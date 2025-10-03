@@ -1,8 +1,35 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: 240 10% 99%; /* slate-50 */
+  --foreground: 240 10% 15%; /* slate-800 */
+
+  --card: 0 0% 100%; /* white */
+  --card-foreground: 240 10% 15%; /* slate-800 */
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 15%;
+
+  --primary: 340 80% 75%; /* Soft pink */
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 240 5% 96%; /* slate-100 */
+  --secondary-foreground: 240 10% 15%;
+
+  --muted: 240 5% 90%; /* slate-200 */
+  --muted-foreground: 240 5% 45%; /* slate-600 */
+
+  --accent: 240 5% 96%;
+  --accent-foreground: 240 10% 15%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 240 5% 83%; /* slate-300 */
+  --input: 240 5% 83%;
+  --ring: 340 80% 75%;
+
+  --radius: 0.75rem;
 }
 
 @theme inline {
@@ -12,15 +39,8 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
   font-family: Arial, Helvetica, sans-serif;
 }

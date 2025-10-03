@@ -61,6 +61,56 @@ export const topProductsData = [
   { name: 'Donut', value: 200 },
 ];
 
+export const dailySalesData = [
+  { value: 100 },
+  { value: 200 },
+  { value: 150 },
+  { value: 300 },
+  { value: 250 },
+  { value: 400 },
+  { value: 350 },
+];
+
+export const openOrdersData = [
+  { value: 5 },
+  { value: 7 },
+  { value: 6 },
+  { value: 8 },
+  { value: 7 },
+  { value: 9 },
+  { value: 12 },
+];
+
+export const topSellingProductData = [
+  { value: 10 },
+  { value: 15 },
+  { value: 12 },
+  { value: 18 },
+  { value: 20 },
+  { value: 25 },
+  { value: 22 },
+];
+
+export const weeklyQuantityData = [
+  { day: 'Seg', value: 100 },
+  { day: 'Ter', value: 80 },
+  { day: 'Qua', value: 120 },
+  { day: 'Qui', value: 150 },
+  { day: 'Sex', value: 140 },
+  { day: 'Sáb', value: 200 },
+  { day: 'Dom', value: 250 },
+];
+
+export const weeklyProfitData = [
+  { day: 'Seg', value: 200 },
+  { day: 'Ter', value: 150 },
+  { day: 'Qua', value: 300 },
+  { day: 'Qui', value: 400 },
+  { day: 'Sex', value: 350 },
+  { day: 'Sáb', value: 550 },
+  { day: 'Dom', value: 650 },
+];
+
 export const allOrders: Order[] = [
     {
         id: "ORD001",
@@ -131,8 +181,23 @@ export const allProducts: Product[] = [
 ];
 
 export const allCustomers: Customer[] = [
-    { id: "CUST001", name: "João Silva", email: "joao.silva@example.com", phone: "(11) 98765-4321", totalOrders: 5, totalSpent: 350.00 },
-    { id: "CUST002", name: "Maria Oliveira", email: "maria.o@example.com", phone: "(21) 91234-5678", totalOrders: 3, totalSpent: 120.00 },
-    { id: "CUST003", name: "Carlos Pereira", email: "carlos.p@example.com", phone: "(31) 99876-1234", totalOrders: 7, totalSpent: 500.00 },
-    { id: "CUST004", name: "Ana Costa", email: "ana.c@example.com", phone: "(41) 91122-3344", totalOrders: 2, totalSpent: 80.00 },
+    { id: "CUST001", name: "João Silva", email: "joao.silva@example.com", phone: "(11) 98765-4321", totalOrders: 5, totalSpent: 350.00, lastPurchase: "2025-09-28", segment: "Recorrente" },
+    { id: "CUST002", name: "Maria Oliveira", email: "maria.o@example.com", phone: "(21) 91234-5678", totalOrders: 3, totalSpent: 120.00, lastPurchase: "2025-09-27", segment: "Novo" },
+    { id: "CUST003", name: "Carlos Pereira", email: "carlos.p@example.com", phone: "(31) 99876-1234", totalOrders: 7, totalSpent: 500.00, lastPurchase: "2025-09-26", segment: "VIP" },
+    { id: "CUST004", name: "Ana Costa", email: "ana.c@example.com", phone: "(41) 91122-3344", totalOrders: 2, totalSpent: 80.00, lastPurchase: "2025-09-25", segment: "Recorrente" },
+];
+
+export const monthlyClientGrowth = [
+  { month: 'Jan', clients: 10 },
+  { month: 'Fev', clients: 12 },
+  { month: 'Mar', clients: 15 },
+  { month: 'Abr', clients: 18 },
+  { month: 'Mai', clients: 22 },
+  { month: 'Jun', clients: 25 },
+  { month: 'Jul', clients: 28 },
+  { month: 'Ago', clients: 30 },
+  { month: 'Set', clients: 35 },
+  { month: 'Out', clients: 38 },
+  { month: 'Nov', clients: 42 },
+  { month: 'Dez', clients: 45 },
 ];
