@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Home, Package, ShoppingCart, Users, LogOut, Cake } from 'lucide-react'
+import { Home, Package, ShoppingCart, Users, LogOut, Cake, TrendingUp, ArrowUpCircle, ArrowDownCircle } from 'lucide-react'
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -22,6 +22,9 @@ export function Sidebar() {
     { href: '/dashboard/pedidos', label: 'Pedidos', icon: ShoppingCart },
     { href: '/dashboard/produtos', label: 'Produtos', icon: Package },
     { href: '/dashboard/clientes', label: 'Clientes', icon: Users },
+    { href: '/dashboard/financeiro', label: 'Financeiro', icon: TrendingUp },
+    { href: '/dashboard/entradas', label: 'Entradas', icon: ArrowUpCircle },
+    { href: '/dashboard/saidas', label: 'Saídas', icon: ArrowDownCircle },
   ]
 
   return (
@@ -40,7 +43,7 @@ export function Sidebar() {
                 key={item.label}
                 href={item.href}
                 className={cn(
-                  'flex items-center gap-4 px-4 py-3 text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-slate-900 rounded-r-lg',
+                  'flex items-center gap-4 px-4 py-3 text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-slate-900 rounded-lg',
                   { 'bg-slate-100 text-pink-600 font-semibold border-l-4 border-pink-500': pathname === item.href }
                 )}
               >

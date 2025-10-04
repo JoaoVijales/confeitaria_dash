@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Providers from "./providers";
 
 export const metadata: Metadata = {
   title: "Dashboard Confeitaria",
@@ -13,8 +14,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className="font-sans antialiased bg-slate-50 text-slate-800">
-        {children}
+      <body className="font-sans antialiased bg-gradient-to-br from-slate-50 to-slate-100 text-slate-800">
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

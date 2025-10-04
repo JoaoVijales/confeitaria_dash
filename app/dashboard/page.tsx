@@ -1,8 +1,7 @@
 'use client'
 
 import { KpiCard } from "@/components/KpiCard";
-import { DollarSign, ShoppingCart, Trophy, Eye, PackagePlus } from "lucide-react";
-import { dailySales, openOrders, topSellingProduct, allOrders, dailySalesData, openOrdersData, topSellingProductData } from "@/lib/mock-data";
+import { DollarSign, ShoppingCart, Trophy, Eye, PackagePlus, TrendingUp, Percent, Wallet } from "lucide-react";
 import { SalesChart } from "@/components/charts/SalesChart";
 import { TopProductsChart } from "@/components/charts/TopProductsChart";
 import {
@@ -17,9 +16,13 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { useOrders } from "@/hooks/useOrders";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+
+const COLORS = ['#3B82F6', '#F87171', '#34D399', '#FB923C', '#A78BFA'];
 
 const statusColors: { [key: string]: string } = {
   Entregue: "bg-green-100 text-green-800",
@@ -28,49 +31,77 @@ const statusColors: { [key: string]: string } = {
   Processando: "bg-purple-100 text-purple-800",
 };
 
-
-
 export default function DashboardOverview() {
-  const [loading, setLoading] = useState(true);
+  const { data: stats, isLoading: isLoadingStats } = useDashboardStats();
+  const { data: orders, isLoading: isLoadingOrders } = useOrders();
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
+  const recentOrders = orders?.slice(0, 5) || [];
+
   return (
     <div className="flex flex-col gap-6 p-6 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
       <h1 className="text-3xl font-semibold tracking-tight text-slate-800">
         Visão Geral
       </h1>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <KpiCard 
-          title="Vendas do Dia" 
-          value={dailySales.total} 
-          icon={<DollarSign />} 
-          trend={5.2} 
-          data={dailySalesData} 
-          prefix="R$ "
-          gradient="bg-gradient-to-br from-green-50 to-emerald-50"
-        />
-        <KpiCard 
-          title="Pedidos Abertos" 
-          value={openOrders.count} 
-          icon={<ShoppingCart />} 
-          trend={-1.5} 
-          data={openOrdersData}
-          gradient="bg-gradient-to-br from-blue-50 to-sky-50"
-        />
-        <KpiCard 
-          title="Mais Vendido" 
-          value={124} 
-          icon={<Trophy />} 
-          trend={12} 
-          data={topSellingProductData}
-          gradient="bg-gradient-to-br from-amber-50 to-orange-50"
-        />
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
+        {isLoadingStats ? (
+          <>
+            <Skeleton className="h-36 w-full" />
+            <Skeleton className="h-36 w-full" />
+            <Skeleton className="h-36 w-full" />
+            <Skeleton className="h-36 w-full" />
+            <Skeleton className="h-36 w-full" />
+          </>
+        ) : (
+          <>
+            <KpiCard
+              title="Vendas do Dia"
+              value={stats?.dailySales.total || 0}
+              icon={<DollarSign />}
+              trend={5.2}
+              prefix="R$ "
+              gradient="bg-gradient-to-br from-green-50 to-emerald-50"
+            />
+            <KpiCard
+              title="Pedidos Abertos"
+              value={stats?.openOrders.count || 0}
+              icon={<ShoppingCart />}
+              trend={-1.5}
+              gradient="bg-gradient-to-br from-blue-50 to-sky-50"
+            />
+            <KpiCard
+              title="Mais Vendido"
+              value={stats?.topSellingProduct.name || 'N/A'}
+              icon={<Trophy />}
+              trend={12} // Added a placeholder trend
+              gradient="bg-gradient-to-br from-amber-50 to-orange-50"
+            />
+            <KpiCard
+              title="Lucro do Mês"
+              value={stats?.monthlyProfit || 0}
+              icon={<TrendingUp />}
+              trend={stats?.monthlyProfit > 0 ? 10 : -5} // Added a placeholder trend
+              prefix="R$ "
+              gradient="bg-gradient-to-br from-purple-50 to-violet-50"
+            />
+            <KpiCard
+              title="Margem Média"
+              value={stats?.averageMargin || 0}
+              icon={<Percent />}
+              trend={stats?.averageMargin > 0 ? 2 : -1} // Added a placeholder trend
+              suffix="%"
+              gradient="bg-gradient-to-br from-pink-50 to-rose-50"
+            />
+            <KpiCard
+              title="Balanço do Mês"
+              value={stats?.monthlyProfit || 0}
+              icon={<Wallet />}
+              trend={stats?.monthlyProfit > 0 ? 8 : -3} // Added a placeholder trend
+              prefix="R$ "
+              gradient="bg-gradient-to-br from-cyan-50 to-teal-50"
+            />
+          </>
+        )}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
@@ -98,15 +129,60 @@ export default function DashboardOverview() {
         </Card>
       </div>
 
+      <div className="grid gap-6 md:grid-cols-2 lg:col-span-5">
+        <Card className="col-span-1 lg:col-span-3 rounded-xl border border-slate-200 shadow-sm">
+          <CardHeader>
+            <CardTitle className="font-semibold text-slate-800">Top 5 Produtos Mais Lucrativos</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart data={stats?.topProfitableProducts} layout="vertical">
+                <XAxis type="number" />
+                <YAxis type="category" dataKey="name" />
+                <Tooltip />
+                <Bar dataKey="Lucro" fill="#8884d8" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+        <Card className="col-span-1 lg:col-span-2 rounded-xl border border-slate-200 shadow-sm">
+          <CardHeader>
+            <CardTitle className="font-semibold text-slate-800">Despesas por Categoria</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <ResponsiveContainer width="100%" height={350}>
+              <PieChart>
+                <Pie
+                  data={stats?.expensesByCategoryChartData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={120}
+                  innerRadius={80} // Converted to donut
+                  dataKey="value"
+                  nameKey="name"
+                >
+                  {stats?.expensesByCategoryChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card className="rounded-xl border border-slate-200 shadow-sm">
         <CardHeader>
           <CardTitle className="font-semibold text-slate-800">Pedidos Recentes</CardTitle>
           <CardDescription className="text-slate-600">
-            Últimos 5 pedidos recebidos hoje.
+            Últimos 5 pedidos recebidos.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {isLoadingOrders ? (
             <div className="space-y-4">
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />
@@ -114,7 +190,7 @@ export default function DashboardOverview() {
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />
             </div>
-          ) : allOrders.length > 0 ? (
+          ) : recentOrders.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -127,10 +203,10 @@ export default function DashboardOverview() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {allOrders.slice(0, 5).map((order) => (
+                {recentOrders.map((order) => (
                   <TableRow key={order.id} className="hover:bg-slate-50 transition-colors group">
                     <TableCell className="font-medium py-3 px-4">{order.id}</TableCell>
-                    <TableCell className="py-3 px-4">{order.customerName}</TableCell>
+                    <TableCell className="py-3 px-4">{order.customers?.name}</TableCell>
                     <TableCell className="text-right py-3 px-4">
                       R$ {order.total.toLocaleString("pt-BR", {
                         minimumFractionDigits: 2,
@@ -145,10 +221,12 @@ export default function DashboardOverview() {
                         {order.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right py-3 px-4 text-slate-500">14:35</TableCell>
+                    <TableCell className="text-right py-3 px-4 text-slate-500">{new Date(order.created_at).toLocaleTimeString()}</TableCell>
                     <TableCell className="text-center py-3 px-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="outline" size="icon">
-                        <Eye className="h-4 w-4" />
+                      <Button variant="outline" size="icon" asChild>
+                        <Link href={`/dashboard/pedidos?id=${order.id}`}>
+                          <Eye className="h-4 w-4" />
+                        </Link>
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -156,14 +234,14 @@ export default function DashboardOverview() {
               </TableBody>
             </Table>
           ) : (
-            <EmptyState 
-              title="Nenhum pedido hoje" 
+            <EmptyState
+              title="Nenhum pedido hoje"
               description="Aproveite para relaxar ou preparar novos produtos!"
               icon={<PackagePlus />}
             />
           )}
         </CardContent>
-        {allOrders.length > 0 && (
+        {recentOrders.length > 0 && (
           <CardFooter className="flex justify-center py-4">
             <Link href="/dashboard/pedidos" className="text-sm font-medium text-pink-600 hover:underline">
               Ver todos os pedidos →

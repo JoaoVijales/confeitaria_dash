@@ -8,17 +8,18 @@ import { LineChart, Line, ResponsiveContainer } from "recharts";
 
 interface KpiCardProps {
   title: string;
-  value: number;
+  value: number | string;
   icon: React.ReactNode;
-  trend: number;
-  data: any[];
+  trend?: number;
+  data?: any[];
   prefix?: string;
+  suffix?: string;
   gradient: string;
 }
 
-export function KpiCard({ title, value, icon, trend, data, prefix, gradient }: KpiCardProps) {
-  const TrendIcon = trend >= 0 ? ArrowUp : ArrowDown;
-  const trendColor = trend >= 0 ? "text-green-500" : "text-red-500";
+export function KpiCard({ title, value, icon, trend, data, prefix, suffix, gradient }: KpiCardProps) {
+  const TrendIcon = trend && trend >= 0 ? ArrowUp : ArrowDown;
+  const trendColor = trend && trend >= 0 ? "text-green-500" : "text-red-500";
 
   return (
     <Card className={`rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all hover:scale-[1.02] ${gradient}`}>
@@ -28,22 +29,30 @@ export function KpiCard({ title, value, icon, trend, data, prefix, gradient }: K
       </CardHeader>
       <CardContent>
         <div className="text-4xl font-bold text-slate-900">
-          <CountUp start={0} end={value} duration={2.5} separator="." decimal="," prefix={prefix} />
+          {typeof value === 'number' ? (
+            <CountUp start={0} end={value} duration={2.5} separator="." decimal="," prefix={prefix} suffix={suffix} />
+          ) : (
+            value
+          )}
         </div>
-        <div className="flex items-center gap-2 mt-2">
-          <Badge className={`flex items-center gap-1 ${trend >= 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-            <TrendIcon className={`h-4 w-4 ${trendColor}`} />
-            <span>{trend.toFixed(1)}%</span>
-          </Badge>
-          <span className="text-xs text-slate-500">vs semana anterior</span>
-        </div>
-        <div className="h-16 mt-4">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data}>
-              <Line type="monotone" dataKey="value" stroke="#8884d8" strokeWidth={2} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+        {trend !== undefined && (
+          <div className="flex items-center gap-2 mt-2">
+            <Badge className={`flex items-center gap-1 ${trend >= 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+              <TrendIcon className={`h-4 w-4 ${trendColor}`} />
+              <span>{trend.toFixed(1)}%</span>
+            </Badge>
+            <span className="text-xs text-slate-500">vs semana anterior</span>
+          </div>
+        )}
+        {data && (
+          <div className="h-16 mt-4">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={data}>
+                <Line type="monotone" dataKey="value" stroke="#8884d8" strokeWidth={2} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -17,8 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { PlusCircle, Edit, Trash2, Search, Package, ArrowUp, ArrowDown } from 'lucide-react'
-import { allProducts, Product } from '@/lib/mock-data' // Import Product type
+import { PlusCircle, Edit, Trash2, Search, Package, AlertTriangle } from 'lucide-react'
 import { ProductFormDialog } from '@/components/ProductFormDialog'
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,18 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { Progress } from "@/components/ui/progress";
+import { useProducts } from '@/hooks/useProducts'
+import { createProduct, updateProduct, deleteProduct } from '@/app/actions/products'
+
+type Product = {
+  id: string; // ID agora é string
+  name: string;
+  price: number;
+  cost: number; // Nova coluna
+  stock: number;
+  min_stock: number; // Nova coluna
+  category: string;
+};
 
 const categoryColors: { [key: string]: string } = {
   Bolos: "bg-blue-100 text-blue-800",
@@ -36,20 +48,12 @@ const categoryColors: { [key: string]: string } = {
 };
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>(allProducts)
+  const { data: products, isLoading, error } = useProducts()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState('Todos')
   const [filterStock, setFilterStock] = useState('Todos')
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleAddProduct = () => {
     setEditingProduct(null)
@@ -61,32 +65,39 @@ export default function ProductsPage() {
     setIsDialogOpen(true)
   }
 
-  const handleDeleteProduct = (id: string) => {
-    setProducts(products.filter((product) => product.id !== id))
+  const handleDeleteProduct = async (id: string) => {
+    await deleteProduct(id)
   }
 
-  const handleSaveProduct = (newProduct: Product) => {
-    if (newProduct.id === editingProduct?.id) {
-      // Editing existing product
-      setProducts(products.map((product) => (product.id === newProduct.id ? newProduct : product)))
+  const handleSaveProduct = async (newProduct: Omit<Product, 'id'> & { id?: string }) => {
+    if (editingProduct) {
+      await updateProduct(editingProduct.id, newProduct);
     } else {
-      // Adding new product
-      setProducts([...products, newProduct])
+      await createProduct(newProduct);
     }
   }
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) || product.id.toLowerCase().includes(searchTerm.toLowerCase());
+  const calculateMargin = (product: Product) => {
+    if (product.cost === 0 || product.price === 0) return 0
+    return ((product.price - product.cost) / product.price) * 100
+  }
+
+  const filteredProducts = products?.filter(product => {
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) || String(product.id).toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === 'Todos' || product.category === filterCategory;
-    const matchesStock = filterStock === 'Todos' || 
-      (filterStock === 'Baixo' && product.stock < 10) ||
-      (filterStock === 'Normal' && product.stock >= 10 && product.stock < 50) ||
-      (filterStock === 'Alto' && product.stock >= 50);
+    const matchesStock = filterStock === 'Todos' ||
+      (filterStock === 'Baixo' && product.stock < product.min_stock) ||
+      (filterStock === 'Normal' && product.stock >= product.min_stock && product.stock < (product.min_stock * 2)) || // Exemplo de lógica
+      (filterStock === 'Alto' && product.stock >= (product.min_stock * 2)); // Exemplo de lógica
     return matchesSearch && matchesCategory && matchesStock;
-  });
+  }) || [];
 
   const totalProducts = filteredProducts.length;
   const totalStockValue = filteredProducts.reduce((sum, product) => sum + (product.price * product.stock), 0);
+
+  if (error) {
+    return <EmptyState title="Erro ao carregar produtos" description="Tente novamente mais tarde." icon={<Package className="h-12 w-12" />} />
+  }
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -126,9 +137,9 @@ export default function ProductsPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Todos">Todos</SelectItem>
-              <SelectItem value="Baixo">Estoque Baixo (&lt; 10)</SelectItem>
-              <SelectItem value="Normal">Estoque Normal (10-49)</SelectItem>
-              <SelectItem value="Alto">Estoque Alto (&gt;= 50)</SelectItem>
+              <SelectItem value="Baixo">Estoque Baixo (&lt; Mínimo)</SelectItem>
+              <SelectItem value="Normal">Estoque Normal (Mínimo - 2x Mínimo)</SelectItem>
+              <SelectItem value="Alto">Estoque Alto (&gt;= 2x Mínimo)</SelectItem>
             </SelectContent>
           </Select>
           <Button onClick={handleAddProduct} className="bg-gradient-to-r from-pink-500 to-pink-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all">
@@ -147,7 +158,7 @@ export default function ProductsPage() {
           <CardDescription className="text-slate-600">Gerencie os produtos da sua confeitaria.</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          {loading ? (
+          {isLoading ? (
             <div className="space-y-4 p-4">
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />
@@ -159,11 +170,11 @@ export default function ProductsPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-slate-100 hover:bg-slate-100">
-                  <TableHead className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">ID</TableHead>
-                  <TableHead className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Imagem</TableHead>
-                  <TableHead className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Nome</TableHead>
+                  <TableHead className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Produto</TableHead>
                   <TableHead className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Categoria</TableHead>
                   <TableHead className="text-right py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Preço</TableHead>
+                  <TableHead className="text-right py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Custo</TableHead>
+                  <TableHead className="text-right py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Margem</TableHead>
                   <TableHead className="text-right py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Estoque</TableHead>
                   <TableHead className="text-center py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Ações</TableHead>
                 </TableRow>
@@ -171,11 +182,7 @@ export default function ProductsPage() {
               <TableBody>
                 {filteredProducts.map((product) => (
                   <TableRow key={product.id} className="hover:bg-slate-50 transition-colors py-4">
-                    <TableCell className="font-medium py-4 px-4">{product.id}</TableCell>
-                    <TableCell className="py-4 px-4">
-                      <img src="/placeholder.svg" alt="Product Image" className="w-16 h-16 rounded-lg object-cover" />
-                    </TableCell>
-                    <TableCell className="py-4 px-4">{product.name}</TableCell>
+                    <TableCell className="font-medium py-4 px-4">{product.name}</TableCell>
                     <TableCell className="py-4 px-4">
                       <Badge className={`${categoryColors[product.category] || "bg-gray-100 text-gray-800"} rounded-full px-3 py-1 text-xs font-medium`}>
                         {product.category}
@@ -185,12 +192,36 @@ export default function ProductsPage() {
                       R$ {product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </TableCell>
                     <TableCell className="text-right py-4 px-4">
+                      {product.cost !== undefined && product.cost !== null ? (
+                        `R$ ${product.cost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                      ) : (
+                        <Badge variant="outline" className="bg-amber-100 text-amber-800">Sem custo</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right py-4 px-4">
+                      {product.cost !== undefined && product.cost !== null && product.price > 0 ? (
+                        <Badge
+                          className={
+                            calculateMargin(product) > 30
+                              ? 'bg-green-100 text-green-800'
+                              : calculateMargin(product) > 15
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-red-100 text-red-800'
+                          }
+                        >
+                          {calculateMargin(product).toFixed(2)}%
+                        </Badge>
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right py-4 px-4">
                       <div className="flex flex-col items-end">
                         <span>{product.stock}</span>
-                        {product.stock < 10 && (
+                        {product.stock < product.min_stock && (
                           <Badge variant="destructive" className="mt-1">Estoque baixo!</Badge>
                         )}
-                        <Progress value={(product.stock / 50) * 100} className="w-24 mt-1" />
+                        <Progress value={(product.stock / (product.min_stock * 2)) * 100} className="w-24 mt-1" />
                       </div>
                     </TableCell>
                     <TableCell className="flex justify-center gap-2 py-4 px-4">
@@ -226,14 +257,15 @@ export default function ProductsPage() {
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
+                      {/* Link para editar receita do produto - A ser implementado */}
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           ) : (
-            <EmptyState 
-              title="Nenhum produto encontrado" 
+            <EmptyState
+              title="Nenhum produto encontrado"
               description="Ajuste seus filtros ou adicione um novo produto."
               icon={<Package className="h-12 w-12" />}
               action={{ label: "Adicionar Produto", onClick: handleAddProduct }}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -18,8 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { PlusCircle, Edit, Trash2, Search, Download, CheckCircle, Clock, Truck, Loader } from 'lucide-react'
-import { allOrders, Order } from '@/lib/mock-data' // Import Order type
+import { PlusCircle, Edit, Trash2, Search, Download, CheckCircle, Clock, Truck, Loader, ShoppingCart } from 'lucide-react'
 import { OrderFormDialog } from '@/components/OrderFormDialog'
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -27,6 +26,34 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
+import { useOrders } from '@/hooks/useOrders'
+import { updateOrder, deleteOrder } from '@/app/actions/orders'
+
+type Order = {
+  id: number;
+  total: number;
+  status: string;
+  created_at: string;
+  customers: {
+    name: string;
+    email: string;
+  } | null;
+  order_items: {
+    quantity: number;
+    products: {
+      price: number;
+      recipes: {
+        yield: number;
+        recipe_ingredients: {
+          quantity: number;
+          ingredients: {
+            unit_cost: number;
+          };
+        }[];
+      }[];
+    };
+  }[];
+};
 
 const statusColors: { [key: string]: string } = {
   Entregue: "bg-green-100 text-green-700 border-green-200",
@@ -43,20 +70,12 @@ const statusIcons: { [key: string]: React.ReactNode } = {
 };
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>(allOrders)
+  const { data: orders, isLoading, error } = useOrders()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingOrder, setEditingOrder] = useState<Order | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('Todos')
   const [filterPeriod, setFilterPeriod] = useState('Todos')
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleAddOrder = () => {
     setEditingOrder(null)
@@ -68,29 +87,61 @@ export default function OrdersPage() {
     setIsDialogOpen(true)
   }
 
-  const handleDeleteOrder = (id: string) => {
-    setOrders(orders.filter((order) => order.id !== id))
+  const handleDeleteOrder = async (id: number) => {
+    await deleteOrder(id)
   }
 
-  const handleSaveOrder = (newOrder: Order) => {
-    if (newOrder.id === editingOrder?.id) {
-      // Editing existing order
-      setOrders(orders.map((order) => (order.id === newOrder.id ? newOrder : order)))
-    } else {
-      // Adding new order
-      setOrders([...orders, newOrder])
+  const handleSaveOrder = async (newOrder: Omit<Order, 'id' | 'customers' | 'created_at' | 'order_items'> & { id?: number }) => {
+    if (editingOrder) {
+      await updateOrder(editingOrder.id, { status: newOrder.status });
     }
   }
 
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) || order.id.toLowerCase().includes(searchTerm.toLowerCase());
+  const calculateCost = (product: any) => {
+    if (!product.recipes || product.recipes.length === 0) {
+      return 0
+    }
+    const recipe = product.recipes[0]
+    const totalCost = recipe.recipe_ingredients.reduce((acc: number, ri: any) => {
+      return acc + (ri.ingredients.unit_cost * ri.quantity)
+    }, 0)
+    return totalCost / recipe.yield
+  }
+
+  const calculateOrderProfit = (order: Order) => {
+    return order.order_items.reduce((acc, item) => {
+      const cost = calculateCost(item.products)
+      return acc + (item.products.price - cost) * item.quantity
+    }, 0)
+  }
+
+  const filteredOrders = orders?.filter(order => {
+    const customerName = order.customers?.name || '';
+    const matchesSearch = customerName.toLowerCase().includes(searchTerm.toLowerCase()) || String(order.id).toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'Todos' || order.status === filterStatus;
-    // Period filtering logic can be added here if orderDate is properly formatted and comparable
-    return matchesSearch && matchesStatus;
-  });
+    const orderDate = new Date(order.created_at);
+    const today = new Date();
+    let matchesPeriod = true;
+
+    if (filterPeriod === 'Hoje') {
+      matchesPeriod = orderDate.toDateString() === today.toDateString();
+    } else if (filterPeriod === 'Semana') {
+      const lastWeek = new Date(today.setDate(today.getDate() - 7));
+      matchesPeriod = orderDate >= lastWeek;
+    } else if (filterPeriod === 'Mes') {
+      const lastMonth = new Date(today.setMonth(today.getMonth() - 1));
+      matchesPeriod = orderDate >= lastMonth;
+    }
+
+    return matchesSearch && matchesStatus && matchesPeriod;
+  }) || [];
 
   const totalOrders = filteredOrders.length;
   const totalRevenue = filteredOrders.reduce((sum, order) => sum + order.total, 0);
+
+  if (error) {
+    return <EmptyState title="Erro ao carregar pedidos" description="Tente novamente mais tarde." icon={<ShoppingCart className="h-12 w-12" />} />
+  }
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -154,7 +205,7 @@ export default function OrdersPage() {
           <CardDescription className="text-slate-600">Gerencie os pedidos da sua confeitaria.</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          {loading ? (
+          {isLoading ? (
             <div className="space-y-4 p-4">
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />
@@ -169,8 +220,8 @@ export default function OrdersPage() {
                   <TableHead className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">ID</TableHead>
                   <TableHead className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Cliente</TableHead>
                   <TableHead className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Data</TableHead>
-                  <TableHead className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Produtos</TableHead>
                   <TableHead className="text-right py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Total</TableHead>
+                  <TableHead className="text-right py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Lucro Estimado</TableHead>
                   <TableHead className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Status</TableHead>
                   <TableHead className="text-center py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Ações</TableHead>
                 </TableRow>
@@ -179,11 +230,13 @@ export default function OrdersPage() {
                 {filteredOrders.map((order) => (
                   <TableRow key={order.id} className="hover:bg-slate-50 transition-colors py-4">
                     <TableCell className="font-medium py-4 px-4">{order.id}</TableCell>
-                    <TableCell className="py-4 px-4">{order.customerName}</TableCell>
-                    <TableCell className="py-4 px-4">{order.orderDate}</TableCell>
-                    <TableCell className="py-4 px-4">{order.items.length} itens</TableCell>
+                    <TableCell className="py-4 px-4">{order.customers?.name}</TableCell>
+                    <TableCell className="py-4 px-4">{new Date(order.created_at).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right font-semibold text-slate-900 py-4 px-4">
                       R$ {order.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </TableCell>
+                    <TableCell className="text-right font-semibold text-green-600 py-4 px-4">
+                      R$ {calculateOrderProfit(order).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </TableCell>
                     <TableCell className="py-4 px-4">
                       <Badge
@@ -231,8 +284,8 @@ export default function OrdersPage() {
               </TableBody>
             </Table>
           ) : (
-            <EmptyState 
-              title="Nenhum pedido encontrado" 
+            <EmptyState
+              title="Nenhum pedido encontrado"
               description="Ajuste seus filtros ou adicione um novo pedido."
               icon={<ShoppingCart className="h-12 w-12" />}
               action={{ label: "Adicionar Pedido", onClick: handleAddOrder }}
