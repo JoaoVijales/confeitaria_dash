@@ -1,42 +1,30 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { PlusCircle, Edit, Trash2, Search, Package, AlertTriangle } from 'lucide-react'
-import { ProductFormDialog } from '@/components/ProductFormDialog'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { PlusCircle, Edit, Trash2, Package } from 'lucide-react'
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { Progress } from "@/components/ui/progress";
 import { useProducts } from '@/hooks/useProducts'
-import { createProduct, updateProduct, deleteProduct } from '@/app/actions/products'
+import { useCreateProduct, useUpdateProduct, useDeleteProduct } from '@/hooks/useMutations'
+import { ProductFormDialog } from '@/components/dialogs/ProductFormDialog'
+import { ConfirmDialog } from '@/components/dialogs/ConfirmDialog'
+import { ProductFormValues } from '@/lib/validations/product.schema'
+import { toast } from 'sonner'
 
 type Product = {
-  id: string; // ID agora é string
+  id: string;
   name: string;
   price: number;
-  cost: number; // Nova coluna
+  cost: number;
   stock: number;
-  min_stock: number; // Nova coluna
+  min_stock: number;
   category: string;
 };
 
@@ -48,238 +36,166 @@ const categoryColors: { [key: string]: string } = {
 };
 
 export default function ProductsPage() {
-  const { data: products, isLoading, error } = useProducts()
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const { data: products, isLoading, error } = useProducts() as { data: Product[] | undefined; isLoading: boolean; error: Error | null };
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState<Product | undefined>(undefined)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState('Todos')
-  const [filterStock, setFilterStock] = useState('Todos')
 
-  const handleAddProduct = () => {
-    setEditingProduct(null)
-    setIsDialogOpen(true)
+  const createProductMutation = useCreateProduct()
+  const updateProductMutation = useUpdateProduct()
+  const deleteProductMutation = useDeleteProduct()
+
+  const handleOpenForm = (product?: Product) => {
+    setSelectedProduct(product)
+    setIsFormOpen(true)
   }
 
-  const handleEditProduct = (product: Product) => {
-    setEditingProduct(product)
-    setIsDialogOpen(true)
+  const handleOpenConfirm = (product: Product) => {
+    setSelectedProduct(product)
+    setIsConfirmOpen(true)
   }
 
-  const handleDeleteProduct = async (id: string) => {
-    await deleteProduct(id)
-  }
+  const handleFormSubmit = (data: ProductFormValues) => {
+    const formData = new FormData()
+    Object.entries(data).forEach(([key, value]) => formData.append(key, String(value)))
 
-  const handleSaveProduct = async (newProduct: Omit<Product, 'id'> & { id?: string }) => {
-    if (editingProduct) {
-      await updateProduct(editingProduct.id, newProduct);
+    if (selectedProduct) {
+      updateProductMutation.mutate({ id: selectedProduct.id, data: formData }, {
+        onSuccess: () => {
+          toast.success('Produto atualizado com sucesso!')
+          setIsFormOpen(false)
+        },
+        onError: () => toast.error('Erro ao atualizar produto.'),
+      })
     } else {
-      await createProduct(newProduct);
+      createProductMutation.mutate(formData, {
+        onSuccess: () => {
+          toast.success('Produto criado com sucesso!')
+          setIsFormOpen(false)
+        },
+        onError: () => toast.error('Erro ao criar produto.'),
+      })
     }
   }
 
-  const calculateMargin = (product: Product) => {
-    if (product.cost === 0 || product.price === 0) return 0
-    return ((product.price - product.cost) / product.price) * 100
+  const handleDeleteConfirm = () => {
+    if (!selectedProduct) return
+    deleteProductMutation.mutate(selectedProduct.id, {
+      onSuccess: () => {
+        toast.success('Produto excluído com sucesso!')
+        setIsConfirmOpen(false)
+      },
+      onError: () => toast.error('Erro ao excluir produto.'),
+    })
+  }
+
+  const calculateMargin = (price: number, cost: number) => {
+    if (cost === 0 || price === 0) return 0
+    return ((price - cost) / price) * 100
   }
 
   const filteredProducts = products?.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) || String(product.id).toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === 'Todos' || product.category === filterCategory;
-    const matchesStock = filterStock === 'Todos' ||
-      (filterStock === 'Baixo' && product.stock < product.min_stock) ||
-      (filterStock === 'Normal' && product.stock >= product.min_stock && product.stock < (product.min_stock * 2)) || // Exemplo de lógica
-      (filterStock === 'Alto' && product.stock >= (product.min_stock * 2)); // Exemplo de lógica
-    return matchesSearch && matchesCategory && matchesStock;
+    return matchesSearch && matchesCategory;
   }) || [];
-
-  const totalProducts = filteredProducts.length;
-  const totalStockValue = filteredProducts.reduce((sum, product) => sum + (product.price * product.stock), 0);
 
   if (error) {
     return <EmptyState title="Erro ao carregar produtos" description="Tente novamente mais tarde." icon={<Package className="h-12 w-12" />} />
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-semibold text-slate-800">Produtos</h1>
-          <Badge className="bg-pink-500 text-white rounded-full px-3 py-1 text-sm">
-            {totalProducts} Produtos
-          </Badge>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input
-              type="text"
-              placeholder="Buscar produto..."
-              className="pl-9 pr-4 py-2 rounded-lg border border-slate-200 focus:ring-pink-500 focus:border-pink-500 transition-all"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+    <>
+      <div className="flex flex-col gap-6 p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-3xl font-semibold">Produtos</h1>
+          <div className="flex items-center gap-4">
+            <Input placeholder="Buscar produto..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-64" />
+            <Select onValueChange={setFilterCategory} value={filterCategory}>
+              <SelectTrigger className="w-[180px]"><SelectValue placeholder="Categoria" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Todos">Todas as Categorias</SelectItem>
+                <SelectItem value="Bolos">Bolos</SelectItem>
+                <SelectItem value="Tortas">Tortas</SelectItem>
+                <SelectItem value="Cupcakes">Cupcakes</SelectItem>
+                <SelectItem value="Doces">Doces</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button onClick={() => handleOpenForm()}><PlusCircle className="mr-2 h-4 w-4" /> Adicionar Produto</Button>
           </div>
-          <Select onValueChange={setFilterCategory} value={filterCategory}>
-            <SelectTrigger className="w-[180px] rounded-lg border border-slate-200 focus:ring-pink-500 focus:border-pink-500 transition-all">
-              <SelectValue placeholder="Filtrar por Categoria" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Todos">Todas as Categorias</SelectItem>
-              <SelectItem value="Bolos">Bolos</SelectItem>
-              <SelectItem value="Tortas">Tortas</SelectItem>
-              <SelectItem value="Cupcakes">Cupcakes</SelectItem>
-              <SelectItem value="Doces">Doces</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select onValueChange={setFilterStock} value={filterStock}>
-            <SelectTrigger className="w-[180px] rounded-lg border border-slate-200 focus:ring-pink-500 focus:border-pink-500 transition-all">
-              <SelectValue placeholder="Filtrar por Estoque" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Todos">Todos</SelectItem>
-              <SelectItem value="Baixo">Estoque Baixo (&lt; Mínimo)</SelectItem>
-              <SelectItem value="Normal">Estoque Normal (Mínimo - 2x Mínimo)</SelectItem>
-              <SelectItem value="Alto">Estoque Alto (&gt;= 2x Mínimo)</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button onClick={handleAddProduct} className="bg-gradient-to-r from-pink-500 to-pink-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all">
-            <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Produto
-          </Button>
         </div>
-      </div>
 
-      <div className="text-sm text-slate-600 mb-4">
-        {totalProducts} produtos • R$ {totalStockValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} valor total estoque
-      </div>
-
-      <Card className="rounded-xl border border-slate-200 shadow-sm">
-        <CardHeader className="bg-slate-100 rounded-t-xl py-3">
-          <CardTitle className="font-semibold text-slate-800">Lista de Produtos</CardTitle>
-          <CardDescription className="text-slate-600">Gerencie os produtos da sua confeitaria.</CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="space-y-4 p-4">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-            </div>
-          ) : filteredProducts.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-100 hover:bg-slate-100">
-                  <TableHead className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Produto</TableHead>
-                  <TableHead className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Categoria</TableHead>
-                  <TableHead className="text-right py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Preço</TableHead>
-                  <TableHead className="text-right py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Custo</TableHead>
-                  <TableHead className="text-right py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Margem</TableHead>
-                  <TableHead className="text-right py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Estoque</TableHead>
-                  <TableHead className="text-center py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredProducts.map((product) => (
-                  <TableRow key={product.id} className="hover:bg-slate-50 transition-colors py-4">
-                    <TableCell className="font-medium py-4 px-4">{product.name}</TableCell>
-                    <TableCell className="py-4 px-4">
-                      <Badge className={`${categoryColors[product.category] || "bg-gray-100 text-gray-800"} rounded-full px-3 py-1 text-xs font-medium`}>
-                        {product.category}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-semibold text-slate-900 py-4 px-4">
-                      R$ {product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </TableCell>
-                    <TableCell className="text-right py-4 px-4">
-                      {product.cost !== undefined && product.cost !== null ? (
-                        `R$ ${product.cost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
-                      ) : (
-                        <Badge variant="outline" className="bg-amber-100 text-amber-800">Sem custo</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right py-4 px-4">
-                      {product.cost !== undefined && product.cost !== null && product.price > 0 ? (
-                        <Badge
-                          className={
-                            calculateMargin(product) > 30
-                              ? 'bg-green-100 text-green-800'
-                              : calculateMargin(product) > 15
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800'
-                          }
-                        >
-                          {calculateMargin(product).toFixed(2)}%
-                        </Badge>
-                      ) : (
-                        '-'
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right py-4 px-4">
-                      <div className="flex flex-col items-end">
-                        <span>{product.stock}</span>
-                        {product.stock < product.min_stock && (
-                          <Badge variant="destructive" className="mt-1">Estoque baixo!</Badge>
-                        )}
-                        <Progress value={(product.stock / (product.min_stock * 2)) * 100} className="w-24 mt-1" />
-                      </div>
-                    </TableCell>
-                    <TableCell className="flex justify-center gap-2 py-4 px-4">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => handleEditProduct(product)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Editar produto</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="destructive"
-                              size="icon"
-                              onClick={() => handleDeleteProduct(product.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Excluir produto</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                      {/* Link para editar receita do produto - A ser implementado */}
-                    </TableCell>
+        <Card>
+          <CardHeader><CardTitle>Lista de Produtos</CardTitle></CardHeader>
+          <CardContent className="p-0">
+            {isLoading ? (
+              <div className="space-y-2 p-4">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
+            ) : filteredProducts.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Produto</TableHead>
+                    <TableHead>Categoria</TableHead>
+                    <TableHead className="text-right">Preço</TableHead>
+                    <TableHead className="text-right">Custo</TableHead>
+                    <TableHead className="text-right">Margem</TableHead>
+                    <TableHead className="text-right">Estoque</TableHead>
+                    <TableHead className="text-center">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <EmptyState
-              title="Nenhum produto encontrado"
-              description="Ajuste seus filtros ou adicione um novo produto."
-              icon={<Package className="h-12 w-12" />}
-              action={{ label: "Adicionar Produto", onClick: handleAddProduct }}
-            />
-          )}
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                  {filteredProducts.map((product) => {
+                    const margin = calculateMargin(product.price, product.cost)
+                    return (
+                      <TableRow key={product.id}>
+                        <TableCell className="font-medium">{product.name}</TableCell>
+                        <TableCell><Badge className={`${categoryColors[product.category] || "bg-gray-100"}`}>{product.category}</Badge></TableCell>
+                        <TableCell className="text-right font-semibold">R$ {product.price.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">R$ {product.cost.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">
+                          <Badge className={margin > 50 ? 'bg-green-100 text-green-800' : margin > 20 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}>
+                            {margin.toFixed(1)}%
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {product.stock} un.
+                          {product.stock < product.min_stock && <Badge variant="destructive" className="ml-2">Baixo</Badge>}
+                          <Progress value={(product.stock / (product.min_stock * 2)) * 100} className="w-20 mt-1" />
+                        </TableCell>
+                        <TableCell className="flex justify-center gap-2">
+                          <Button variant="outline" size="icon" onClick={() => handleOpenForm(product)}><Edit className="h-4 w-4" /></Button>
+                          <Button variant="destructive" size="icon" onClick={() => handleOpenConfirm(product)}><Trash2 className="h-4 w-4" /></Button>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            ) : (
+              <EmptyState title="Nenhum produto encontrado" description="Adicione um novo produto para começar." icon={<Package className="h-12 w-12" />} />
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       <ProductFormDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        product={editingProduct}
-        onSave={handleSaveProduct}
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        product={selectedProduct}
+        onSubmit={handleFormSubmit}
+        isSubmitting={createProductMutation.isPending || updateProductMutation.isPending}
       />
-    </div>
+
+      <ConfirmDialog
+        open={isConfirmOpen}
+        onOpenChange={setIsConfirmOpen}
+        onConfirm={handleDeleteConfirm}
+        title="Confirmar Exclusão"
+        description={`Tem certeza que deseja excluir o produto "${selectedProduct?.name}"?`}
+        isConfirming={deleteProductMutation.isPending}
+      />
+    </>
   )
 }

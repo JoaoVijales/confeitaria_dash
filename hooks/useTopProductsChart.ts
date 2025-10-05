@@ -15,11 +15,15 @@ export function useTopProductsChart() {
       if (error) throw error
 
       const productSales = data.reduce((acc, item) => {
-        const productName = item.products.name;
-        if (!acc[productName]) {
-          acc[productName] = 0;
+        if (item.products && Array.isArray(item.products) && item.products.length > 0) {
+          const productName = item.products[0].name;
+          if (productName) {
+            if (!acc[productName]) {
+              acc[productName] = 0;
+            }
+            acc[productName] += item.quantity;
+          }
         }
-        acc[productName] += item.quantity;
         return acc;
       }, {} as Record<string, number>);
 

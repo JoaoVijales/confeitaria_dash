@@ -22,16 +22,16 @@ import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useOrders } from "@/hooks/useOrders";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 
-const COLORS = ['#3B82F6', '#F87171', '#34D399', '#FB923C', '#A78BFA'];
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF1919'];
 
 const statusColors: { [key: string]: string } = {
-  Entregue: "bg-green-100 text-green-800",
-  Pendente: "bg-yellow-100 text-yellow-800",
-  Enviado: "bg-blue-100 text-blue-800",
-  Processando: "bg-purple-100 text-purple-800",
+  Finalizado: "bg-green-100 text-green-700",
+  Pendente: "bg-amber-100 text-amber-700",
+  'Em Preparo': "bg-blue-100 text-blue-700",
+  Cancelado: "bg-red-100 text-red-700",
 };
 
-export default function DashboardOverview() {
+export default function DashboardPage() {
   const { data: stats, isLoading: isLoadingStats } = useDashboardStats();
   const { data: orders, isLoading: isLoadingOrders } = useOrders();
 
@@ -80,7 +80,7 @@ export default function DashboardOverview() {
               title="Lucro do Mês"
               value={stats?.monthlyProfit || 0}
               icon={<TrendingUp />}
-              trend={stats?.monthlyProfit > 0 ? 10 : -5} // Added a placeholder trend
+              trend={(stats?.monthlyProfit || 0) > 0 ? 10 : -5} // Added a placeholder trend
               prefix="R$ "
               gradient="bg-gradient-to-br from-purple-50 to-violet-50"
             />
@@ -88,7 +88,7 @@ export default function DashboardOverview() {
               title="Margem Média"
               value={stats?.averageMargin || 0}
               icon={<Percent />}
-              trend={stats?.averageMargin > 0 ? 2 : -1} // Added a placeholder trend
+              trend={(stats?.averageMargin || 0) > 0 ? 2 : -1} // Added a placeholder trend
               suffix="%"
               gradient="bg-gradient-to-br from-pink-50 to-rose-50"
             />
@@ -96,7 +96,7 @@ export default function DashboardOverview() {
               title="Balanço do Mês"
               value={stats?.monthlyProfit || 0}
               icon={<Wallet />}
-              trend={stats?.monthlyProfit > 0 ? 8 : -3} // Added a placeholder trend
+              trend={(stats?.monthlyProfit || 0) > 0 ? 8 : -3} // Added a placeholder trend
               prefix="R$ "
               gradient="bg-gradient-to-br from-cyan-50 to-teal-50"
             />
@@ -206,7 +206,7 @@ export default function DashboardOverview() {
                 {recentOrders.map((order) => (
                   <TableRow key={order.id} className="hover:bg-slate-50 transition-colors group">
                     <TableCell className="font-medium py-3 px-4">{order.id}</TableCell>
-                    <TableCell className="py-3 px-4">{order.customers?.name}</TableCell>
+                    <TableCell className="py-3 px-4">{order.customers?.[0]?.name}</TableCell>
                     <TableCell className="text-right py-3 px-4">
                       R$ {order.total.toLocaleString("pt-BR", {
                         minimumFractionDigits: 2,

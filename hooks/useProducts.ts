@@ -13,9 +13,9 @@ export function useProducts() {
           id,
           name,
           price,
-          cost, // Nova coluna
+          cost,
           stock,
-          min_stock, // Nova coluna
+          min_stock,
           category
         `)
       if (error) {

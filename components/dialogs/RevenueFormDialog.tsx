@@ -22,18 +22,23 @@ export function RevenueFormDialog({ open, onOpenChange, revenue }: RevenueFormDi
   const updateMutation = useUpdateRevenue()
 
   const onSubmit = async (data: RevenueFormValues) => {
+    const formData = new FormData()
+    Object.entries(data).forEach(([key, value]) => {
+      formData.append(key, String(value))
+    })
+
     try {
       if (revenue?.id) {
-        await updateMutation.mutateAsync({ id: revenue.id, data })
+        await updateMutation.mutateAsync({ id: revenue.id, data: formData })
         toast.success('Entrada atualizada com sucesso!')
       } else {
-        await createMutation.mutateAsync(data)
+        await createMutation.mutateAsync(formData)
         toast.success('Entrada criada com sucesso!')
       }
       onOpenChange(false)
-    } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_error) {
       toast.error('Erro ao salvar entrada.')
-      console.error(error)
     }
   }
 

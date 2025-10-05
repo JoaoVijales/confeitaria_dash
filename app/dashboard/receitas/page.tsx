@@ -24,28 +24,54 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { useRecipes } from '@/hooks/useRecipes'
 import { createRecipe, updateRecipe, deleteRecipe } from '@/app/actions/recipes'
-import { RecipeFormDialog } from '@/components/RecipeFormDialog'
+import { RecipeFormDialog, RecipeFormValues } from '@/components/RecipeFormDialog'
+
+type IngredientInRecipe = {
+  id: string;
+  name: string;
+  unit: string;
+  unit_cost: number;
+};
+
+type RecipeIngredient = {
+  quantity: number;
+  ingredients: IngredientInRecipe[] | null;
+};
+
+type ProductInRecipe = {
+  id: string;
+  name: string;
+  price: number;
+  cost: number;
+};
+
+type Recipe = {
+  id: string;
+  yield: number;
+  products: ProductInRecipe[] | null;
+  recipe_ingredients: RecipeIngredient[];
+};
 
 export default function ReceitasPage() {
   const { data: recipes, isLoading, error } = useRecipes()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingRecipe, setEditingRecipe] = useState<any | null>(null)
+  const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null)
 
   const handleAddRecipe = () => {
     setEditingRecipe(null)
     setIsDialogOpen(true)
   }
 
-  const handleEditRecipe = (recipe: any) => {
+  const handleEditRecipe = (recipe: Recipe) => {
     setEditingRecipe(recipe)
     setIsDialogOpen(true)
   }
 
-  const handleDeleteRecipe = async (id: number) => {
+  const handleDeleteRecipe = async (id: string) => {
     await deleteRecipe(id)
   }
 
-  const handleSaveRecipe = async (data: any) => {
+  const handleSaveRecipe = async (data: RecipeFormValues) => {
     if (editingRecipe) {
       await updateRecipe(editingRecipe.id, data);
     } else {
@@ -53,16 +79,18 @@ export default function ReceitasPage() {
     }
   }
 
-  const calculateCost = (recipe: any) => {
-    const totalCost = recipe.recipe_ingredients.reduce((acc: number, ri: any) => {
-      return acc + (ri.ingredients.unit_cost * ri.quantity)
+  const calculateCost = (recipe: Recipe) => {
+    const totalCost = recipe.recipe_ingredients.reduce((acc: number, ri: RecipeIngredient) => {
+      if (!ri.ingredients || ri.ingredients.length === 0) return acc;
+      return acc + (ri.ingredients[0].unit_cost * ri.quantity)
     }, 0)
     return totalCost / recipe.yield
   }
 
-  const calculateMargin = (recipe: any) => {
+  const calculateMargin = (recipe: Recipe) => {
     const cost = calculateCost(recipe)
-    const price = recipe.products.price
+    if (!recipe.products || recipe.products.length === 0) return 0; // Handle null or empty products
+    const price = recipe.products[0].price
     return ((price - cost) / price) * 100
   }
 
@@ -111,7 +139,7 @@ export default function ReceitasPage() {
               <TableBody>
                 {recipes.map((recipe) => (
                   <TableRow key={recipe.id} className="hover:bg-slate-50 transition-colors py-4">
-                    <TableCell className="font-medium py-4 px-4">{recipe.products.name}</TableCell>
+                    <TableCell className="font-medium py-4 px-4">{recipe.products?.[0]?.name}</TableCell>
                     <TableCell className="py-4 px-4">{recipe.recipe_ingredients.length} itens</TableCell>
                     <TableCell className="text-right font-semibold text-slate-900 py-4 px-4">
                       R$ {calculateCost(recipe).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}

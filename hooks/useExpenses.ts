@@ -1,16 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
-import { createClient } from '@/lib/supabase/client'
+import { getExpenses } from '@/app/actions/expenses'
 
-const supabase = createClient()
-
-export function useExpenses() {
+export function useExpenses(page: number, pageSize: number) {
   return useQuery({
-    queryKey: ['expenses'],
+    queryKey: ['expenses', page, pageSize],
     queryFn: async () => {
-      const { data, error } = await supabase.from('expense_entries').select('*')
-      if (error) {
-        throw error
-      }
+      const data = await getExpenses()
 
       const expensesByCategory = data.reduce((acc, entry) => {
         if (!acc[entry.category]) {
@@ -20,9 +15,16 @@ export function useExpenses() {
         return acc;
       }, {} as Record<string, number>);
 
+      // Implementação de paginação simples no cliente
+      const startIndex = (page - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      const paginatedEntries = data.slice(startIndex, endIndex);
+      const totalPages = Math.ceil(data.length / pageSize);
+
       return {
-        entries: data,
+        entries: paginatedEntries,
         expensesByCategory,
+        totalPages,
       }
     },
   })

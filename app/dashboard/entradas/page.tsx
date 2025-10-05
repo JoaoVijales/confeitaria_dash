@@ -18,30 +18,35 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { PlusCircle, Edit, Trash2, Search } from 'lucide-react'
+import { PlusCircle, Edit, Trash2, Search, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { useRevenues } from '@/hooks/useRevenues'
-import { RevenueFormDialog } from '@/components/dialogs/RevenueFormDialog' // Importar o novo dialog
-import { useDeleteRevenue } from '@/hooks/useMutations' // Importar o hook de delete
-import { RevenueFormValues } from '@/lib/validations/revenue.schema' // Importar o tipo de valores do formulário
-import { toast } from 'sonner' // Importar toast
+import { RevenueFormDialog } from '@/components/dialogs/RevenueFormDialog'
+import { useDeleteRevenue } from '@/hooks/useMutations'
+import { RevenueFormValues } from '@/lib/validations/revenue.schema'
+import { toast } from 'sonner'
+import { useQueryClient } from '@tanstack/react-query'
 
-type Revenue = RevenueFormValues & { id: string }; // Usar o tipo do schema e adicionar id
+type Revenue = RevenueFormValues & { id: string };
 
 export default function EntradasPage() {
-  const { data: revenuesData, isLoading, error } = useRevenues()
-  const revenues = revenuesData?.entries || []
-  const totalAmount = revenuesData?.totalAmount || 0
-
-  const deleteMutation = useDeleteRevenue()
-
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingRevenue, setEditingRevenue] = useState<Revenue | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
+
+  const { data: revenuesData, isLoading, error } = useRevenues(currentPage, itemsPerPage)
+  const revenues = revenuesData?.entries || []
+  const totalAmount = revenuesData?.totalAmount || 0
+  const totalPages = revenuesData?.totalPages || 1
+
+  const deleteMutation = useDeleteRevenue()
+  const queryClient = useQueryClient()
 
   const handleAddRevenue = () => {
     setEditingRevenue(null)
@@ -54,12 +59,21 @@ export default function EntradasPage() {
   }
 
   const handleDeleteRevenue = async (id: string) => {
+    // Optimistic update
+    const previousRevenues = revenuesData?.entries;
+    queryClient.setQueryData(['revenues', currentPage, itemsPerPage], (old: { entries: Revenue[], totalAmount: number, totalPages: number } | undefined) => ({
+      ...old,
+      entries: old ? old.entries.filter((r: Revenue) => r.id !== id) : [],
+    }));
+
     try {
       await deleteMutation.mutateAsync(id)
       toast.success('Entrada excluída com sucesso!')
     } catch (error) {
       toast.error('Erro ao excluir entrada.')
       console.error(error)
+      // Rollback on error
+      queryClient.setQueryData(['revenues', currentPage, itemsPerPage], previousRevenues);
     }
   }
 
@@ -192,6 +206,25 @@ export default function EntradasPage() {
         {filteredRevenues.length > 0 && (
           <CardFooter className="flex justify-between items-center py-4 px-6 border-t border-slate-200">
             <div className="text-sm text-slate-600">Total: R$ {totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm text-slate-600">Página {currentPage} de {totalPages}</span>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </CardFooter>
         )}
       </Card>

@@ -18,21 +18,22 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { PlusCircle, Edit, Trash2, Search } from 'lucide-react'
+import { PlusCircle, Edit, Trash2, Search, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { useExpenses } from '@/hooks/useExpenses'
-import { ExpenseFormDialog } from '@/components/dialogs/ExpenseFormDialog' // Importar o novo dialog
-import { useDeleteExpense } from '@/hooks/useMutations' // Importar o hook de delete
-import { ExpenseFormValues } from '@/lib/validations/expense.schema' // Importar o tipo de valores do formulário
-import { toast } // Importar toast
+import { ExpenseFormDialog } from '@/components/dialogs/ExpenseFormDialog'
+import { useDeleteExpense } from '@/hooks/useMutations'
+import { ExpenseFormValues } from '@/lib/validations/expense.schema'
+import { toast } from 'sonner'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useQueryClient } from '@tanstack/react-query'
 
 
-type Expense = ExpenseFormValues & { id: string }; // Usar o tipo do schema e adicionar id
+type Expense = ExpenseFormValues & { id: string };
 
 const categoryColors: { [key: string]: string } = {
   Ingredientes: "bg-blue-100 text-blue-800",
@@ -45,16 +46,19 @@ const categoryColors: { [key: string]: string } = {
 };
 
 export default function SaidasPage() {
-  const { data: expensesData, isLoading, error } = useExpenses()
-  const expenses = expensesData?.entries || []
-  const totalAmount = expensesData?.expensesByCategory ? Object.values(expensesData.expensesByCategory).reduce((acc, val) => acc + val, 0) : 0;
-
-  const deleteMutation = useDeleteExpense()
-
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState('Todos')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
+
+  const { data: expensesData, isLoading, error } = useExpenses(currentPage, itemsPerPage)
+  const expenses = expensesData?.entries || []
+     const totalAmount = expensesData?.expensesByCategory ? (Object.values(expensesData.expensesByCategory) as number[]).reduce((acc, val) => acc + val, 0) : 0;  const totalPages = expensesData?.totalPages || 1
+
+  const deleteMutation = useDeleteExpense()
+  const queryClient = useQueryClient()
 
   const handleAddExpense = () => {
     setEditingExpense(null)
@@ -67,12 +71,21 @@ export default function SaidasPage() {
   }
 
   const handleDeleteExpense = async (id: string) => {
+    // Optimistic update
+    const previousExpenses = expensesData?.entries;
+    queryClient.setQueryData(['expenses', currentPage, itemsPerPage], (old: { entries: Expense[], expensesByCategory: Record<string, number>, totalPages: number } | undefined) => ({
+      ...old,
+      entries: old ? old.entries.filter((e: Expense) => e.id !== id) : [],
+    }));
+
     try {
       await deleteMutation.mutateAsync(id)
       toast.success('Saída excluída com sucesso!')
     } catch (error) {
       toast.error('Erro ao excluir saída.')
       console.error(error)
+      // Rollback on error
+      queryClient.setQueryData(['expenses', currentPage, itemsPerPage], previousExpenses);
     }
   }
 
@@ -218,6 +231,25 @@ export default function SaidasPage() {
         {filteredExpenses.length > 0 && (
           <CardFooter className="flex justify-between items-center py-4 px-6 border-t border-slate-200">
             <div className="text-sm text-slate-600">Total: R$ {totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm text-slate-600">Página {currentPage} de {totalPages}</span>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </CardFooter>
         )}
       </Card>

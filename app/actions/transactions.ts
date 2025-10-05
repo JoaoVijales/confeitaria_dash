@@ -1,10 +1,13 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
 
-const supabase = createClient()
+
 
 export async function getTransactions(startDate: string, endDate: string) {
+  const cookieStore = await cookies()
+  const supabase = createClient(cookieStore)
   const { data: revenues, error: revenuesError } = await supabase
     .from('revenue_entries')
     .select('id, date, description, total')
@@ -30,6 +33,8 @@ export async function getTransactions(startDate: string, endDate: string) {
 }
 
 export async function getMonthSummary(month: number, year: number) {
+  const cookieStore = await cookies()
+  const supabase = createClient(cookieStore)
   const { data: monthlyClosure, error } = await supabase
     .from('monthly_closures')
     .select('*')

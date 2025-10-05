@@ -1,8 +1,8 @@
 'use client'
 
 import { KpiCard } from "@/components/KpiCard";
-import { DollarSign, TrendingUp, TrendingDown, Percent } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { DollarSign, TrendingUp, TrendingDown, Percent, Wallet } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, PieLabelRenderProps } from 'recharts';
 import {
   Table,
   TableBody,
@@ -18,18 +18,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+
 
 const COLORS = ['#3B82F6', '#F87171', '#34D399', '#FB923C', '#A78BFA'];
 
-const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-  const x = cx + radius * Math.cos(-midAngle * Math.PI / 180);
-  const y = cy + radius * Math.sin(-midAngle * Math.PI / 180);
+const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: PieLabelRenderProps) => {
+  const radius = (innerRadius as number) + ((outerRadius as number) - (innerRadius as number)) * 0.5;
+  const x = (cx as number) + radius * Math.cos(-(midAngle as number) * Math.PI / 180);
+  const y = (cy as number) + radius * Math.sin(-(midAngle as number) * Math.PI / 180);
 
   return (
-    <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
-      {`${(percent * 100).toFixed(0)}%`}
+    <text x={x} y={y} fill="white" textAnchor={x > (cx as number) ? 'start' : 'end'} dominantBaseline="central">
+      {`${((percent as number) * 100).toFixed(0)}%`}
     </text>
   );
 };
@@ -90,7 +90,7 @@ export default function FinanceiroPage() {
   }
 
   if (error) {
-    return <EmptyState title="Erro ao carregar dados financeiros" description="Tente novamente mais tarde." />
+    return <EmptyState title="Erro ao carregar dados financeiros" description="Tente novamente mais tarde." icon={<Wallet className="h-12 w-12" />} />
   }
 
   return (
@@ -243,8 +243,8 @@ export default function FinanceiroPage() {
                   </TableCell>
                   <TableCell>{transaction.description}</TableCell>
                   <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell>
-                  <TableCell className={`text-right font-semibold ${transaction.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    R$ {transaction.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  <TableCell className={`text-right font-semibold ${transaction.total > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    R$ {transaction.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </TableCell>
                 </TableRow>
               ))}

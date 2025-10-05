@@ -11,7 +11,7 @@ interface KpiCardProps {
   value: number | string;
   icon: React.ReactNode;
   trend?: number;
-  data?: any[];
+  data?: Array<{ value: number }>;
   prefix?: string;
   suffix?: string;
   gradient: string;

@@ -22,18 +22,23 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDi
   const updateMutation = useUpdateExpense()
 
   const onSubmit = async (data: ExpenseFormValues) => {
+    const formData = new FormData()
+    Object.entries(data).forEach(([key, value]) => {
+      formData.append(key, String(value))
+    })
+
     try {
       if (expense?.id) {
-        await updateMutation.mutateAsync({ id: expense.id, data })
+        await updateMutation.mutateAsync({ id: expense.id, data: formData })
         toast.success('Saída atualizada com sucesso!')
       } else {
-        await createMutation.mutateAsync(data)
+        await createMutation.mutateAsync(formData)
         toast.success('Saída criada com sucesso!')
       }
       onOpenChange(false)
-    } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_error) {
       toast.error('Erro ao salvar saída.')
-      console.error(error)
     }
   }
 

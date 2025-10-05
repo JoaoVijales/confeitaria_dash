@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import { getMonthSummary } from '@/app/actions/transactions' // Importar getMonthSummary
+import { getMonthSummary, getTransactions } from '@/app/actions/transactions' // Importar getMonthSummary e getTransactions
 
 const supabase = createClient()
 
@@ -60,6 +60,11 @@ export function useFinancials() {
 
       const expensesByCategoryChartData = Object.entries(expensesByCategoryData).map(([name, value]) => ({ name, value }));
 
+      // Fetch recent transactions for the table
+      const recentTransactions = await getTransactions(
+        new Date(today.getFullYear(), today.getMonth(), 1).toISOString(),
+        new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString()
+      );
 
       return {
         totalRevenue,
@@ -69,6 +74,7 @@ export function useFinancials() {
         monthlySummary,
         revenueVsExpensesData,
         expensesByCategoryChartData,
+        recentTransactions,
       }
     },
   })

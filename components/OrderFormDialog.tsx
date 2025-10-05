@@ -19,13 +19,38 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Order } from '@/lib/mock-data' // Import Order type
+
+type Order = {
+  id: number;
+  total: number;
+  status: string;
+  created_at: string;
+  customers: {
+    name: string;
+    email: string;
+  }[] | null;
+  order_items: {
+    quantity: number;
+    products: {
+      price: number;
+      recipes: {
+        yield: number;
+        recipe_ingredients: {
+          quantity: number;
+          ingredients: {
+            unit_cost: number;
+          };
+        }[];
+      }[];
+    };
+  }[];
+};
 
 interface OrderFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   order: Order | null
-  onSave: (order: Order) => void
+  onSave: (newOrder: Omit<Order, 'id' | 'customers' | 'created_at' | 'order_items'> & { id?: number }) => void
 }
 
 export function OrderFormDialog({
@@ -34,15 +59,15 @@ export function OrderFormDialog({
   order,
   onSave,
 }: OrderFormDialogProps) {
-  const [customerName, setCustomerName] = useState(order?.customerName || '')
-  const [customerEmail, setCustomerEmail] = useState(order?.customerEmail || '')
+  const [customerName, setCustomerName] = useState(order?.customers?.[0]?.name || '')
+  const [customerEmail, setCustomerEmail] = useState(order?.customers?.[0]?.email || '')
   const [total, setTotal] = useState(order?.total || 0)
   const [status, setStatus] = useState(order?.status || 'Pendente')
 
   useEffect(() => {
     if (order) {
-      setCustomerName(order.customerName)
-      setCustomerEmail(order.customerEmail)
+      setCustomerName(order.customers?.[0]?.name || '')
+      setCustomerEmail(order.customers?.[0]?.email || '')
       setTotal(order.total)
       setStatus(order.status)
     } else {
@@ -54,14 +79,10 @@ export function OrderFormDialog({
   }, [order])
 
   const handleSubmit = () => {
-    const newOrder: Order = {
-      id: order?.id || `ORD${Date.now()}`, // Simple ID generation for mock
-      customerName,
-      customerEmail,
-      orderDate: order?.orderDate || new Date().toISOString().split('T')[0],
+    const newOrder = {
+      id: order?.id,
       total: parseFloat(total.toString()),
       status,
-      items: order?.items || [], // Keep existing items or empty
     }
     onSave(newOrder)
     onOpenChange(false)
@@ -88,6 +109,7 @@ export function OrderFormDialog({
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               className="col-span-3"
+              readOnly // Customer name should not be editable directly here
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
@@ -100,6 +122,7 @@ export function OrderFormDialog({
               value={customerEmail}
               onChange={(e) => setCustomerEmail(e.target.value)}
               className="col-span-3"
+              readOnly // Customer email should not be editable directly here
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
@@ -112,6 +135,7 @@ export function OrderFormDialog({
               value={total}
               onChange={(e) => setTotal(parseFloat(e.target.value))}
               className="col-span-3"
+              readOnly // Total should be calculated, not directly editable
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">

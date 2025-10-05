@@ -6,7 +6,13 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/EmptyState'
 import { PackagePlus } from 'lucide-react'
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{ value: number; name: string }>;
+  label?: string;
+}
+
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     const value = payload[0].value;
     const formattedValue = `R$${value.toLocaleString('pt-BR')}`

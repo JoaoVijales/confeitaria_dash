@@ -28,8 +28,12 @@ export interface Customer {
   name: string;
   email: string;
   phone: string;
-  totalOrders: number;
-  totalSpent: number;
+  is_vip: boolean;
+  birthday: string | null;
+  last_purchase: string | null;
+  total_orders: number;
+  total_spent: number;
+  segment: string;
 }
 
 export const dailySales = {
@@ -181,10 +185,10 @@ export const allProducts: Product[] = [
 ];
 
 export const allCustomers: Customer[] = [
-    { id: "CUST001", name: "João Silva", email: "joao.silva@example.com", phone: "(11) 98765-4321", totalOrders: 5, totalSpent: 350.00, lastPurchase: "2025-09-28", segment: "Recorrente" },
-    { id: "CUST002", name: "Maria Oliveira", email: "maria.o@example.com", phone: "(21) 91234-5678", totalOrders: 3, totalSpent: 120.00, lastPurchase: "2025-09-27", segment: "Novo" },
-    { id: "CUST003", name: "Carlos Pereira", email: "carlos.p@example.com", phone: "(31) 99876-1234", totalOrders: 7, totalSpent: 500.00, lastPurchase: "2025-09-26", segment: "VIP" },
-    { id: "CUST004", name: "Ana Costa", email: "ana.c@example.com", phone: "(41) 91122-3344", totalOrders: 2, totalSpent: 80.00, lastPurchase: "2025-09-25", segment: "Recorrente" },
+    { id: "CUST001", name: "João Silva", email: "joao.silva@example.com", phone: "(11) 98765-4321", is_vip: true, birthday: null, total_orders: 5, total_spent: 350.00, last_purchase: "2025-09-28", segment: "Recorrente" },
+    { id: "CUST002", name: "Maria Oliveira", email: "maria.o@example.com", phone: "(21) 91234-5678", is_vip: false, birthday: null, total_orders: 3, total_spent: 120.00, last_purchase: "2025-09-27", segment: "Novo" },
+    { id: "CUST003", name: "Carlos Pereira", email: "carlos.p@example.com", phone: "(31) 99876-1234", is_vip: true, birthday: null, total_orders: 7, total_spent: 500.00, last_purchase: "2025-09-26", segment: "VIP" },
+    { id: "CUST004", name: "Ana Costa", email: "ana.c@example.com", phone: "(41) 91122-3344", is_vip: false, birthday: null, total_orders: 2, total_spent: 80.00, last_purchase: "2025-09-25", segment: "Recorrente" },
 ];
 
 export const monthlyClientGrowth = [

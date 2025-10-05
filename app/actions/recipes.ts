@@ -1,11 +1,12 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-
-const supabase = createClient()
+import { createClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
 
 export async function createRecipe(data: { product_id: string; yield: number; ingredients: { ingredient_id: string; quantity: number }[] }) {
+  const cookieStore = await cookies()
+  const supabase = createClient(cookieStore)
   const { data: recipe, error: recipeError } = await supabase.from('recipes').insert({ product_id: data.product_id, yield: data.yield }).select().single()
 
   if (recipeError) throw recipeError
@@ -23,6 +24,8 @@ export async function createRecipe(data: { product_id: string; yield: number; in
 }
 
 export async function updateRecipe(id: string, data: { product_id: string; yield: number; ingredients: { ingredient_id: string; quantity: number }[] }) {
+  const cookieStore = await cookies()
+  const supabase = createClient(cookieStore)
   const { error: recipeError } = await supabase.from('recipes').update(data).eq('id', id)
 
   if (recipeError) throw recipeError
@@ -44,6 +47,8 @@ export async function updateRecipe(id: string, data: { product_id: string; yield
 }
 
 export async function deleteRecipe(id: string) {
+  const cookieStore = await cookies()
+  const supabase = createClient(cookieStore)
   const { error } = await supabase.from('recipes').delete().eq('id', id)
   if (error) {
     throw error

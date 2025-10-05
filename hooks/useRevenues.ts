@@ -1,22 +1,24 @@
 import { useQuery } from '@tanstack/react-query'
-import { createClient } from '@/lib/supabase/client'
+import { getRevenues } from '@/app/actions/revenues'
 
-const supabase = createClient()
-
-export function useRevenues() {
+export function useRevenues(page: number, pageSize: number) {
   return useQuery({
-    queryKey: ['revenues'],
+    queryKey: ['revenues', page, pageSize],
     queryFn: async () => {
-      const { data, error } = await supabase.from('revenue_entries').select('*')
-      if (error) {
-        throw error
-      }
+      const data = await getRevenues()
 
       const totalAmount = data.reduce((acc, entry) => acc + entry.total, 0);
 
+      // Implementação de paginação simples no cliente
+      const startIndex = (page - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      const paginatedEntries = data.slice(startIndex, endIndex);
+      const totalPages = Math.ceil(data.length / pageSize);
+
       return {
-        entries: data,
+        entries: paginatedEntries,
         totalAmount,
+        totalPages,
       }
     },
   })

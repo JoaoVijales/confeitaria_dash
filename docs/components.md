@@ -51,12 +51,33 @@ Contém componentes específicos para a renderização de gráficos.
 
 Contém componentes de diálogo (modals) que são usados para formulários ou confirmações.
 
+*   **`components/dialogs/CustomerFormDialog.tsx`**
+    *   **Propósito:** Um diálogo que contém o formulário para adicionar ou editar um cliente.
+    *   **Conteúdo Principal:**
+        *   Envolve o componente `CustomerForm` (de `components/forms/CustomerForm.tsx`) dentro de um `Dialog` do Shadcn/ui.
+        *   Recebe props para controlar a abertura/fechamento do diálogo (`open`, `onOpenChange`), os dados do cliente a ser editado (`customer`), e uma função para salvar (`onSubmit`).
+    *   **Detalhes:** Atua como um wrapper para o formulário de cliente.
+
 *   **`components/dialogs/ExpenseFormDialog.tsx`**
     *   **Propósito:** Um diálogo que contém o formulário para adicionar ou editar uma despesa.
     *   **Conteúdo Principal:**
         *   Envolve o componente `ExpenseForm` (de `components/forms/ExpenseForm.tsx`) dentro de um `Dialog` do Shadcn/ui.
         *   Recebe props para controlar a abertura/fechamento do diálogo (`open`, `onOpenChange`), os dados da despesa a ser editada (`expense`), e uma função para salvar (`onSave`).
     *   **Detalhes:** Este componente atua como um wrapper para o formulário, fornecendo a estrutura do diálogo.
+
+*   **`components/dialogs/OrderFormDialog.tsx`**
+    *   **Propósito:** Um diálogo que contém o formulário para criar ou editar um pedido.
+    *   **Conteúdo Principal:**
+        *   Envolve o componente `OrderForm` (de `components/forms/OrderForm.tsx`) dentro de um `Dialog` do Shadcn/ui.
+        *   Recebe props para controlar a abertura/fechamento do diálogo (`open`, `onOpenChange`), os dados do pedido a ser editado (`order`), e uma função para salvar (`onSubmit`).
+    *   **Detalhes:** Atua como um wrapper para o formulário de pedido.
+
+*   **`components/dialogs/ProductFormDialog.tsx`**
+    *   **Propósito:** Um diálogo que contém o formulário para adicionar ou editar um produto.
+    *   **Conteúdo Principal:**
+        *   Envolve o componente `ProductForm` (de `components/forms/ProductForm.tsx`) dentro de um `Dialog` do Shadcn/ui.
+        *   Recebe props para controlar a abertura/fechamento do diálogo (`open`, `onOpenChange`), os dados do produto a ser editado (`product`), e uma função para salvar (`onSubmit`).
+    *   **Detalhes:** Atua como um wrapper para o formulário de produto.
 
 *   **`components/dialogs/RevenueFormDialog.tsx`**
     *   **Propósito:** Um diálogo que contém o formulário para adicionar ou editar uma entrada financeira (receita).
@@ -65,9 +86,25 @@ Contém componentes de diálogo (modals) que são usados para formulários ou co
         *   Recebe props para controlar a abertura/fechamento do diálogo (`open`, `onOpenChange`), os dados da receita a ser editada (`revenue`), e uma função para salvar (`onSave`).
     *   **Detalhes:** Similar ao `ExpenseFormDialog`, mas para receitas.
 
+*   **`components/dialogs/UpdateOrderStatusDialog.tsx`**
+    *   **Propósito:** Um diálogo para alterar o status de um pedido.
+    *   **Conteúdo Principal:**
+        *   Utiliza o componente `Select` do Shadcn/ui para permitir a seleção de um novo status.
+        *   Recebe props para controlar a abertura/fechamento (`open`, `onOpenChange`), a função de submissão (`onSubmit`), o estado de carregamento (`isSubmitting`) e o status atual (`currentStatus`).
+    *   **Detalhes:** Oferece uma interface simples para atualizar o status de um pedido.
+
 ### `components/forms/`
 
 Contém os componentes de formulário reais que são usados dentro dos diálogos.
+
+*   **`components/forms/CustomerForm.tsx`**
+    *   **Propósito:** O formulário para criar ou editar um cliente.
+    *   **Conteúdo Principal:**
+        *   Utiliza `react-hook-form` para gerenciamento do estado do formulário e validação.
+        *   Integra `zodResolver` com `customerSchema` (de `lib/validations/customer.schema.ts`) para validação de esquema.
+        *   Define campos de entrada para detalhes do cliente (e.g., `name`, `email`, `phone`, `is_vip`).
+        *   Recebe `onSubmit` como prop para lidar com o envio do formulário.
+    *   **Detalhes:** Este é um formulário controlado, com feedback de erro para cada campo.
 
 *   **`components/forms/ExpenseForm.tsx`**
     *   **Propósito:** O formulário para criar ou editar uma despesa.
@@ -77,6 +114,24 @@ Contém os componentes de formulário reais que são usados dentro dos diálogos
         *   Define campos de entrada para detalhes da despesa (e.g., `description`, `amount`, `category`, `date`).
         *   Recebe `onSubmit` como prop para lidar com o envio do formulário.
     *   **Detalhes:** Este é um formulário controlado, com feedback de erro para cada campo.
+
+*   **`components/forms/OrderForm.tsx`**
+    *   **Propósito:** O formulário para criar ou editar um pedido.
+    *   **Conteúdo Principal:**
+        *   Utiliza `react-hook-form` e `zodResolver` com `orderSchema` (de `lib/validations/order.schema.ts`).
+        *   Define campos para `customer_id`, `items` (com `useFieldArray` para múltiplos produtos), `total` e `status`.
+        *   Calcula o `total` dinamicamente com base nos itens.
+        *   Recebe `onSubmit` como prop.
+    *   **Detalhes:** Inclui lógica para adicionar e remover produtos do pedido, e exibe o total calculado.
+
+*   **`components/forms/ProductForm.tsx`**
+    *   **Propósito:** O formulário para criar ou editar um produto.
+    *   **Conteúdo Principal:**
+        *   Utiliza `react-hook-form` e `zodResolver` com `productSchema` (de `lib/validations/product.schema.ts`).
+        *   Define campos para `name`, `category`, `price`, `cost`, `stock`, `min_stock`.
+        *   Calcula a `Margem de Lucro` dinamicamente.
+        *   Recebe `onSubmit` como prop.
+    *   **Detalhes:** Permite gerenciar detalhes do produto, incluindo custos e níveis de estoque.
 
 *   **`components/forms/RevenueForm.tsx`**
     *   **Propósito:** O formulário para criar ou editar uma entrada financeira (receita).
@@ -137,25 +192,34 @@ Este diretório contém os componentes de UI base gerados pelo Shadcn/ui. Estes 
 
 ### Outros componentes na raiz de `components/`
 
-*   **`components/ExpenseFormDialog.tsx`** (Duplicado em `components/dialogs/` - verificar e remover duplicação se for o caso)
+**Nota:** Os componentes de diálogo listados abaixo são implementações autocontidas com sua própria lógica de formulário e validação. Eles diferem das versões em `components/dialogs/` que atuam como wrappers para os formulários em `components/forms/`. Isso pode indicar a necessidade de refatoração para padronizar o uso de formulários e diálogos.
+
+*   **`components/ExpenseFormDialog.tsx`**
     *   **Propósito:** Diálogo para formulário de despesas.
+    *   **Conteúdo Principal:** Implementa um formulário completo para adicionar/editar despesas, incluindo validação Zod e gerenciamento de estado com `react-hook-form`.
+    *   **Detalhes:** Define seu próprio `expenseSchema` e utiliza `Select` para categorias.
 
 *   **`components/IngredientFormDialog.tsx`**
     *   **Propósito:** Diálogo para formulário de ingredientes.
+    *   **Conteúdo Principal:** Implementa um formulário completo para adicionar/editar ingredientes, incluindo validação Zod e gerenciamento de estado com `react-hook-form`.
+    *   **Detalhes:** Define seu próprio `ingredientSchema` e campos para nome, unidade, custo, estoque, etc.
 
 *   **`components/OrderFormDialog.tsx`**
     *   **Propósito:** Diálogo para formulário de pedidos.
+    *   **Conteúdo Principal:** Implementa um formulário para adicionar/editar pedidos, utilizando `useState` para gerenciar o estado e `Select` para o status.
+    *   **Detalhes:** Exibe informações do cliente e total do pedido (somente leitura).
 
 *   **`components/ProductFormDialog.tsx`**
     *   **Propósito:** Diálogo para formulário de produtos.
-    *   **Conteúdo Principal:**
-        *   Utiliza `react-hook-form` e `zodResolver` com um `productSchema` definido internamente.
-        *   Define campos para `name`, `category`, `price`, `cost`, `stock`, `min_stock`.
-        *   Recebe `product` (para edição) e `onSave` como props.
-    *   **Detalhes:** Este componente foi modificado recentemente para incluir campos de `cost` e `min_stock`, e para usar `react-hook-form` para gerenciamento de estado e validação.
+    *   **Conteúdo Principal:** Implementa um formulário completo para adicionar/editar produtos, incluindo validação Zod e gerenciamento de estado com `react-hook-form`.
+    *   **Detalhes:** Define seu próprio `productSchema` e campos para nome, categoria, preço, custo, estoque e estoque mínimo.
 
 *   **`components/RecipeFormDialog.tsx`**
     *   **Propósito:** Diálogo para formulário de receitas.
+    *   **Conteúdo Principal:** Implementa um formulário completo para adicionar/editar receitas, incluindo validação Zod, gerenciamento de estado com `react-hook-form` e `useFieldArray` para ingredientes. Utiliza `useProducts` e `useIngredients` para buscar dados.
+    *   **Detalhes:** Define seu próprio `recipeSchema` e `recipeIngredientSchema`.
 
-*   **`components/RevenueFormDialog.tsx`** (Duplicado em `components/dialogs/` - verificar e remover duplicação se for o caso)
-    *   **Propósito:** Diálogo para formulário de receitas.
+*   **`components/RevenueFormDialog.tsx`**
+    *   **Propósito:** Diálogo para formulário de receitas (entradas financeiras).
+    *   **Conteúdo Principal:** Implementa um formulário completo para adicionar/editar receitas financeiras, incluindo validação Zod e gerenciamento de estado com `react-hook-form`.
+    *   **Detalhes:** Define seu próprio `revenueSchema` e campos para descrição, quantidade, valor unitário, total e data.

@@ -19,22 +19,45 @@ import { useIngredients } from '@/hooks/useIngredients'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const recipeIngredientSchema = z.object({
-  ingredient_id: z.number(),
+  ingredient_id: z.string(),
   quantity: z.number().min(0, 'Quantidade deve ser positiva'),
 })
 
 const recipeSchema = z.object({
-  product_id: z.number(),
+  product_id: z.string(),
   yield: z.number().min(1, 'Rendimento deve ser maior que zero'),
   ingredients: z.array(recipeIngredientSchema),
 })
 
-type RecipeFormValues = z.infer<typeof recipeSchema>
+export type RecipeFormValues = z.infer<typeof recipeSchema>
+
+type IngredientInRecipe = {
+  unit_cost: number;
+  id: string; // Assuming id is needed for mapping
+};
+
+type RecipeIngredient = {
+  quantity: number;
+  ingredients: IngredientInRecipe[] | null;
+};
+
+type ProductInRecipe = {
+  id: string; // Assuming product id is needed
+  name: string;
+  price: number;
+};
+
+type Recipe = {
+  id: string;
+  products: ProductInRecipe[] | null;
+  recipe_ingredients: RecipeIngredient[];
+  yield: number;
+};
 
 type RecipeFormDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  recipe: any | null // Adjust type later
+  recipe: Recipe | null
   onSave: (data: RecipeFormValues) => void
 }
 
@@ -68,10 +91,10 @@ export function RecipeFormDialog({
   useEffect(() => {
     if (recipe) {
       reset({
-        product_id: recipe.products.id,
+        product_id: recipe.products ? recipe.products[0].id : '',
         yield: recipe.yield,
-        ingredients: recipe.recipe_ingredients.map((ri: any) => ({
-          ingredient_id: ri.ingredients.id,
+        ingredients: recipe.recipe_ingredients.map((ri: RecipeIngredient) => ({
+          ingredient_id: ri.ingredients ? ri.ingredients[0].id : '',
           quantity: ri.quantity,
         })),
       })
@@ -168,7 +191,7 @@ export function RecipeFormDialog({
               variant="outline"
               size="sm"
               className="mt-2"
-              onClick={() => append({ ingredient_id: 0, quantity: 0 })}
+              onClick={() => append({ ingredient_id: '', quantity: 0 })}
             >
               Adicionar Ingrediente
             </Button>

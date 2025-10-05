@@ -1,44 +1,87 @@
 'use client'
 
-import { PieChart, Pie, ResponsiveContainer, Cell, Legend, Tooltip } from 'recharts'
+import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer, PieLabelRenderProps } from 'recharts'
 import { useTopProductsChart } from '@/hooks/useTopProductsChart'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/EmptyState'
 import { PackagePlus } from 'lucide-react'
 
-const COLORS = ['#3B82F6', '#F87171', '#34D399', '#FB923C', '#A78BFA'];
 
-const CustomTooltip = ({ active, payload }: any) => {
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{ name: string; value: number; payload: { name: string; vendidos: number; } }>;
+  label?: string;
+}
+
+// Define CustomTooltip component
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
-    const data = payload[0].payload;
     return (
-      <div className="p-3 bg-white border border-slate-200 rounded-lg shadow-lg">
-        <p className="font-semibold text-slate-800">{data.name}</p>
-        <p className="text-sm text-blue-500">{`${data.vendidos} unidades`}</p>
+      <div className="p-2 bg-white border border-gray-300 rounded shadow-md">
+        <p className="text-sm font-semibold">{`${label}`}</p>
+        <p className="text-sm">{`${payload[0].name}: ${payload[0].value}`}</p>
       </div>
     );
   }
   return null;
 };
 
-const renderLegend = (props: any) => {
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF1919'];
+
+const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: PieLabelRenderProps) => {
+  const numericInnerRadius = innerRadius as number;
+  const numericOuterRadius = outerRadius as number;
+  const numericMidAngle = midAngle as number;
+  const numericPercent = percent as number;
+
+  const radius = numericInnerRadius + (numericOuterRadius - numericInnerRadius) * 0.5;
+  const x = (cx as number) + radius * Math.cos(-numericMidAngle * Math.PI / 180);
+  const y = (cy as number) + radius * Math.sin(-numericMidAngle * Math.PI / 180);
+
+  return (
+    <text x={x} y={y} fill="white" textAnchor={x > (cx as number) ? 'start' : 'end'} dominantBaseline="central">
+      {`${(numericPercent * 100).toFixed(0)}%`}
+    </text>
+  );
+};
+
+interface VendidosPayload {
+  vendidos: number;
+}
+
+function hasVendidos(payload: unknown): payload is VendidosPayload {
+  return typeof payload === 'object' && payload !== null && 'vendidos' in payload && typeof (payload as { vendidos: number }).vendidos === 'number';
+}
+
+const renderLegend = (props: { payload?: readonly { color?: string, value?: string, payload?: unknown }[] }) => {
   const { payload } = props;
-  const total = payload.reduce((acc: any, entry: any) => acc + entry.payload.vendidos, 0);
+  const total = payload ? payload.reduce((acc, entry) => {
+    if (hasVendidos(entry.payload)) {
+      return acc + entry.payload.vendidos;
+    }
+    return acc;
+  }, 0) : 0;
 
   return (
     <ul className="flex flex-wrap justify-center mt-4 text-sm text-slate-600">
-      {payload.map((entry: any, index: number) => {
-        const percentage = ((entry.payload.vendidos / total) * 100).toFixed(0);
-        return (
-          <li key={`item-${index}`} className="flex items-center mr-4 mb-2">
-            <span className="w-3 h-3 mr-2 rounded-full" style={{ backgroundColor: entry.color }} />
-            <span>{`${entry.value} (${percentage}%)`}</span>
-          </li>
-        );
+      {payload?.map((entry, index) => {
+        if (hasVendidos(entry.payload)) {
+          const percentage = ((entry.payload.vendidos / total) * 100).toFixed(0);
+          return (
+            <li key={`item-${index}`} className="flex items-center mr-4 mb-2">
+              <span className="w-3 h-3 mr-2 rounded-full" style={{ backgroundColor: entry.color }} />
+              <span>{`${entry.value} (${percentage}%)`}</span>
+            </li>
+          );
+        }
+        return null;
       })}
     </ul>
   );
 };
+
+
 
 export function TopProductsChart() {
   const { data: chartData, isLoading, error } = useTopProductsChart();
@@ -92,15 +135,3 @@ export function TopProductsChart() {
     </ResponsiveContainer>
   )
 }
-
-const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }: any) => {
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-  const x = cx + radius * Math.cos(-midAngle * Math.PI / 180);
-  const y = cy + radius * Math.sin(-midAngle * Math.PI / 180);
-
-  return (
-    <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
-      {`${(percent * 100).toFixed(0)}%`}
-    </text>
-  );
-};

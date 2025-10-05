@@ -12,7 +12,7 @@ export function useRecipes() {
         .select(`
           id,
           yield,
-          products (id, name, price, cost), // Adicionado 'cost'
+          products (id, name, price, cost),
           recipe_ingredients (
             quantity,
             ingredients (id, name, unit, unit_cost)

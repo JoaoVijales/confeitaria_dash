@@ -8,6 +8,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from '@/components/ui/card'
 import {
   Table,
@@ -17,29 +18,48 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { PlusCircle, Edit, Trash2, Search } from 'lucide-react'
+import { PlusCircle, Edit, Trash2, Search, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { useExpenses } from '@/hooks/useExpenses'
-import { createExpense, updateExpense, deleteExpense } from '@/app/actions/expenses'
-import { ExpenseFormDialog } from '@/components/ExpenseFormDialog'
+import { ExpenseFormDialog } from '@/components/dialogs/ExpenseFormDialog'
+import { useDeleteExpense } from '@/hooks/useMutations'
+import { ExpenseFormValues } from '@/lib/validations/expense.schema'
+import { toast } from 'sonner'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useQueryClient } from '@tanstack/react-query'
 
-type Expense = {
-  id: number;
-  category: string;
-  description: string;
-  amount: number;
-  date: string;
+
+type Expense = ExpenseFormValues & { id: string };
+
+const categoryColors: { [key: string]: string } = {
+  Ingredientes: "bg-blue-100 text-blue-800",
+  Embalagens: "bg-purple-100 text-purple-800",
+  Utensílios: "bg-orange-100 text-orange-800",
+  Aluguel: "bg-red-100 text-red-800",
+  Energia: "bg-yellow-100 text-yellow-800",
+  Marketing: "bg-green-100 text-green-800",
+  Outros: "bg-gray-100 text-gray-800",
 };
 
 export default function DespesasPage() {
-  const { data: expenses, isLoading, error } = useExpenses()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [filterCategory, setFilterCategory] = useState('Todos')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
+
+  const { data: expensesData, isLoading, error } = useExpenses(currentPage, itemsPerPage)
+  const expenses = expensesData?.entries || []
+  const totalAmount = expensesData?.expensesByCategory ? (Object.values(expensesData.expensesByCategory) as number[]).reduce((acc, val) => acc + val, 0) : 0;
+  const totalPages = expensesData?.totalPages || 1
+
+  const deleteMutation = useDeleteExpense()
+  const queryClient = useQueryClient()
 
   const handleAddExpense = () => {
     setEditingExpense(null)
@@ -51,28 +71,31 @@ export default function DespesasPage() {
     setIsDialogOpen(true)
   }
 
-  const handleDeleteExpense = async (id: number) => {
-    await deleteExpense(id)
-  }
+  const handleDeleteExpense = async (id: string) => {
+    // Optimistic update
+    const previousExpenses = expensesData?.entries;
+    queryClient.setQueryData(['expenses', currentPage, itemsPerPage], (old: { entries: Expense[], expensesByCategory: Record<string, number>, totalPages: number } | undefined) => ({
+      ...old,
+      entries: old ? old.entries.filter((e: Expense) => e.id !== id) : [],
+    }));
 
-  const handleSaveExpense = async (data: Omit<Expense, 'id'>) => {
-    if (editingExpense) {
-      await updateExpense(editingExpense.id, data);
-    } else {
-      await createExpense(data);
+    try {
+      await deleteMutation.mutateAsync(id)
+      toast.success('Despesa excluída com sucesso!')
+    } catch (error) {
+      toast.error('Erro ao excluir despesa.')
+      console.error(error)
+      // Rollback on error
+      queryClient.setQueryData(['expenses', currentPage, itemsPerPage], previousExpenses);
     }
   }
 
-  const filteredExpenses = expenses?.filter(expense => {
+  const filteredExpenses = expenses.filter(expense => {
     const searchTermLower = searchTerm.toLowerCase();
-    return (
-      expense.description.toLowerCase().includes(searchTermLower) ||
-      expense.category.toLowerCase().includes(searchTermLower)
-    );
+    const matchesSearch = expense.description.toLowerCase().includes(searchTermLower);
+    const matchesCategory = filterCategory === 'Todos' || expense.category === filterCategory;
+    return matchesSearch && matchesCategory;
   }) || [];
-
-  const totalExpenses = filteredExpenses.length;
-  const totalAmount = filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
 
   if (error) {
     return <EmptyState title="Erro ao carregar despesas" description="Tente novamente mais tarde." icon={<Search className="h-12 w-12" />} />
@@ -84,7 +107,7 @@ export default function DespesasPage() {
         <div className="flex items-center gap-3">
           <h1 className="text-3xl font-semibold text-slate-800">Despesas</h1>
           <Badge className="bg-red-500 text-white rounded-full px-3 py-1 text-sm">
-            {totalExpenses} Despesas
+            {filteredExpenses.length} Despesas
           </Badge>
         </div>
         <div className="flex items-center gap-4">
@@ -98,6 +121,19 @@ export default function DespesasPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+          <Select onValueChange={setFilterCategory} value={filterCategory}>
+            <SelectTrigger className="w-[180px] rounded-lg border border-slate-200 focus:ring-red-500 focus:border-red-500 transition-all">
+              <SelectValue placeholder="Filtrar por Categoria" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.keys(categoryColors).map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              ))}
+              <SelectItem value="Todos">Todas as Categorias</SelectItem>
+            </SelectContent>
+          </Select>
           <Button onClick={handleAddExpense} className="bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all">
             <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Despesa
           </Button>
@@ -105,7 +141,7 @@ export default function DespesasPage() {
       </div>
 
       <div className="text-sm text-slate-600 mb-4">
-        {totalExpenses} despesas • R$ {totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} total
+        {filteredExpenses.length} despesas • R$ {totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} total
       </div>
 
       <Card className="rounded-xl border border-slate-200 shadow-sm">
@@ -138,11 +174,13 @@ export default function DespesasPage() {
                   <TableRow key={expense.id} className="hover:bg-slate-50 transition-colors py-4">
                     <TableCell className="py-4 px-4">{new Date(expense.date).toLocaleDateString()}</TableCell>
                     <TableCell className="py-4 px-4">
-                      <Badge className="bg-gray-100 text-gray-800">{expense.category}</Badge>
+                      <Badge className={`${categoryColors[expense.category] || "bg-gray-100 text-gray-800"}`}>
+                        {expense.category}
+                      </Badge>
                     </TableCell>
                     <TableCell className="font-medium py-4 px-4">{expense.description}</TableCell>
                     <TableCell className="text-right font-semibold text-red-600 py-4 px-4">
-                      R$ {expense.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      R$ {expense.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </TableCell>
                     <TableCell className="flex justify-center gap-2 py-4 px-4">
                       <TooltipProvider>
@@ -186,18 +224,41 @@ export default function DespesasPage() {
             <EmptyState
               title="Nenhuma despesa encontrada"
               description="Ajuste seus filtros ou adicione uma nova despesa."
-              icon={<Search className="h-12 w-12" />}
+              icon={<Search className="h-12 w-12" />} 
               action={{ label: "Adicionar Despesa", onClick: handleAddExpense }}
             />
           )}
         </CardContent>
+        {filteredExpenses.length > 0 && (
+          <CardFooter className="flex justify-between items-center py-4 px-6 border-t border-slate-200">
+            <div className="text-sm text-slate-600">Total: R$ {totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm text-slate-600">Página {currentPage} de {totalPages}</span>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardFooter>
+        )}
       </Card>
 
       <ExpenseFormDialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         expense={editingExpense}
-        onSave={handleSaveExpense}
       />
     </div>
   )

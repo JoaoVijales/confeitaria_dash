@@ -14,7 +14,9 @@ export function useCustomers() {
           name,
           email,
           phone,
+          is_vip,
           birthday,
+          segment,
           orders (created_at, total)
         `)
       if (error) {
