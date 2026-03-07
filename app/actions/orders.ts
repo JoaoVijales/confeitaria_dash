@@ -41,8 +41,9 @@ export async function createOrder(data: { customer_id: string; items: { product_
   }
 
   revalidatePath('/dashboard/pedidos')
-  // Optionally, trigger customer stats update
-  // await updateCustomerStats(data.customer_id)
+
+  const { updateCustomerStats } = await import('@/app/actions/customers')
+  await updateCustomerStats(data.customer_id)
 }
 
 export async function updateOrderStatus(id: string, status: string) {

@@ -10,6 +10,10 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(() => mockSupabase),
 }))
 
+vi.mock('@/app/actions/customers', () => ({
+  updateCustomerStats: vi.fn().mockResolvedValue(undefined),
+}))
+
 import { createOrder, updateOrderStatus, deleteOrder, getOrders, getOrderDetails } from '@/app/actions/orders'
 import { revalidatePath } from 'next/cache'
 
