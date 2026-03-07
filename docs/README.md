@@ -13,6 +13,7 @@ Bem-vindo à documentação do projeto Confeitaria App. Este documento detalha a
     *   [`components/`](#components)
     *   [`hooks/`](#hooks)
     *   [`lib/`](#lib)
+    *   [`__tests__/`](#__tests__)
     *   [Arquivos de Configuração e Outros na Raiz](#arquivos-de-configuração-e-outros-na-raiz)
 
 ---
@@ -40,80 +41,93 @@ O "Confeitaria App" é uma aplicação web desenvolvida com Next.js, React e Typ
 A seguir, uma descrição detalhada da estrutura de diretórios e arquivos do projeto:
 
 ```
-C:\mobile_aura\Confeitaria\app\
-├───.git\                     # Metadados do repositório Git
-├───.next\                    # Build artifacts do Next.js (gerado automaticamente)
-├───node_modules\             # Dependências do Node.js (gerado automaticamente)
-├───public\                   # Arquivos estáticos (imagens, etc.)
-├───app\                      # Diretório principal da aplicação Next.js (App Router)
-│   ├───actions\              # Server Actions para manipulação de dados
-│   ├───dashboard\            # Páginas e layouts específicos do dashboard
-│   │   ├───clientes\
-│   │   ├───despesas\
-│   │   ├───entradas\
-│   │   ├───financeiro\
-│   │   ├───ingredientes\
-│   │   ├───pedidos\
-│   │   ├───produtos\
-│   │   ├───receitas\
-│   │   ├───saidas\
-│   │   ├───layout.tsx
-│   │   └───page.tsx
-│   ├───favicon.ico
-│   ├───globals.css
-│   ├───layout.tsx
-│   ├───page.tsx
-│   └───providers.tsx
-├───components\               # Componentes React reutilizáveis
-│   ├───charts\               # Componentes de gráficos
-│   ├───dialogs\              # Componentes de diálogo (modals)
-│   ├───forms\                # Componentes de formulário
-│   ├───ui\                   # Componentes UI base (Shadcn/ui)
-│   ├───EmptyState.tsx
-│   ├───ExpenseFormDialog.tsx
-│   ├───IngredientFormDialog.tsx
-│   ├───KpiCard.tsx
-│   ├───OrderFormDialog.tsx
-│   ├───ProductFormDialog.tsx
-│   ├───RecipeFormDialog.tsx
-│   ├───RevenueFormDialog.tsx
-│   └───Sidebar.tsx
-├───hooks\                    # Custom React Hooks para lógica reutilizável
-│   ├───useCustomers.ts
-│   ├───useDashboardStats.ts
-│   ├───useExpenses.ts
-│   ├───useFinancials.ts
-│   ├───useIngredients.ts
-│   ├───useMutations.ts
-│   ├───useOrders.ts
-│   ├───useProducts.ts
-│   ├───useRecipes.ts
-│   ├───useRevenues.ts
-│   ├───useSalesChart.ts
-│   ├───useTopProductsChart.ts
-│   └───useTransactions.ts
-├───lib\                      # Funções utilitárias, configurações e schemas de validação
-│   ├───supabase\             # Configurações do cliente Supabase
-│   │   ├───client.ts
-│   │   └───server.ts
-│   ├───validations\          # Schemas de validação Zod
-│   │   ├───expense.schema.ts
-│   │   └───revenue.schema.ts
-│   ├───mock-data.ts
-│   └───utils.ts
-├───.gitignore                # Arquivos e diretórios ignorados pelo Git
-├───components.json           # Configuração do Shadcn/ui
-├───eslint.config.mjs         # Configuração do ESLint
-├───middleware.ts             # Middleware do Next.js
-├───next-env.d.ts             # Definições de tipo para o ambiente Next.js
-├───next.config.ts            # Configuração do Next.js
-├───package.json              # Metadados do projeto e dependências
-├───postcss.config.mjs        # Configuração do PostCSS
-├───prompt.md                 # (Este arquivo, provavelmente para instruções ou rascunhos)
-├───README.md                 # Informações gerais do projeto
-├───tailwind.config.ts        # Configuração do Tailwind CSS
-├───tsconfig.json             # Configuração do TypeScript
-└───yarn.lock                 # Bloqueio de dependências do Yarn
+confeitaria_dash/
+├── .git/                     # Metadados do repositório Git
+├── .next/                    # Build artifacts do Next.js (gerado automaticamente)
+├── node_modules/             # Dependências do Node.js (gerado automaticamente)
+├── public/                   # Arquivos estáticos (imagens, etc.)
+├── app/                      # Diretório principal da aplicação Next.js (App Router)
+│   ├── actions/              # Server Actions para manipulação de dados
+│   ├── dashboard/            # Páginas e layouts específicos do dashboard
+│   │   ├── clientes/
+│   │   ├── despesas/
+│   │   ├── entradas/
+│   │   ├── financeiro/
+│   │   ├── ingredientes/
+│   │   ├── pedidos/
+│   │   ├── produtos/
+│   │   ├── receitas/
+│   │   ├── saidas/
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── favicon.ico
+│   ├── globals.css
+│   ├── layout.tsx
+│   ├── page.tsx
+│   └── providers.tsx
+├── components/               # Componentes React reutilizáveis
+│   ├── charts/               # Componentes de gráficos
+│   ├── dialogs/              # Componentes de diálogo (modals)
+│   ├── forms/                # Componentes de formulário
+│   ├── ui/                   # Componentes UI base (Shadcn/ui)
+│   ├── EmptyState.tsx
+│   ├── ExpenseFormDialog.tsx
+│   ├── IngredientFormDialog.tsx
+│   ├── KpiCard.tsx
+│   ├── OrderFormDialog.tsx
+│   ├── ProductFormDialog.tsx
+│   ├── RecipeFormDialog.tsx
+│   ├── RevenueFormDialog.tsx
+│   └── Sidebar.tsx
+├── hooks/                    # Custom React Hooks para lógica reutilizável
+│   ├── useCustomers.ts
+│   ├── useDashboardStats.ts
+│   ├── useExpenses.ts
+│   ├── useFinancials.ts
+│   ├── useIngredients.ts
+│   ├── useMutations.ts
+│   ├── useOrders.ts
+│   ├── useProducts.ts
+│   ├── useRecipes.ts
+│   ├── useRevenues.ts
+│   ├── useSalesChart.ts
+│   ├── useTopProductsChart.ts
+│   └── useTransactions.ts
+├── lib/                      # Funções utilitárias, configurações e schemas de validação
+│   ├── supabase/             # Configurações do cliente Supabase
+│   │   ├── client.ts
+│   │   └── server.ts
+│   ├── validations/          # Schemas de validação Zod
+│   │   ├── customer.schema.ts
+│   │   ├── expense.schema.ts
+│   │   ├── order.schema.ts
+│   │   ├── product.schema.ts
+│   │   └── revenue.schema.ts
+│   ├── mock-data.ts
+│   └── utils.ts
+├── __tests__/                # Testes automatizados (Vitest)
+│   ├── mocks/
+│   │   └── supabase.ts       # Mock centralizado do cliente Supabase
+│   └── unit/
+│       ├── actions/          # Testes de server actions
+│       ├── hooks/            # Testes de custom hooks
+│       └── validations/      # Testes de schemas Zod
+├── docs/                     # Documentação detalhada do projeto
+├── .gitignore                # Arquivos e diretórios ignorados pelo Git
+├── CLAUDE.md                 # Instruções e convenções para o Claude Code
+├── components.json           # Configuração do Shadcn/ui
+├── eslint.config.mjs         # Configuração do ESLint
+├── middleware.ts             # Middleware do Next.js (auth guard)
+├── next-env.d.ts             # Definições de tipo para o ambiente Next.js
+├── next.config.ts            # Configuração do Next.js
+├── package.json              # Metadados do projeto e dependências
+├── postcss.config.mjs        # Configuração do PostCSS
+├── README.md                 # Informações gerais do projeto
+├── tailwind.config.ts        # Configuração do Tailwind CSS
+├── tsconfig.json             # Configuração do TypeScript
+├── vitest.config.ts          # Configuração do Vitest
+├── vitest.setup.ts           # Setup global dos testes
+└── yarn.lock                 # Bloqueio de dependências do Yarn
 ```
 
 ---
@@ -128,4 +142,5 @@ Para detalhes sobre cada diretório e seus arquivos, consulte os seguintes docum
 *   [`components/`](./components.md)
 *   [`hooks/`](./hooks.md)
 *   [`lib/`](./lib.md)
+*   [`__tests__/`](./tests.md)
 *   [Arquivos de Configuração e Outros na Raiz](./config-files.md)

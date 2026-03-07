@@ -32,9 +32,6 @@
     *   **Propósito:** Configuração do PostCSS.
     *   **Detalhes:** Usado para processar CSS, especialmente em conjunto com Tailwind CSS para adicionar prefixos de vendor, otimizações, etc.
 
-*   **`prompt.md`**
-    *   **Propósito:** (Este arquivo, provavelmente um rascunho, anotações ou instruções específicas para o desenvolvimento ou para o modelo de IA).
-
 *   **`README.md`**
     *   **Propósito:** Arquivo de documentação geral do projeto.
     *   **Detalhes:** Geralmente contém instruções de setup, como rodar o projeto, uma visão geral das funcionalidades e informações de contato.
@@ -46,6 +43,14 @@
 *   **`tsconfig.json`**
     *   **Propósito:** Configuração do TypeScript para o projeto.
     *   **Detalhes:** Define opções do compilador TypeScript (e.g., `target`, `module`, `jsx`), caminhos de inclusão/exclusão de arquivos, e outras configurações relacionadas ao TypeScript.
+
+*   **`vitest.config.ts`**
+    *   **Propósito:** Configuração do Vitest para o projeto.
+    *   **Detalhes:** Define o ambiente de teste (`jsdom`), o arquivo de setup (`vitest.setup.ts`), habilita globals, configura alias `@/` para a raiz do projeto e define opções de cobertura de código (provider `v8`).
+
+*   **`vitest.setup.ts`**
+    *   **Propósito:** Arquivo de inicialização global executado antes de cada arquivo de teste.
+    *   **Detalhes:** Importa `@testing-library/jest-dom` para adicionar matchers customizados ao Vitest (e.g., `toBeInTheDocument`, `toHaveTextContent`).
 
 *   **`yarn.lock`**
     *   **Propósito:** Arquivo de bloqueio de dependências gerado pelo Yarn.

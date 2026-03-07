@@ -2,10 +2,6 @@
 
 Este diretório contém custom React Hooks, que encapsulam lógica de estado e/ou efeitos colaterais para serem reutilizados em diferentes componentes. Muitos desses hooks utilizam `@tanstack/react-query` para gerenciamento de dados assíncronos (fetching, caching, updating).
 
-## `hooks/`
-
-Este diretório contém custom React Hooks, que encapsulam lógica de estado e/ou efeitos colaterais para serem reutilizados em diferentes componentes. Muitos desses hooks utilizam `@tanstack/react-query` para gerenciamento de dados assíncronos (fetching, caching, updating).
-
 *   **`hooks/useCustomers.ts`**
     *   **Propósito:** Hook personalizado para buscar e gerenciar dados de clientes.
     *   **Conteúdo Principal:**

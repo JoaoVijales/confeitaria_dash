@@ -96,6 +96,15 @@ lib/
   utils.ts
   mock-data.ts
 middleware.ts             # Protecao de rotas /dashboard/*
+__tests__/
+  mocks/
+    supabase.ts           # Mock do cliente Supabase
+  unit/
+    actions/              # Testes de server actions
+    hooks/                # Testes de custom hooks
+    validations/          # Testes de schemas Zod
+vitest.config.ts          # Configuracao do Vitest (jsdom + alias @/)
+vitest.setup.ts           # Setup global (@testing-library/jest-dom)
 ```
 
 ## Entidades do Dominio
@@ -137,6 +146,7 @@ Middleware em `middleware.ts` protege todas as rotas `/dashboard/*`. Usa Supabas
 - [x] Formulários com dialogs + react-hook-form
 - [x] KPI cards e charts básicos (SalesChart, TopProductsChart)
 - [x] Sidebar navegação com logout
+- [x] Infraestrutura de testes (Vitest + Testing Library) — 22 arquivos, 186 testes passando
 
 ### ⚠️ Parcial
 - [ ] Histórico de compras de ingredientes (schema existe, CRUD base funciona)
@@ -156,19 +166,22 @@ Middleware em `middleware.ts` protege todas as rotas `/dashboard/*`. Usa Supabas
 
 ## Problemas Conhecidos
 
-### Build & Lint (Task #2 - 2026-03-06)
+### Build & Lint (2026-03-07)
 **Build**: ❌ FALHA
 - Causa: Falta `.env.local` com variáveis Supabase
 - Solução: Criar .env.local conforme seção "Variáveis de Ambiente Necessárias"
 
-**Lint**: ❌ 5 ERROS + 1 WARNING
+**Lint**: ❌ 25 ERROS + 31 WARNINGS (principais issues conhecidos)
 | Arquivo | Tipo | Detalhes |
 |---------|------|----------|
 | `hooks/useDashboardStats.ts` | `no-explicit-any` | 4 instâncias (linhas ~31, 36, 52, 60) — tipagem complexa |
-| `tailwind.config.ts` | `no-require-imports` | require() em config — esperado |
-| `hooks/useTransactions.ts` | `no-unused-vars` | 1 warning — verificar se supabase é usado |
+| `tailwind.config.ts` | `no-require-imports` | require() em config — esperado para Tailwind v4 |
+| `hooks/useTransactions.ts` | `no-unused-vars` | variável supabase importada mas não usada |
+| `app/actions/revenues.ts` | `no-unused-vars` | unit_price e total desestruturados mas não usados |
 
 **TypeScript**: ✅ SEM ERROS
+
+**Testes**: ✅ 22 arquivos, 186 testes passando
 
 ### Peer Dependencies
 - `recharts@3.2.1` pode requerer `react-is` explícito
@@ -260,3 +273,117 @@ export function useCreateProduct() {
 - **User feedback**: Toast via `sonner` (toast.success / toast.error)
 - **Dialog patterns**: Estado local `[open, setOpen]` com `DialogTrigger`
 - **Tipo de dados**: FormData para Server Actions, objetos tipados para hooks
+
+## Git & CI/CD
+
+### Fluxo de Branches
+
+- `main` — branch principal, sempre estável e deployável
+- `feat/<descricao>` — novas funcionalidades (ex: `feat/alertas-estoque`)
+- `fix/<descricao>` — correções de bug (ex: `fix/lint-dashboard-stats`)
+- `chore/<descricao>` — tarefas de manutenção, configs, deps
+- `docs/<descricao>` — apenas documentação
+
+Nunca commitar direto na `main` para features novas. Sempre abrir PR.
+
+### Commits (Conventional Commits)
+
+Formato: `<tipo>(<escopo opcional>): <mensagem no imperativo em português>`
+
+| Tipo | Quando usar |
+|------|-------------|
+| `feat` | Nova funcionalidade |
+| `fix` | Correção de bug |
+| `docs` | Apenas documentação |
+| `test` | Adicionar ou corrigir testes |
+| `refactor` | Refatoração sem mudar comportamento |
+| `chore` | Deps, configs, build |
+| `style` | Formatação, sem mudança de lógica |
+
+Exemplos:
+```
+feat(pedidos): adiciona filtro por status na listagem
+fix(lint): substitui any por tipos específicos em useDashboardStats
+test(products): adiciona testes unitários para server actions
+docs: atualiza CLAUDE.md com práticas de git
+```
+
+### Regras de Git
+
+1. **Sempre `yarn lint` e `yarn test` antes de commitar**
+2. **Nunca commitar `.env.local` ou arquivos com credenciais**
+3. **Commits atômicos** — um commit por mudança lógica, não acumular tudo
+4. **Mensagens descritivas** — o "porquê", não só o "o quê"
+5. **Nunca usar `--force` na `main`**
+6. **Nunca usar `--no-verify`** para pular hooks
+7. **Rebase interativo** para limpar histórico antes de abrir PR
+
+### CI/CD (a implementar)
+
+Pipeline recomendado (GitHub Actions):
+
+```yaml
+# .github/workflows/ci.yml
+on: [push, pull_request]
+jobs:
+  quality:
+    steps:
+      - yarn install
+      - yarn lint          # ESLint
+      - yarn tsc --noEmit  # TypeScript check
+      - yarn test          # Testes automatizados
+      - yarn build         # Build de produção
+```
+
+**Regras de proteção da main:**
+- PR obrigatório (sem push direto)
+- CI deve passar antes do merge
+- Code review de pelo menos 1 pessoa
+
+## TDD — Test-Driven Development
+
+A partir de agora, todo código novo deve seguir o ciclo TDD:
+
+1. **Red** — escreva o teste antes, veja falhar
+2. **Green** — implemente o mínimo para passar
+3. **Refactor** — limpe sem quebrar os testes
+
+### Stack de Testes
+
+- **Vitest** — test runner (compatível com Next.js/Vite)
+- **@testing-library/react** — testes de componentes
+- **@testing-library/user-event** — simulação de interações
+- **msw** (Mock Service Worker) — mock de APIs/Supabase
+- **@vitejs/plugin-react** — suporte JSX nos testes
+
+### Estrutura de Testes
+
+```
+__tests__/
+  mocks/
+    supabase.ts       # Mock centralizado do cliente Supabase
+  unit/
+    actions/          # Testes de server actions (mock Supabase) — 6 arquivos
+    hooks/            # Testes de custom hooks (mock queries) — 9 arquivos
+    validations/      # Testes de schemas Zod — 5 arquivos
+  integration/        # (futuro) componentes e forms com DOM
+  e2e/                # (futuro) Playwright para fluxos críticos
+```
+
+### Comandos de Teste
+
+```bash
+yarn test           # Rodar todos os testes
+yarn test --watch   # Modo watch (TDD)
+yarn test --coverage # Relatório de cobertura
+```
+
+### O que testar em cada camada
+
+| Camada | Foco dos testes |
+|--------|----------------|
+| `lib/validations/` | Schemas Zod: campos obrigatórios, tipos, edge cases |
+| `app/actions/` | Retorno correto, erros Supabase, validação rejeitada |
+| `hooks/` | Estado loading/success/error, invalidação de cache |
+| `components/forms/` | Renderização, submit, mensagens de erro |
+| `components/dialogs/` | Abertura/fechamento, integração com forms |

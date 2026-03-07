@@ -2,10 +2,6 @@
 
 Este diretório contém funções utilitárias, configurações e schemas de validação que são usados em toda a aplicação.
 
-## `lib/`
-
-Este diretório contém funções utilitárias, configurações e schemas de validação que são usados em toda a aplicação.
-
 *   **`lib/mock-data.ts`**
     *   **Propósito:** Contém dados de exemplo (mock data) que podem ser usados para desenvolvimento e testes, antes que a integração completa com o backend esteja pronta ou para simular dados.
     *   **Conteúdo Principal:**
@@ -47,6 +43,13 @@ Contém os schemas de validação definidos com a biblioteca Zod. Esses schemas 
         *   Exporta um objeto Zod (`customerSchema`) com os campos: `name` (string, mínimo 3 caracteres), `email` (string, formato de email válido), `phone` (string, mínimo 10 caracteres) e `is_vip` (boolean).
         *   Exporta o tipo `CustomerFormValues` inferido do schema.
     *   **Detalhes:** Usado em conjunto com `react-hook-form` e `zodResolver` para validação de formulários no frontend e pode ser reutilizado para validação de dados em Server Actions.
+
+*   **`lib/validations/customer.schema.ts`**
+    *   **Propósito:** Define o schema de validação para dados de clientes.
+    *   **Conteúdo Principal:**
+        *   Exporta um objeto Zod (`customerSchema`) com os campos: `name` (string, mínimo 3 caracteres), `email` (string, formato de email válido), `phone` (string, mínimo 10 caracteres) e `is_vip` (boolean).
+        *   Exporta o tipo `CustomerFormValues` inferido do schema.
+    *   **Detalhes:** Usado em conjunto com `react-hook-form` e `zodResolver` para validação de formulários e Server Actions.
 
 *   **`lib/validations/expense.schema.ts`**
     *   **Propósito:** Define o schema de validação para dados de despesas.
