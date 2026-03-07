@@ -20,6 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useOrders } from "@/hooks/useOrders";
+import { StockAlertBanner } from "@/components/StockAlertBanner";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF1919'];
@@ -42,6 +43,8 @@ export default function DashboardPage() {
       <h1 className="text-3xl font-semibold tracking-tight text-slate-800">
         Visão Geral
       </h1>
+
+      <StockAlertBanner />
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
         {isLoadingStats ? (

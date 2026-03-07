@@ -52,12 +52,12 @@ components/
   charts/           # SalesChart, TopProductsChart
   dialogs/          # Modais CRUD
   forms/            # react-hook-form + Zod
-  Sidebar.tsx / KpiCard.tsx / EmptyState.tsx
+  Sidebar.tsx / KpiCard.tsx / EmptyState.tsx / StockAlertBanner.tsx
 hooks/              # useQuery + mutations por entidade
 lib/
   supabase/client.ts / server.ts
   validations/      # Schemas Zod (*.schema.ts)
-  utils/            # Utilitários puros (recipe-cost.ts, ...)
+  utils/            # Utilitários puros (recipe-cost.ts, stock-alert.ts)
 middleware.ts       # Protege /dashboard/*
 __tests__/
   mocks/supabase.ts
@@ -131,13 +131,15 @@ Mock centralizado do Supabase em `__tests__/mocks/supabase.ts` com padrão `vi.h
 - CRUD completo: 8 entidades + histórico de compras de ingredientes
 - Order-customer relationships
 - Engine de cálculo de custo de receita (`lib/utils/recipe-cost.ts`)
+- Alertas de estoque baixo (`lib/utils/stock-alert.ts` + `hooks/useStockAlerts.ts` + `components/StockAlertBanner.tsx`)
+  - Ingredientes: threshold via quantidade usada em receitas; fallback para `min_stock`
+  - Produtos: threshold via `min_stock`
 - Autenticação SSR + middleware
 - 10 páginas dashboard
 - KPI cards + charts (SalesChart, TopProductsChart)
 - Infraestrutura de testes Vitest — TDD estabelecido
 
 ### ❌ TODO (Fase 2)
-- Alertas de estoque baixo crítico
 - Analytics avançada (trends, previsões, sazonalidade)
 - Sistema de metas e objetivos
 - Notas em pedidos/produtos/despesas/clientes
