@@ -46,10 +46,38 @@ export async function deleteCustomer(id: string) {
   revalidatePath('/dashboard/clientes')
 }
 
-// This function would likely be called after an order is created/updated
 export async function updateCustomerStats(customerId: string) {
-  // Logic to calculate total_orders and total_spent would go here.
-  // This is a placeholder for now.
-  console.log(`Updating stats for customer ${customerId}`)
-  // Example: Fetch all orders for the customer, calculate totals, and update the customer record.
+  const cookieStore = await cookies()
+  const supabase = createClient(cookieStore)
+
+  const { data: orders, error: ordersError } = await supabase
+    .from('orders')
+    .select('total')
+    .eq('customer_id', customerId)
+
+  if (ordersError) throw ordersError
+
+  const total_orders = orders.length
+  const total_spent = orders.reduce((acc, order) => acc + order.total, 0)
+
+  const { error } = await supabase
+    .from('customers')
+    .update({ total_orders, total_spent })
+    .eq('id', customerId)
+
+  if (error) throw error
+}
+
+export async function getCustomerOrders(customerId: string) {
+  const cookieStore = await cookies()
+  const supabase = createClient(cookieStore)
+
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*, order_items(*, products(name))')
+    .eq('customer_id', customerId)
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  return data
 }
