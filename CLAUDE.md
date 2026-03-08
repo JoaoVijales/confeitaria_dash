@@ -1,389 +1,196 @@
 # Confeitaria Dashboard — CLAUDE.md
 
-## Contexto do Projeto
+## Contexto
 
-Dashboard de gestão para uma confeitaria artesanal. Permite controlar pedidos, clientes, produtos, receitas, ingredientes, despesas e fluxo financeiro. Aplicação web full-stack usando Next.js App Router com Supabase como backend/banco de dados.
+Dashboard de gestão para confeitaria artesanal: pedidos, clientes, produtos, receitas, ingredientes, despesas e fluxo financeiro. Next.js App Router + Supabase.
 
-## Stack Tecnológica
+## Stack
 
-- **Framework**: Next.js 15.5.4 (App Router)
-- **Runtime**: React 19
-- **Backend/DB**: Supabase (PostgreSQL + Auth)
-- **Autenticação**: Supabase SSR Auth via middleware
-- **State**: TanStack Query v5 (React Query)
-- **Forms**: react-hook-form + Zod v4
-- **UI**: shadcn/ui (Radix UI + Tailwind CSS v4)
-- **Charts**: Recharts v3
-- **Toast**: sonner
-- **Icons**: lucide-react
-- **Gerenciador de pacotes**: yarn
+| Camada | Tecnologia |
+|--------|-----------|
+| Framework | Next.js 15.5.4 (App Router) + React 19 |
+| Backend/DB | Supabase (PostgreSQL + Auth SSR) |
+| State | TanStack Query v5 |
+| Forms | react-hook-form + Zod v4 |
+| UI | shadcn/ui (Radix UI + Tailwind CSS v4) |
+| Charts | Recharts v3 |
+| Toast | sonner |
+| Pacotes | yarn |
 
 ## Comandos
 
 ```bash
-yarn dev      # dev server (sem turbopack — NEXT_DISABLE_TURBOPACK=1)
-yarn build    # build de produção (com turbopack)
+yarn dev      # dev server (NEXT_DISABLE_TURBOPACK=1)
+yarn build    # build de produção
 yarn lint     # ESLint
-yarn start    # produção
+yarn test     # Vitest (todos os testes)
+yarn test --watch    # modo watch (TDD)
+yarn test --coverage # cobertura
 ```
 
-## Variaveis de Ambiente Necessarias
+## Variáveis de Ambiente
 
-Criar `.env.local` na raiz com:
-
+Criar `.env.local` na raiz:
 ```
-NEXT_PUBLIC_SUPABASE_URL=<url-do-projeto>
+NEXT_PUBLIC_SUPABASE_URL=<url>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
 ```
 
-Sem essas variáveis o build e o runtime falham com erro do Supabase client.
-
-## Estrutura de Diretórios
+## Estrutura
 
 ```
 app/
-  layout.tsx              # Root layout — React Query Provider
-  page.tsx                # Landing / login page
+  layout.tsx / page.tsx
   dashboard/
-    page.tsx              # Dashboard principal (KPIs, charts, pedidos recentes)
-    clientes/page.tsx     # Gestao de clientes
-    pedidos/page.tsx      # Gestao de pedidos
-    produtos/page.tsx     # Gestao de produtos + estoque
-    ingredientes/page.tsx # Gestao de ingredientes + estoque
-    receitas/page.tsx     # Receitas (ficha tecnica) + custo
-    despesas/page.tsx     # Despesas categorisadas
-    entradas/page.tsx     # Receitas financeiras
-    saidas/page.tsx       # Saidas / transacoes
-    financeiro/page.tsx   # Resumo financeiro mensal
-  actions/                # Server Actions (FormData -> Zod -> Supabase)
-    customers.ts
-    products.ts
-    orders.ts
-    expenses.ts
-    revenues.ts
-    recipes.ts
-    ingredients.ts
-    transactions.ts
+    page.tsx + clientes/ pedidos/ produtos/ ingredientes/
+    receitas/ despesas/ entradas/ saidas/ financeiro/
+  actions/          # Server Actions (customers, products, orders,
+                    #   expenses, revenues, recipes, ingredients,
+                    #   transactions, ingredient-purchases)
 components/
-  ui/                     # shadcn/ui primitives
-  charts/                 # SalesChart, TopProductsChart (Recharts)
-  dialogs/                # Modais CRUD (Product, Order, Customer, etc.)
-  forms/                  # Formularios (react-hook-form + Zod)
-  Sidebar.tsx             # Navegacao lateral
-  KpiCard.tsx             # Card de KPI reutilizavel
-  EmptyState.tsx          # Estado vazio reutilizavel
-  RecipeFormDialog.tsx    # Dialog complexo de receitas
-  IngredientFormDialog.tsx
-hooks/
-  useCustomers.ts         # useQuery + mutations de clientes
-  useProducts.ts
-  useOrders.ts
-  useIngredients.ts
-  useRecipes.ts
-  useExpenses.ts
-  useRevenues.ts
-  useTransactions.ts
-  useDashboardStats.ts    # Calculo de KPIs
-  useSalesChart.ts
-  useTopProductsChart.ts
-  useFinancials.ts
-  useMutations.ts         # Mutations reutilizaveis
+  ui/               # shadcn primitives
+  charts/           # SalesChart, TopProductsChart
+  dialogs/          # Modais CRUD
+  forms/            # react-hook-form + Zod
+  Sidebar.tsx / KpiCard.tsx / EmptyState.tsx / StockAlertBanner.tsx
+hooks/              # useQuery + mutations por entidade
 lib/
-  supabase/
-    client.ts             # Supabase browser client
-    server.ts             # Supabase SSR client
-  validations/            # Schemas Zod por entidade
-  utils.ts
-  mock-data.ts
-middleware.ts             # Protecao de rotas /dashboard/*
+  supabase/client.ts / server.ts
+  validations/      # Schemas Zod (*.schema.ts)
+  utils/            # Utilitários puros (recipe-cost.ts, stock-alert.ts)
+middleware.ts       # Protege /dashboard/*
 __tests__/
-  mocks/
-    supabase.ts           # Mock do cliente Supabase
-  unit/
-    actions/              # Testes de server actions
-    hooks/                # Testes de custom hooks
-    validations/          # Testes de schemas Zod
-vitest.config.ts          # Configuracao do Vitest (jsdom + alias @/)
-vitest.setup.ts           # Setup global (@testing-library/jest-dom)
+  mocks/supabase.ts
+  unit/actions/ hooks/ utils/ validations/
+vitest.config.ts / vitest.setup.ts
 ```
 
-## Entidades do Dominio
+## Entidades
 
 | Entidade | Campos principais |
 |----------|------------------|
 | Clientes | nome, email, phone, is_vip |
-| Pedidos | customer_id, items, total, status (Pendente/Processando/Finalizado/Cancelado) |
+| Pedidos | customer_id, items, total, status |
 | Produtos | nome, categoria, preco, custo, estoque, min_stock |
 | Ingredientes | nome, unidade, unit_cost, current_stock, min_stock, supplier |
-| Receitas (ficha) | product_id, yield, prep_time, ingredientes + quantidades |
+| Compras de Ingredientes | ingredient_id, quantity, unit_cost, total_cost, date |
+| Receitas | product_id, yield, prep_time, ingredientes + quantidades |
 | Despesas | descricao, montante, categoria, data |
 | Receitas Financeiras | descricao, quantidade, unit_price, total, data |
-| Transacoes | view combinada de entradas e saidas |
 
-## Padroes Arquiteturais
+## Padrões Arquiteturais
 
-### Data Flow
-- **Leitura**: hook useQuery (client) -> Supabase SELECT -> cache React Query
-- **Mutacao**: Form submit -> Server Action (FormData) -> validacao Zod -> Supabase INSERT/UPDATE/DELETE -> revalidatePath() -> invalidateQueries()
+**Data flow leitura:** `useQuery` (client) → Supabase SELECT → cache React Query
 
-### Paginas do Dashboard
-Todas as paginas de dashboard usam `'use client'`. Dados sao buscados via hooks customizados com React Query. Mutacoes passam por Server Actions para manter segurança server-side.
+**Data flow mutação:** Form → Server Action (FormData) → Zod → Supabase INSERT/UPDATE/DELETE → `revalidatePath()` → `invalidateQueries()`
 
-### Formularios
-react-hook-form + zodResolver. Schemas de validacao em `lib/validations/`. Formularios ficam em `components/forms/` e sao usados dentro de `components/dialogs/`.
+**Páginas dashboard:** todas `'use client'`, dados via hooks, mutações via Server Actions.
 
-### Autenticação
-Middleware em `middleware.ts` protege todas as rotas `/dashboard/*`. Usa Supabase SSR com cookies. Redireciona nao autenticados para `/`.
+**Autenticação:** `middleware.ts` protege `/dashboard/*`, Supabase SSR com cookies.
 
-## Status de Implementacao
+### Regras Obrigatórias
 
-### ✅ Completo (Fase 1)
-- [x] CRUD para 8 entidades (customers, products, orders, recipes, ingredients, expenses, revenues, transactions)
-- [x] Autenticação Supabase SSR com middleware
-- [x] 10 páginas dashboard funcionales
-- [x] Validação Zod em todas entidades
-- [x] React Query v5 integration
-- [x] Formulários com dialogs + react-hook-form
-- [x] KPI cards e charts básicos (SalesChart, TopProductsChart)
-- [x] Sidebar navegação com logout
-- [x] Infraestrutura de testes (Vitest + Testing Library) — 22 arquivos, 186 testes passando
+1. `cookies()` só dentro de async function
+2. Zod antes de qualquer INSERT/UPDATE
+3. `revalidatePath('/dashboard')` após toda mutação server-side
+4. `invalidateQueries()` no `onSuccess` dos hooks
+5. Estado de dialog local: `[open, setOpen] = useState(false)`
+6. Toast via `sonner` para feedback ao usuário
 
-### ⚠️ Parcial
-- [ ] Histórico de compras de ingredientes (schema existe, CRUD base funciona)
-- [ ] Triggers SQL de cálculo automático de custo (schema definido em prompt_receitas.md)
-- [ ] Order-customer relationships (básico implementado)
+### Nomenclatura
 
-### ❌ TODO (Fase 2 — ver prompt.md e prompt_receitas.md)
-- [ ] Alertas de estoque baixo crítico
-- [ ] Analytics avancada (trends, previsoes, sazonalidade)
-- [ ] Sistema de metas e objetivos
-- [ ] Sistema de alertas inteligentes
-- [ ] Notas em pedidos/produtos/despesas/clientes
-- [ ] Sistema de tags (produtos, clientes, despesas)
-- [ ] Calendario de entregas
-- [ ] Dashboard executivo
-- [ ] Comparações inteligentes (mês anterior)
+- Hooks: `useEntity` (useProducts, useCustomers)
+- Actions: `verboEntidade` (createProduct, updateOrder)
+- Arquivos: camelCase (hooks/utils), PascalCase (componentes)
+- Schemas: `lib/validations/*.schema.ts`
+- Utils puros: `lib/utils/*.ts`
+
+## TDD — Fluxo de Trabalho
+
+Todo código novo segue ciclo **Red → Green → Refactor**:
+
+1. Escreva os testes primeiro (falham)
+2. Implemente o mínimo para passar
+3. Refatore sem quebrar
+
+### Estrutura de testes
+
+```
+__tests__/unit/
+  validations/  # Schemas Zod: campos, tipos, edge cases
+  utils/        # Funções puras: cálculos, transformações
+  actions/      # Server actions: retorno, erros Supabase, validação
+  hooks/        # Estado loading/success/error, invalidação de cache
+```
+
+Mock centralizado do Supabase em `__tests__/mocks/supabase.ts` com padrão `vi.hoisted`.
+
+## Status de Implementação
+
+### ✅ Completo
+- CRUD completo: 8 entidades + histórico de compras de ingredientes
+- Order-customer relationships
+- Engine de cálculo de custo de receita (`lib/utils/recipe-cost.ts`)
+- Alertas de estoque baixo (`lib/utils/stock-alert.ts` + `hooks/useStockAlerts.ts` + `components/StockAlertBanner.tsx`)
+  - Ingredientes: threshold via quantidade usada em receitas; fallback para `min_stock`
+  - Produtos: threshold via `min_stock`
+- Autenticação SSR + middleware
+- 10 páginas dashboard
+- KPI cards + charts (SalesChart, TopProductsChart)
+- Infraestrutura de testes Vitest — TDD estabelecido
+
+### ❌ TODO (Fase 2)
+- Analytics avançada (trends, previsões, sazonalidade)
+- Sistema de metas e objetivos
+- Notas em pedidos/produtos/despesas/clientes
+- Tags (produtos, clientes, despesas)
+- Calendário de entregas
+- Dashboard executivo / comparações com mês anterior
 
 ## Problemas Conhecidos
 
-### Build & Lint (2026-03-07)
-**Build**: ❌ FALHA
-- Causa: Falta `.env.local` com variáveis Supabase
-- Solução: Criar .env.local conforme seção "Variáveis de Ambiente Necessárias"
+| Problema | Detalhe |
+|----------|---------|
+| Build falha | Falta `.env.local` — criar conforme seção acima |
+| Lint: `no-explicit-any` | `hooks/useDashboardStats.ts` linhas ~31,36,52,60 |
+| Lint: `no-require-imports` | `tailwind.config.ts` — esperado para Tailwind v4 |
+| Lint: `no-unused-vars` | `hooks/useTransactions.ts`, `app/actions/revenues.ts` |
+| TypeScript | ✅ sem erros |
 
-**Lint**: ❌ 25 ERROS + 31 WARNINGS (principais issues conhecidos)
-| Arquivo | Tipo | Detalhes |
-|---------|------|----------|
-| `hooks/useDashboardStats.ts` | `no-explicit-any` | 4 instâncias (linhas ~31, 36, 52, 60) — tipagem complexa |
-| `tailwind.config.ts` | `no-require-imports` | require() em config — esperado para Tailwind v4 |
-| `hooks/useTransactions.ts` | `no-unused-vars` | variável supabase importada mas não usada |
-| `app/actions/revenues.ts` | `no-unused-vars` | unit_price e total desestruturados mas não usados |
+## Git & Versionamento
 
-**TypeScript**: ✅ SEM ERROS
+### Branches
 
-**Testes**: ✅ 22 arquivos, 186 testes passando
+- `main` — sempre estável, nunca commitar direto para features
+- `feat/<desc>` — novas funcionalidades
+- `fix/<desc>` — correções
+- `chore/<desc>` — manutenção, deps, configs
+- `docs/<desc>` — documentação
+- `claude/<desc>-<id>` — branches de sessões Claude Code (automático)
 
-### Peer Dependencies
-- `recharts@3.2.1` pode requerer `react-is` explícito
+### Commits (Conventional Commits em português)
 
-## Padrões & Convencoes
-
-### Nomenclatura
-- Arquivos: camelCase para hooks/utils, PascalCase para componentes
-- Server Actions: verbo + entidade (createProduct, updateOrder, deleteCustomer)
-- Hooks: useEntity pattern (useProducts, useCustomers)
-
-### Data Flow Patterns
-
-**1. Leitura (READ)**
-```typescript
-// Hook
-const { data, isLoading } = useProducts()
-
-// Implementação interna
-export function useProducts() {
-  return useQuery({
-    queryKey: ['products'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('products').select('*')
-      if (error) throw error
-      return data
-    }
-  })
-}
+```
+feat(pedidos): adiciona filtro por status na listagem
+fix(lint): substitui any por tipos em useDashboardStats
+test(receitas): adiciona testes TDD para cálculo de custo
+docs: compacta CLAUDE.md com fluxo atual
 ```
 
-**2. Criação (CREATE)**
-```typescript
-// Componente
-const mutation = useCreateProduct()
-await mutation.mutateAsync(formData)
+Tipos: `feat` | `fix` | `docs` | `test` | `refactor` | `chore` | `style`
 
-// Server Action
-export async function createProduct(formData: FormData) {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-  const parsed = productSchema.parse(Object.fromEntries(formData.entries()))
-  const { error } = await supabase.from('products').insert(parsed)
-  revalidatePath('/dashboard/produtos')
-}
+### Regras
 
-// Hook (mutation)
-export function useCreateProduct() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (data: FormData) => createProduct(data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['products'] })
-  })
-}
-```
-
-### Arquivos Críticos
-- **Autenticação**: `middleware.ts` (protege /dashboard/*)
-- **Validações**: `lib/validations/*.schema.ts`
-- **Server Actions**: `app/actions/*.ts`
-- **Custom Hooks**: `hooks/*.ts`
-- **Componentes**: `components/` (UI + Forms + Dialogs)
-
-### Regras Importantes
-
-1. **Nunca use `cookies()` fora de async function** → erro "outside request scope"
-2. **Sempre valide com Zod antes de INSERT/UPDATE** → segurança
-3. **Chame `revalidatePath()` após toda mutação** → cache invalidation
-4. **Use `queryClient.invalidateQueries()` em `onSuccess`** → UI sync
-5. **Dialog state é local** → `[open, setOpen] = useState(false)`
-6. **Forms devem ser reusáveis** → aceitar `onSubmit` como prop
-7. **Toast notifications para user feedback** → `toast.success/error/loading`
+1. `yarn lint` e `yarn test` antes de commitar
+2. Nunca commitar `.env.local`
+3. Commits atômicos — uma mudança lógica por commit
+4. Nunca `--force` na `main`, nunca `--no-verify`
 
 ## Troubleshooting
 
-| Erro | Causa | Solução |
-|------|-------|---------|
-| "cookies was called outside request scope" | `cookies()` fora de async | Mover inicialização para dentro da function |
-| "NEXT_PUBLIC_SUPABASE_URL not found" | .env.local falta | Criar .env.local com credenciais Supabase |
-| Build falha silenciosamente | TypeScript errors | Rodar `yarn tsc --noEmit` para ver detalhes |
-| Dados não atualizam | Query cache não invalidado | Adicionar `invalidateQueries()` no `onSuccess` |
-| Linting errors | ESLint rules | Rodar `yarn lint` e corrigir conforme erros |
-
-## Convencoes Estabelecidas
-
-- **Pasta server actions**: `app/actions/` — nunca colocar lógica de negócio em componentes
-- **Validação obrigatória**: Zod em TODAS server actions ANTES de chamar Supabase
-- **Cache invalidation**: `revalidatePath('/dashboard')` após TODA mutação server-side
-- **User feedback**: Toast via `sonner` (toast.success / toast.error)
-- **Dialog patterns**: Estado local `[open, setOpen]` com `DialogTrigger`
-- **Tipo de dados**: FormData para Server Actions, objetos tipados para hooks
-
-## Git & CI/CD
-
-### Fluxo de Branches
-
-- `main` — branch principal, sempre estável e deployável
-- `feat/<descricao>` — novas funcionalidades (ex: `feat/alertas-estoque`)
-- `fix/<descricao>` — correções de bug (ex: `fix/lint-dashboard-stats`)
-- `chore/<descricao>` — tarefas de manutenção, configs, deps
-- `docs/<descricao>` — apenas documentação
-
-Nunca commitar direto na `main` para features novas. Sempre abrir PR.
-
-### Commits (Conventional Commits)
-
-Formato: `<tipo>(<escopo opcional>): <mensagem no imperativo em português>`
-
-| Tipo | Quando usar |
-|------|-------------|
-| `feat` | Nova funcionalidade |
-| `fix` | Correção de bug |
-| `docs` | Apenas documentação |
-| `test` | Adicionar ou corrigir testes |
-| `refactor` | Refatoração sem mudar comportamento |
-| `chore` | Deps, configs, build |
-| `style` | Formatação, sem mudança de lógica |
-
-Exemplos:
-```
-feat(pedidos): adiciona filtro por status na listagem
-fix(lint): substitui any por tipos específicos em useDashboardStats
-test(products): adiciona testes unitários para server actions
-docs: atualiza CLAUDE.md com práticas de git
-```
-
-### Regras de Git
-
-1. **Sempre `yarn lint` e `yarn test` antes de commitar**
-2. **Nunca commitar `.env.local` ou arquivos com credenciais**
-3. **Commits atômicos** — um commit por mudança lógica, não acumular tudo
-4. **Mensagens descritivas** — o "porquê", não só o "o quê"
-5. **Nunca usar `--force` na `main`**
-6. **Nunca usar `--no-verify`** para pular hooks
-7. **Rebase interativo** para limpar histórico antes de abrir PR
-
-### CI/CD (a implementar)
-
-Pipeline recomendado (GitHub Actions):
-
-```yaml
-# .github/workflows/ci.yml
-on: [push, pull_request]
-jobs:
-  quality:
-    steps:
-      - yarn install
-      - yarn lint          # ESLint
-      - yarn tsc --noEmit  # TypeScript check
-      - yarn test          # Testes automatizados
-      - yarn build         # Build de produção
-```
-
-**Regras de proteção da main:**
-- PR obrigatório (sem push direto)
-- CI deve passar antes do merge
-- Code review de pelo menos 1 pessoa
-
-## TDD — Test-Driven Development
-
-A partir de agora, todo código novo deve seguir o ciclo TDD:
-
-1. **Red** — escreva o teste antes, veja falhar
-2. **Green** — implemente o mínimo para passar
-3. **Refactor** — limpe sem quebrar os testes
-
-### Stack de Testes
-
-- **Vitest** — test runner (compatível com Next.js/Vite)
-- **@testing-library/react** — testes de componentes
-- **@testing-library/user-event** — simulação de interações
-- **msw** (Mock Service Worker) — mock de APIs/Supabase
-- **@vitejs/plugin-react** — suporte JSX nos testes
-
-### Estrutura de Testes
-
-```
-__tests__/
-  mocks/
-    supabase.ts       # Mock centralizado do cliente Supabase
-  unit/
-    actions/          # Testes de server actions (mock Supabase) — 6 arquivos
-    hooks/            # Testes de custom hooks (mock queries) — 9 arquivos
-    validations/      # Testes de schemas Zod — 5 arquivos
-  integration/        # (futuro) componentes e forms com DOM
-  e2e/                # (futuro) Playwright para fluxos críticos
-```
-
-### Comandos de Teste
-
-```bash
-yarn test           # Rodar todos os testes
-yarn test --watch   # Modo watch (TDD)
-yarn test --coverage # Relatório de cobertura
-```
-
-### O que testar em cada camada
-
-| Camada | Foco dos testes |
-|--------|----------------|
-| `lib/validations/` | Schemas Zod: campos obrigatórios, tipos, edge cases |
-| `app/actions/` | Retorno correto, erros Supabase, validação rejeitada |
-| `hooks/` | Estado loading/success/error, invalidação de cache |
-| `components/forms/` | Renderização, submit, mensagens de erro |
-| `components/dialogs/` | Abertura/fechamento, integração com forms |
+| Erro | Solução |
+|------|---------|
+| "cookies outside request scope" | Mover `cookies()` para dentro da async function |
+| "NEXT_PUBLIC_SUPABASE_URL not found" | Criar `.env.local` |
+| Build falha silenciosamente | `yarn tsc --noEmit` para ver detalhes |
+| Dados não atualizam | Adicionar `invalidateQueries()` no `onSuccess` |
