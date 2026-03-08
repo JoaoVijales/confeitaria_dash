@@ -194,3 +194,178 @@ Tipos: `feat` | `fix` | `docs` | `test` | `refactor` | `chore` | `style`
 | "NEXT_PUBLIC_SUPABASE_URL not found" | Criar `.env.local` |
 | Build falha silenciosamente | `yarn tsc --noEmit` para ver detalhes |
 | Dados não atualizam | Adicionar `invalidateQueries()` no `onSuccess` |
+
+---
+
+## Roadmap SaaS — Próximos Passos
+
+> Objetivo: transformar o dashboard single-tenant em um SaaS multi-tenant com autenticação Firebase e pagamentos Stripe.
+
+### Decisões de Arquitetura
+
+| Camada | Atual | SaaS |
+|--------|-------|------|
+| Auth | Supabase Auth | **Firebase Auth** (JWT → Admin SDK no server) |
+| Pagamentos | — | **Stripe** (Checkout + Webhooks + Billing Portal) |
+| Banco | Supabase (sem isolamento) | Supabase + **RLS por `tenant_id`** |
+| Rota `/` | Tela de login | **Landing page** (marketing) |
+
+---
+
+### Fase 1 — Multi-tenancy no Banco (Supabase)
+
+**Objetivo:** isolar dados por organização/cliente do SaaS.
+
+- [ ] Criar tabela `tenants` (`id`, `name`, `owner_uid` (Firebase UID), `plan`, `stripe_customer_id`, `stripe_subscription_id`, `status`, `created_at`)
+- [ ] Adicionar coluna `tenant_id uuid NOT NULL` em todas as tabelas de dados (customers, products, orders, ingredients, recipes, expenses, revenues, transactions, ingredient_purchases)
+- [ ] Criar políticas RLS no Supabase para cada tabela: `USING (tenant_id = current_setting('app.tenant_id')::uuid)`
+- [ ] Atualizar todas as Server Actions para incluir `tenant_id` em SELECT/INSERT/UPDATE/DELETE
+- [ ] Criar helper `lib/supabase/tenant.ts` que injeta o `tenant_id` do contexto da sessão em cada query
+
+**Testes:** unit tests para confirmar que queries sem `tenant_id` retornam vazio.
+
+---
+
+### Fase 2 — Autenticação Firebase
+
+**Objetivo:** substituir Supabase Auth por Firebase Auth, mantendo Supabase apenas como banco de dados.
+
+#### Setup
+- [ ] Instalar `firebase` (client) e `firebase-admin` (server)
+- [ ] Criar `lib/firebase/client.ts` — inicializa Firebase App + Auth
+- [ ] Criar `lib/firebase/admin.ts` — inicializa Admin SDK com service account
+- [ ] Adicionar variáveis de ambiente (ver seção abaixo)
+
+#### Autenticação
+- [ ] Criar `/login` (email/senha + Google OAuth via `signInWithPopup`)
+- [ ] Criar `/signup` (registro + cria tenant no Supabase via Server Action)
+- [ ] Remover Supabase Auth do `middleware.ts` → verificar Firebase ID Token via `admin.auth().verifyIdToken()`
+- [ ] Armazenar session cookie (`__session`) com token Firebase após login
+- [ ] Atualizar `middleware.ts`: decodificar `__session`, extrair `uid` e `tenant_id`, redirecionar para `/login` se inválido
+
+#### Onboarding
+- [ ] Criar `/onboarding` — primeira tela após signup: pede nome da confeitaria, cria registro em `tenants`
+- [ ] Redirecionar para `/onboarding` se usuário autenticado mas sem `tenant`
+
+#### Remoção do Supabase Auth
+- [ ] Remover `@supabase/ssr`, `createServerClient` e `supabase.auth.*` de todo o codebase
+- [ ] Manter apenas `@supabase/supabase-js` para queries de dados
+- [ ] Atualizar `lib/supabase/server.ts` para usar service role key (sem auth SSR)
+
+**Variáveis de ambiente adicionais:**
+```
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+FIREBASE_ADMIN_PROJECT_ID=
+FIREBASE_ADMIN_CLIENT_EMAIL=
+FIREBASE_ADMIN_PRIVATE_KEY=
+```
+
+---
+
+### Fase 3 — Pagamentos Stripe
+
+**Objetivo:** monetizar com planos de assinatura recorrentes.
+
+#### Planos sugeridos
+| Plano | Limite | Preço |
+|-------|--------|-------|
+| Gratuito | 30 produtos, 50 pedidos/mês | R$ 0 |
+| Básico | 200 produtos, pedidos ilimitados | R$ 49/mês |
+| Pro | Ilimitado + analytics avançado | R$ 99/mês |
+
+#### Setup
+- [ ] Instalar `stripe`
+- [ ] Criar `lib/stripe/client.ts` — instância do Stripe SDK
+- [ ] Configurar produtos e preços no Stripe Dashboard, salvar Price IDs no `.env.local`
+
+#### Checkout
+- [ ] Criar Server Action `createCheckoutSession(priceId)` → retorna URL do Stripe Checkout
+- [ ] Criar `/dashboard/billing` — página de planos com botões de upgrade
+- [ ] Após checkout bem-sucedido, redirecionar para `/dashboard/billing?success=true`
+
+#### Webhooks
+- [ ] Criar `/api/webhooks/stripe/route.ts` — handler de eventos:
+  - `checkout.session.completed` → atualiza `tenants.stripe_customer_id`, `stripe_subscription_id`, `plan`, `status = active`
+  - `invoice.payment_succeeded` → confirma renovação
+  - `invoice.payment_failed` → seta `status = past_due`, notifica usuário
+  - `customer.subscription.updated` → sincroniza plano
+  - `customer.subscription.deleted` → reverte para plano gratuito
+- [ ] Validar assinatura do webhook com `stripe.webhooks.constructEvent()`
+
+#### Portal do cliente
+- [ ] Server Action `createBillingPortalSession()` → URL do Stripe Billing Portal (cancelar, trocar plano, atualizar cartão)
+
+#### Feature gating
+- [ ] Criar `lib/utils/plan-limits.ts` — define limites por plano
+- [ ] Hook `usePlan()` — retorna plano atual e limites
+- [ ] Bloquear criação quando limite atingido (ex: "Limite de produtos atingido — faça upgrade")
+- [ ] Banner de trial/upgrade na Sidebar
+
+**Variáveis de ambiente adicionais:**
+```
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+STRIPE_PRICE_ID_BASIC=
+STRIPE_PRICE_ID_PRO=
+```
+
+---
+
+### Fase 4 — UX SaaS
+
+**Objetivo:** fluxo completo de um produto SaaS público.
+
+- [ ] Landing page em `/` — hero, features, pricing, CTA, footer
+- [ ] Mover login para `/login`, criar `/signup`
+- [ ] Página `/dashboard/billing` com plano atual, uso, botão upgrade, portal do cliente
+- [ ] Header no dashboard com: nome do tenant, plano atual, botão de logout, avatar
+- [ ] Tela de trial expirado / pagamento pendente com call-to-action para billing
+- [ ] E-mails transacionais (Resend ou SendGrid):
+  - Boas-vindas após signup
+  - Confirmação de pagamento
+  - Aviso de falha no pagamento (3 dias antes de suspender)
+  - Conta suspensa
+
+---
+
+### Fase 5 — Operacional
+
+**Objetivo:** confiabilidade, observabilidade e escalabilidade.
+
+- [ ] Monitoramento de erros (Sentry)
+- [ ] Rate limiting nas rotas de API e webhooks
+- [ ] Painel de admin interno (`/admin`) — lista tenants, status, plano, MRR
+- [ ] Métricas de uso por tenant (produtos criados, pedidos/mês)
+- [ ] Auditoria de ações críticas (log de delete, export de dados)
+- [ ] Script de migração para adicionar `tenant_id` em dados existentes
+- [ ] Política de privacidade + Termos de uso (páginas `/privacy` e `/terms`)
+- [ ] LGPD: endpoint de exportação e exclusão de dados do usuário
+
+---
+
+### Ordem de Implementação Recomendada
+
+```
+1. Fase 1 (Multi-tenancy DB)     → fundação obrigatória, sem isso nada funciona
+2. Fase 2 (Firebase Auth)        → login/logout novo, middleware, onboarding
+3. Fase 4 parcial (Landing + /login + /signup)  → produto acessível publicamente
+4. Fase 3 (Stripe)               → monetização
+5. Fase 4 completo (Billing UX)  → experiência completa de upgrade/cancelamento
+6. Fase 5 (Operacional)          → estabilidade em produção
+```
+
+---
+
+### Stack Adicional (SaaS)
+
+| Camada | Tecnologia |
+|--------|-----------|
+| Auth | Firebase Auth (client) + Firebase Admin SDK (server) |
+| Pagamentos | Stripe (Checkout, Webhooks, Billing Portal) |
+| E-mail | Resend (ou SendGrid) |
+| Monitoramento | Sentry |
+| Feature flags | Plano armazenado em `tenants.plan` no Supabase |
