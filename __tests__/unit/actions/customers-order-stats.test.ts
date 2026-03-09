@@ -10,6 +10,8 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(() => mockSupabase),
 }))
 
+vi.mock('@/lib/supabase/tenant', () => ({ getTenantId: vi.fn().mockResolvedValue('test-tenant-id') }))
+
 import { updateCustomerStats, getCustomerOrders } from '@/app/actions/customers'
 
 describe('customer order stats actions', () => {
@@ -25,14 +27,17 @@ describe('customer order stats actions', () => {
         { total: 50 },
       ]
 
-      const updateEqMock = vi.fn().mockResolvedValue({ data: null, error: null })
-      const updateMock = vi.fn().mockReturnValue({ eq: updateEqMock })
+      const updateEqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
+      const updateEqIdMock = vi.fn().mockReturnValue({ eq: updateEqTenantMock })
+      const updateMock = vi.fn().mockReturnValue({ eq: updateEqIdMock })
 
       mockFrom.mockImplementation((table: string) => {
         if (table === 'orders') {
           return {
             select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({ data: orders, error: null }),
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({ data: orders, error: null }),
+              }),
             }),
           }
         }
@@ -48,18 +53,21 @@ describe('customer order stats actions', () => {
         total_orders: 3,
         total_spent: 350,
       })
-      expect(updateEqMock).toHaveBeenCalledWith('id', 'cust-1')
+      expect(updateEqIdMock).toHaveBeenCalledWith('id', 'cust-1')
     })
 
     it('define stats como zero quando cliente nao tem pedidos', async () => {
-      const updateEqMock = vi.fn().mockResolvedValue({ data: null, error: null })
-      const updateMock = vi.fn().mockReturnValue({ eq: updateEqMock })
+      const updateEqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
+      const updateEqIdMock = vi.fn().mockReturnValue({ eq: updateEqTenantMock })
+      const updateMock = vi.fn().mockReturnValue({ eq: updateEqIdMock })
 
       mockFrom.mockImplementation((table: string) => {
         if (table === 'orders') {
           return {
             select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+              }),
             }),
           }
         }
@@ -84,7 +92,9 @@ describe('customer order stats actions', () => {
         if (table === 'orders') {
           return {
             select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({ data: null, error: dbError }),
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({ data: null, error: dbError }),
+              }),
             }),
           }
         }
@@ -108,22 +118,24 @@ describe('customer order stats actions', () => {
       ]
 
       const orderMock = vi.fn().mockResolvedValue({ data: orders, error: null })
-      const eqMock = vi.fn().mockReturnValue({ order: orderMock })
-      const selectMock = vi.fn().mockReturnValue({ eq: eqMock })
+      const eqTenantMock = vi.fn().mockReturnValue({ order: orderMock })
+      const eqCustomerMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
+      const selectMock = vi.fn().mockReturnValue({ eq: eqCustomerMock })
       mockFrom.mockReturnValue({ select: selectMock })
 
       const result = await getCustomerOrders('cust-1')
 
       expect(mockFrom).toHaveBeenCalledWith('orders')
-      expect(eqMock).toHaveBeenCalledWith('customer_id', 'cust-1')
+      expect(eqCustomerMock).toHaveBeenCalledWith('customer_id', 'cust-1')
       expect(result).toEqual(orders)
     })
 
     it('lanca erro quando Supabase falha', async () => {
       const dbError = { message: 'DB error' }
       const orderMock = vi.fn().mockResolvedValue({ data: null, error: dbError })
-      const eqMock = vi.fn().mockReturnValue({ order: orderMock })
-      const selectMock = vi.fn().mockReturnValue({ eq: eqMock })
+      const eqTenantMock = vi.fn().mockReturnValue({ order: orderMock })
+      const eqCustomerMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
+      const selectMock = vi.fn().mockReturnValue({ eq: eqCustomerMock })
       mockFrom.mockReturnValue({ select: selectMock })
 
       await expect(getCustomerOrders('cust-1')).rejects.toEqual(dbError)

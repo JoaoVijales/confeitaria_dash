@@ -10,6 +10,8 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(() => mockSupabase),
 }))
 
+vi.mock('@/lib/supabase/tenant', () => ({ getTenantId: vi.fn().mockResolvedValue('test-tenant-id') }))
+
 vi.mock('@/app/actions/customers', () => ({
   updateCustomerStats: vi.fn().mockResolvedValue(undefined),
 }))
@@ -35,9 +37,6 @@ describe('orders actions', () => {
     it('cria pedido e itens com dados validos', async () => {
       const itemsInsertMock = vi.fn().mockResolvedValue({ data: null, error: null })
 
-      // First call: orders insert -> select -> single
-      // Second call: order_items insert
-      let callCount = 0
       mockFrom.mockImplementation((table: string) => {
         if (table === 'orders') {
           return {
@@ -50,7 +49,9 @@ describe('orders actions', () => {
               }),
             }),
             delete: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
             }),
           }
         }
@@ -62,9 +63,9 @@ describe('orders actions', () => {
 
       await createOrder(validOrderData)
 
-      expect(itemsInsertMock).toHaveBeenCalledWith([
-        { order_id: 'order-1', product_id: 'prod-1', quantity: 2, unit_price: 10 },
-      ])
+      expect(itemsInsertMock).toHaveBeenCalledWith(expect.arrayContaining([
+        expect.objectContaining({ order_id: 'order-1', product_id: 'prod-1', quantity: 2, unit_price: 10 }),
+      ]))
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/pedidos')
     })
 
@@ -89,7 +90,8 @@ describe('orders actions', () => {
 
     it('faz rollback do pedido quando insert de itens falha', async () => {
       const itemsError = { message: 'Items error' }
-      const orderDeleteEqMock = vi.fn().mockResolvedValue({ data: null, error: null })
+      const orderDeleteEqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
+      const orderDeleteEqMock = vi.fn().mockReturnValue({ eq: orderDeleteEqTenantMock })
       const orderDeleteMock = vi.fn().mockReturnValue({ eq: orderDeleteEqMock })
 
       mockFrom.mockImplementation((table: string) => {
@@ -122,22 +124,24 @@ describe('orders actions', () => {
 
   describe('updateOrderStatus', () => {
     it('atualiza status do pedido', async () => {
-      const eqMock = vi.fn().mockResolvedValue({ data: null, error: null })
-      const updateMock = vi.fn().mockReturnValue({ eq: eqMock })
+      const eqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
+      const eqIdMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
+      const updateMock = vi.fn().mockReturnValue({ eq: eqIdMock })
       mockFrom.mockReturnValue({ update: updateMock })
 
       await updateOrderStatus('order-1', 'completed')
 
       expect(mockFrom).toHaveBeenCalledWith('orders')
       expect(updateMock).toHaveBeenCalledWith({ status: 'completed' })
-      expect(eqMock).toHaveBeenCalledWith('id', 'order-1')
+      expect(eqIdMock).toHaveBeenCalledWith('id', 'order-1')
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/pedidos')
     })
 
     it('lanca erro quando Supabase falha', async () => {
       const dbError = { message: 'DB error' }
-      const eqMock = vi.fn().mockResolvedValue({ data: null, error: dbError })
-      const updateMock = vi.fn().mockReturnValue({ eq: eqMock })
+      const eqTenantMock = vi.fn().mockResolvedValue({ data: null, error: dbError })
+      const eqIdMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
+      const updateMock = vi.fn().mockReturnValue({ eq: eqIdMock })
       mockFrom.mockReturnValue({ update: updateMock })
 
       await expect(updateOrderStatus('order-1', 'completed')).rejects.toEqual(dbError)
@@ -146,23 +150,25 @@ describe('orders actions', () => {
 
   describe('deleteOrder', () => {
     it('deleta itens e pedido', async () => {
-      const orderEqMock = vi.fn().mockResolvedValue({ data: null, error: null })
-      const itemsEqMock = vi.fn().mockResolvedValue({ data: null, error: null })
+      const orderEqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
+      const orderEqIdMock = vi.fn().mockReturnValue({ eq: orderEqTenantMock })
+      const itemsEqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
+      const itemsEqOrderIdMock = vi.fn().mockReturnValue({ eq: itemsEqTenantMock })
 
       mockFrom.mockImplementation((table: string) => {
         if (table === 'order_items') {
-          return { delete: vi.fn().mockReturnValue({ eq: itemsEqMock }) }
+          return { delete: vi.fn().mockReturnValue({ eq: itemsEqOrderIdMock }) }
         }
         if (table === 'orders') {
-          return { delete: vi.fn().mockReturnValue({ eq: orderEqMock }) }
+          return { delete: vi.fn().mockReturnValue({ eq: orderEqIdMock }) }
         }
         return {}
       })
 
       await deleteOrder('order-1')
 
-      expect(itemsEqMock).toHaveBeenCalledWith('order_id', 'order-1')
-      expect(orderEqMock).toHaveBeenCalledWith('id', 'order-1')
+      expect(itemsEqOrderIdMock).toHaveBeenCalledWith('order_id', 'order-1')
+      expect(orderEqIdMock).toHaveBeenCalledWith('id', 'order-1')
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/pedidos')
     })
 
@@ -172,7 +178,9 @@ describe('orders actions', () => {
         if (table === 'order_items') {
           return {
             delete: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({ data: null, error: dbError }),
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({ data: null, error: dbError }),
+              }),
             }),
           }
         }
@@ -188,7 +196,9 @@ describe('orders actions', () => {
       const orders = [{ id: '1', customers: { name: 'Maria' } }]
       mockFrom.mockReturnValue({
         select: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({ data: orders, error: null }),
+          eq: vi.fn().mockReturnValue({
+            order: vi.fn().mockResolvedValue({ data: orders, error: null }),
+          }),
         }),
       })
 
@@ -201,7 +211,9 @@ describe('orders actions', () => {
       const dbError = { message: 'DB error' }
       mockFrom.mockReturnValue({
         select: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({ data: null, error: dbError }),
+          eq: vi.fn().mockReturnValue({
+            order: vi.fn().mockResolvedValue({ data: null, error: dbError }),
+          }),
         }),
       })
 
@@ -215,7 +227,9 @@ describe('orders actions', () => {
       mockFrom.mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ data: order, error: null }),
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: order, error: null }),
+            }),
           }),
         }),
       })
@@ -229,7 +243,9 @@ describe('orders actions', () => {
       mockFrom.mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ data: null, error: dbError }),
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: null, error: dbError }),
+            }),
           }),
         }),
       })
