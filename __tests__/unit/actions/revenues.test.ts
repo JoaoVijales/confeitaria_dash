@@ -10,6 +10,8 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(() => mockSupabase),
 }))
 
+vi.mock('@/lib/supabase/tenant', () => ({ getTenantId: vi.fn().mockResolvedValue('test-tenant-id') }))
+
 import { createRevenue, updateRevenue, deleteRevenue, getRevenues } from '@/app/actions/revenues'
 import { revalidatePath } from 'next/cache'
 
@@ -37,7 +39,9 @@ describe('revenues actions', () => {
       const revenues = [{ id: '1', description: 'Venda' }]
       mockFrom.mockReturnValue({
         select: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({ data: revenues, error: null }),
+          eq: vi.fn().mockReturnValue({
+            order: vi.fn().mockResolvedValue({ data: revenues, error: null }),
+          }),
         }),
       })
 
@@ -50,7 +54,9 @@ describe('revenues actions', () => {
       const dbError = { message: 'DB error' }
       mockFrom.mockReturnValue({
         select: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({ data: null, error: dbError }),
+          eq: vi.fn().mockReturnValue({
+            order: vi.fn().mockResolvedValue({ data: null, error: dbError }),
+          }),
         }),
       })
 
@@ -66,13 +72,13 @@ describe('revenues actions', () => {
       await createRevenue(makeFormData(validRevenueData))
 
       expect(mockFrom).toHaveBeenCalledWith('revenue_entries')
-      expect(insertMock).toHaveBeenCalledWith({
+      expect(insertMock).toHaveBeenCalledWith(expect.objectContaining({
         date: '2024-01-15',
         description: 'Venda de bolos',
         quantity: 5,
         unit_price: 25,
         total: 125,
-      })
+      }))
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/entradas')
     })
 
@@ -96,14 +102,15 @@ describe('revenues actions', () => {
 
   describe('updateRevenue', () => {
     it('atualiza receita com dados validos', async () => {
-      const eqMock = vi.fn().mockResolvedValue({ data: null, error: null })
-      const updateMock = vi.fn().mockReturnValue({ eq: eqMock })
+      const eqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
+      const eqIdMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
+      const updateMock = vi.fn().mockReturnValue({ eq: eqIdMock })
       mockFrom.mockReturnValue({ update: updateMock })
 
       await updateRevenue('123', makeFormData(validRevenueData))
 
       expect(mockFrom).toHaveBeenCalledWith('revenue_entries')
-      expect(eqMock).toHaveBeenCalledWith('id', '123')
+      expect(eqIdMock).toHaveBeenCalledWith('id', '123')
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/entradas')
     })
 
@@ -118,8 +125,9 @@ describe('revenues actions', () => {
 
     it('lanca erro quando Supabase falha', async () => {
       const dbError = { message: 'DB error' }
-      const eqMock = vi.fn().mockResolvedValue({ data: null, error: dbError })
-      const updateMock = vi.fn().mockReturnValue({ eq: eqMock })
+      const eqTenantMock = vi.fn().mockResolvedValue({ data: null, error: dbError })
+      const eqIdMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
+      const updateMock = vi.fn().mockReturnValue({ eq: eqIdMock })
       mockFrom.mockReturnValue({ update: updateMock })
 
       await expect(updateRevenue('123', makeFormData(validRevenueData))).rejects.toEqual(dbError)
@@ -128,21 +136,23 @@ describe('revenues actions', () => {
 
   describe('deleteRevenue', () => {
     it('deleta receita por id', async () => {
-      const eqMock = vi.fn().mockResolvedValue({ data: null, error: null })
-      const deleteMock = vi.fn().mockReturnValue({ eq: eqMock })
+      const eqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
+      const eqIdMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
+      const deleteMock = vi.fn().mockReturnValue({ eq: eqIdMock })
       mockFrom.mockReturnValue({ delete: deleteMock })
 
       await deleteRevenue('123')
 
       expect(mockFrom).toHaveBeenCalledWith('revenue_entries')
-      expect(eqMock).toHaveBeenCalledWith('id', '123')
+      expect(eqIdMock).toHaveBeenCalledWith('id', '123')
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/entradas')
     })
 
     it('lanca erro quando Supabase falha', async () => {
       const dbError = { message: 'DB error' }
-      const eqMock = vi.fn().mockResolvedValue({ data: null, error: dbError })
-      const deleteMock = vi.fn().mockReturnValue({ eq: eqMock })
+      const eqTenantMock = vi.fn().mockResolvedValue({ data: null, error: dbError })
+      const eqIdMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
+      const deleteMock = vi.fn().mockReturnValue({ eq: eqIdMock })
       mockFrom.mockReturnValue({ delete: deleteMock })
 
       await expect(deleteRevenue('123')).rejects.toEqual(dbError)
