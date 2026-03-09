@@ -10,6 +10,8 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(() => mockSupabase),
 }))
 
+vi.mock('@/lib/supabase/tenant', () => ({ getTenantId: vi.fn().mockResolvedValue('test-tenant-id') }))
+
 import { createRecipe, updateRecipe, deleteRecipe } from '@/app/actions/recipes'
 import { revalidatePath } from 'next/cache'
 
@@ -52,10 +54,10 @@ describe('recipes actions', () => {
 
       await createRecipe(validRecipeData)
 
-      expect(ingredientsInsertMock).toHaveBeenCalledWith([
-        { recipe_id: 'recipe-1', ingredient_id: 'ing-1', quantity: 2 },
-        { recipe_id: 'recipe-1', ingredient_id: 'ing-2', quantity: 3 },
-      ])
+      expect(ingredientsInsertMock).toHaveBeenCalledWith(expect.arrayContaining([
+        expect.objectContaining({ recipe_id: 'recipe-1', ingredient_id: 'ing-1', quantity: 2 }),
+        expect.objectContaining({ recipe_id: 'recipe-1', ingredient_id: 'ing-2', quantity: 3 }),
+      ]))
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/receitas')
     })
 
@@ -113,14 +115,18 @@ describe('recipes actions', () => {
         if (table === 'recipes') {
           return {
             update: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
             }),
           }
         }
         if (table === 'recipe_ingredients') {
           return {
             delete: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
             }),
             insert: ingredientsInsertMock,
           }
@@ -130,10 +136,10 @@ describe('recipes actions', () => {
 
       await updateRecipe('recipe-1', validRecipeData)
 
-      expect(ingredientsInsertMock).toHaveBeenCalledWith([
-        { recipe_id: 'recipe-1', ingredient_id: 'ing-1', quantity: 2 },
-        { recipe_id: 'recipe-1', ingredient_id: 'ing-2', quantity: 3 },
-      ])
+      expect(ingredientsInsertMock).toHaveBeenCalledWith(expect.arrayContaining([
+        expect.objectContaining({ recipe_id: 'recipe-1', ingredient_id: 'ing-1', quantity: 2 }),
+        expect.objectContaining({ recipe_id: 'recipe-1', ingredient_id: 'ing-2', quantity: 3 }),
+      ]))
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/receitas')
     })
 
@@ -144,7 +150,9 @@ describe('recipes actions', () => {
         if (table === 'recipes') {
           return {
             update: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({ data: null, error: dbError }),
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({ data: null, error: dbError }),
+              }),
             }),
           }
         }
@@ -161,14 +169,18 @@ describe('recipes actions', () => {
         if (table === 'recipes') {
           return {
             update: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
             }),
           }
         }
         if (table === 'recipe_ingredients') {
           return {
             delete: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({ data: null, error: deleteError }),
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({ data: null, error: deleteError }),
+              }),
             }),
           }
         }
@@ -181,21 +193,23 @@ describe('recipes actions', () => {
 
   describe('deleteRecipe', () => {
     it('deleta receita por id', async () => {
-      const eqMock = vi.fn().mockResolvedValue({ data: null, error: null })
-      const deleteMock = vi.fn().mockReturnValue({ eq: eqMock })
+      const eqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
+      const eqIdMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
+      const deleteMock = vi.fn().mockReturnValue({ eq: eqIdMock })
       mockFrom.mockReturnValue({ delete: deleteMock })
 
       await deleteRecipe('recipe-1')
 
       expect(mockFrom).toHaveBeenCalledWith('recipes')
-      expect(eqMock).toHaveBeenCalledWith('id', 'recipe-1')
+      expect(eqIdMock).toHaveBeenCalledWith('id', 'recipe-1')
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/receitas')
     })
 
     it('lanca erro quando Supabase falha', async () => {
       const dbError = { message: 'DB error' }
-      const eqMock = vi.fn().mockResolvedValue({ data: null, error: dbError })
-      const deleteMock = vi.fn().mockReturnValue({ eq: eqMock })
+      const eqTenantMock = vi.fn().mockResolvedValue({ data: null, error: dbError })
+      const eqIdMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
+      const deleteMock = vi.fn().mockReturnValue({ eq: eqIdMock })
       mockFrom.mockReturnValue({ delete: deleteMock })
 
       await expect(deleteRecipe('recipe-1')).rejects.toEqual(dbError)

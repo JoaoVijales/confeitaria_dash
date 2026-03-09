@@ -10,6 +10,8 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(() => mockSupabase),
 }))
 
+vi.mock('@/lib/supabase/tenant', () => ({ getTenantId: vi.fn().mockResolvedValue('test-tenant-id') }))
+
 import {
   createIngredientPurchase,
   getIngredientPurchases,
@@ -46,7 +48,7 @@ describe('ingredient-purchases actions', () => {
 
       await createIngredientPurchase(validPurchaseData)
 
-      expect(insertMock).toHaveBeenCalledWith(validPurchaseData)
+      expect(insertMock).toHaveBeenCalledWith(expect.objectContaining(validPurchaseData))
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/ingredientes')
     })
 
@@ -68,21 +70,23 @@ describe('ingredient-purchases actions', () => {
       ]
 
       const orderMock = vi.fn().mockResolvedValue({ data: purchases, error: null })
-      const eqMock = vi.fn().mockReturnValue({ order: orderMock })
-      const selectMock = vi.fn().mockReturnValue({ eq: eqMock })
+      const eqIngredientMock = vi.fn().mockReturnValue({ order: orderMock })
+      const eqTenantMock = vi.fn().mockReturnValue({ eq: eqIngredientMock })
+      const selectMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
       mockFrom.mockReturnValue({ select: selectMock })
 
       const result = await getIngredientPurchases(1)
 
       expect(mockFrom).toHaveBeenCalledWith('ingredient_purchases')
-      expect(eqMock).toHaveBeenCalledWith('ingredient_id', 1)
+      expect(eqIngredientMock).toHaveBeenCalledWith('ingredient_id', 1)
       expect(result).toEqual(purchases)
     })
 
     it('retorna todas as compras quando nenhum ingrediente_id passado', async () => {
       const purchases = [{ id: 1 }, { id: 2 }]
       const orderMock = vi.fn().mockResolvedValue({ data: purchases, error: null })
-      const selectMock = vi.fn().mockReturnValue({ order: orderMock })
+      const eqTenantMock = vi.fn().mockReturnValue({ order: orderMock })
+      const selectMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
       mockFrom.mockReturnValue({ select: selectMock })
 
       const result = await getIngredientPurchases()
@@ -94,8 +98,9 @@ describe('ingredient-purchases actions', () => {
     it('lanca erro quando Supabase falha', async () => {
       const dbError = { message: 'DB error' }
       const orderMock = vi.fn().mockResolvedValue({ data: null, error: dbError })
-      const eqMock = vi.fn().mockReturnValue({ order: orderMock })
-      const selectMock = vi.fn().mockReturnValue({ eq: eqMock })
+      const eqIngredientMock = vi.fn().mockReturnValue({ order: orderMock })
+      const eqTenantMock = vi.fn().mockReturnValue({ eq: eqIngredientMock })
+      const selectMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
       mockFrom.mockReturnValue({ select: selectMock })
 
       await expect(getIngredientPurchases(1)).rejects.toEqual(dbError)
@@ -104,21 +109,23 @@ describe('ingredient-purchases actions', () => {
 
   describe('deleteIngredientPurchase', () => {
     it('deleta compra por id', async () => {
-      const eqMock = vi.fn().mockResolvedValue({ data: null, error: null })
-      const deleteMock = vi.fn().mockReturnValue({ eq: eqMock })
+      const eqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
+      const eqIdMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
+      const deleteMock = vi.fn().mockReturnValue({ eq: eqIdMock })
       mockFrom.mockReturnValue({ delete: deleteMock })
 
       await deleteIngredientPurchase(1)
 
       expect(mockFrom).toHaveBeenCalledWith('ingredient_purchases')
-      expect(eqMock).toHaveBeenCalledWith('id', 1)
+      expect(eqIdMock).toHaveBeenCalledWith('id', 1)
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/ingredientes')
     })
 
     it('lanca erro quando Supabase falha', async () => {
       const dbError = { message: 'DB error' }
-      const eqMock = vi.fn().mockResolvedValue({ data: null, error: dbError })
-      const deleteMock = vi.fn().mockReturnValue({ eq: eqMock })
+      const eqTenantMock = vi.fn().mockResolvedValue({ data: null, error: dbError })
+      const eqIdMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
+      const deleteMock = vi.fn().mockReturnValue({ eq: eqIdMock })
       mockFrom.mockReturnValue({ delete: deleteMock })
 
       await expect(deleteIngredientPurchase(1)).rejects.toEqual(dbError)

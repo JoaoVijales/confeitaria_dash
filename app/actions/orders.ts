@@ -2,21 +2,21 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { getTenantId } from '@/lib/supabase/tenant'
 import { cookies } from 'next/headers'
 
-// NOTE: This is a simplified createOrder for demonstration.
-// In a real app, you'd handle FormData parsing more robustly,
-// potentially stringifying/parsing the items array.
 export async function createOrder(data: { customer_id: string; items: { product_id: string; quantity: number; unit_price: number; }[]; total: number; status: string }) {
   const cookieStore = await cookies()
   const supabase = createClient(cookieStore)
-  // 1. Create the main order record
+  const tenantId = await getTenantId(supabase)
+
   const { data: orderData, error: orderError } = await supabase
     .from('orders')
     .insert({
       customer_id: data.customer_id,
       total: data.total,
       status: data.status,
+      tenant_id: tenantId,
     })
     .select('id')
     .single()
@@ -24,19 +24,18 @@ export async function createOrder(data: { customer_id: string; items: { product_
   if (orderError) throw orderError
   const orderId = orderData.id
 
-  // 2. Create the associated order items
   const orderItems = data.items.map(item => ({
     order_id: orderId,
     product_id: item.product_id,
     quantity: item.quantity,
     unit_price: item.unit_price,
+    tenant_id: tenantId,
   }))
 
   const { error: itemsError } = await supabase.from('order_items').insert(orderItems)
 
   if (itemsError) {
-    // If items fail, attempt to roll back the order creation
-    await supabase.from('orders').delete().eq('id', orderId)
+    await supabase.from('orders').delete().eq('id', orderId).eq('tenant_id', tenantId)
     throw itemsError
   }
 
@@ -49,7 +48,12 @@ export async function createOrder(data: { customer_id: string; items: { product_
 export async function updateOrderStatus(id: string, status: string) {
   const cookieStore = await cookies()
   const supabase = createClient(cookieStore)
-  const { error } = await supabase.from('orders').update({ status }).eq('id', id)
+  const tenantId = await getTenantId(supabase)
+  const { error } = await supabase
+    .from('orders')
+    .update({ status })
+    .eq('id', id)
+    .eq('tenant_id', tenantId)
   if (error) throw error
   revalidatePath('/dashboard/pedidos')
 }
@@ -57,12 +61,20 @@ export async function updateOrderStatus(id: string, status: string) {
 export async function deleteOrder(id: string) {
   const cookieStore = await cookies()
   const supabase = createClient(cookieStore)
-  // 1. Delete associated order items first to avoid foreign key violation
-  const { error: itemsError } = await supabase.from('order_items').delete().eq('order_id', id)
+  const tenantId = await getTenantId(supabase)
+
+  const { error: itemsError } = await supabase
+    .from('order_items')
+    .delete()
+    .eq('order_id', id)
+    .eq('tenant_id', tenantId)
   if (itemsError) throw itemsError
 
-  // 2. Delete the main order record
-  const { error: orderError } = await supabase.from('orders').delete().eq('id', id)
+  const { error: orderError } = await supabase
+    .from('orders')
+    .delete()
+    .eq('id', id)
+    .eq('tenant_id', tenantId)
   if (orderError) throw orderError
 
   revalidatePath('/dashboard/pedidos')
@@ -71,9 +83,11 @@ export async function deleteOrder(id: string) {
 export async function getOrders() {
   const cookieStore = await cookies()
   const supabase = createClient(cookieStore)
+  const tenantId = await getTenantId(supabase)
   const { data, error } = await supabase
     .from('orders')
-    .select('*, customers(name)') // Join with customers table
+    .select('*, customers(name)')
+    .eq('tenant_id', tenantId)
     .order('created_at', { ascending: false })
 
   if (error) throw error
@@ -83,10 +97,12 @@ export async function getOrders() {
 export async function getOrderDetails(id: string) {
   const cookieStore = await cookies()
   const supabase = createClient(cookieStore)
+  const tenantId = await getTenantId(supabase)
   const { data, error } = await supabase
     .from('orders')
-    .select('*, customers(name, email), order_items(*, products(name))') // Join all related tables
+    .select('*, customers(name, email), order_items(*, products(name))')
     .eq('id', id)
+    .eq('tenant_id', tenantId)
     .single()
 
   if (error) throw error

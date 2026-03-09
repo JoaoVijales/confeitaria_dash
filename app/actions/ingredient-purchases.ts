@@ -2,14 +2,16 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { getTenantId } from '@/lib/supabase/tenant'
 import { cookies } from 'next/headers'
 import { IngredientPurchaseFormValues } from '@/lib/validations/ingredient-purchase.schema'
 
 export async function createIngredientPurchase(data: IngredientPurchaseFormValues) {
   const cookieStore = await cookies()
   const supabase = createClient(cookieStore)
+  const tenantId = await getTenantId(supabase)
 
-  const { error } = await supabase.from('ingredient_purchases').insert(data)
+  const { error } = await supabase.from('ingredient_purchases').insert({ ...data, tenant_id: tenantId })
   if (error) throw error
 
   revalidatePath('/dashboard/ingredientes')
@@ -18,10 +20,12 @@ export async function createIngredientPurchase(data: IngredientPurchaseFormValue
 export async function getIngredientPurchases(ingredientId?: number) {
   const cookieStore = await cookies()
   const supabase = createClient(cookieStore)
+  const tenantId = await getTenantId(supabase)
 
   const query = supabase
     .from('ingredient_purchases')
     .select('*, ingredients(name, unit)')
+    .eq('tenant_id', tenantId)
 
   if (ingredientId !== undefined) {
     const { data, error } = await query.eq('ingredient_id', ingredientId).order('purchased_at', { ascending: false })
@@ -37,8 +41,13 @@ export async function getIngredientPurchases(ingredientId?: number) {
 export async function deleteIngredientPurchase(id: number) {
   const cookieStore = await cookies()
   const supabase = createClient(cookieStore)
+  const tenantId = await getTenantId(supabase)
 
-  const { error } = await supabase.from('ingredient_purchases').delete().eq('id', id)
+  const { error } = await supabase
+    .from('ingredient_purchases')
+    .delete()
+    .eq('id', id)
+    .eq('tenant_id', tenantId)
   if (error) throw error
 
   revalidatePath('/dashboard/ingredientes')

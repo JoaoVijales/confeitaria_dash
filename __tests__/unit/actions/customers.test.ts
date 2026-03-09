@@ -10,6 +10,10 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(() => mockSupabase),
 }))
 
+vi.mock('@/lib/supabase/tenant', () => ({
+  getTenantId: vi.fn().mockResolvedValue('test-tenant-id'),
+}))
+
 import { createCustomer, updateCustomer, deleteCustomer, getCustomers } from '@/app/actions/customers'
 import { revalidatePath } from 'next/cache'
 
@@ -36,7 +40,9 @@ describe('customers actions', () => {
       const customers = [{ id: '1', name: 'Maria' }]
       mockFrom.mockReturnValue({
         select: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({ data: customers, error: null }),
+          eq: vi.fn().mockReturnValue({
+            order: vi.fn().mockResolvedValue({ data: customers, error: null }),
+          }),
         }),
       })
 
@@ -49,7 +55,9 @@ describe('customers actions', () => {
       const dbError = { message: 'DB error' }
       mockFrom.mockReturnValue({
         select: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({ data: null, error: dbError }),
+          eq: vi.fn().mockReturnValue({
+            order: vi.fn().mockResolvedValue({ data: null, error: dbError }),
+          }),
         }),
       })
 
@@ -65,12 +73,14 @@ describe('customers actions', () => {
       await createCustomer(makeFormData(validCustomerData))
 
       expect(mockFrom).toHaveBeenCalledWith('customers')
-      expect(insertMock).toHaveBeenCalledWith({
-        name: 'Maria Silva',
-        email: 'maria@example.com',
-        phone: '11999999999',
-        is_vip: true,
-      })
+      expect(insertMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Maria Silva',
+          email: 'maria@example.com',
+          phone: '11999999999',
+          is_vip: true,
+        })
+      )
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/clientes')
     })
 
@@ -94,20 +104,23 @@ describe('customers actions', () => {
 
   describe('updateCustomer', () => {
     it('atualiza cliente com dados validos', async () => {
-      const eqMock = vi.fn().mockResolvedValue({ data: null, error: null })
-      const updateMock = vi.fn().mockReturnValue({ eq: eqMock })
+      const eqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
+      const eqIdMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
+      const updateMock = vi.fn().mockReturnValue({ eq: eqIdMock })
       mockFrom.mockReturnValue({ update: updateMock })
 
       await updateCustomer('123', makeFormData(validCustomerData))
 
       expect(mockFrom).toHaveBeenCalledWith('customers')
-      expect(updateMock).toHaveBeenCalledWith({
-        name: 'Maria Silva',
-        email: 'maria@example.com',
-        phone: '11999999999',
-        is_vip: true,
-      })
-      expect(eqMock).toHaveBeenCalledWith('id', '123')
+      expect(updateMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Maria Silva',
+          email: 'maria@example.com',
+          phone: '11999999999',
+          is_vip: true,
+        })
+      )
+      expect(eqIdMock).toHaveBeenCalledWith('id', '123')
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/clientes')
     })
 
@@ -122,8 +135,9 @@ describe('customers actions', () => {
 
     it('lanca erro quando Supabase falha', async () => {
       const dbError = { message: 'DB error' }
-      const eqMock = vi.fn().mockResolvedValue({ data: null, error: dbError })
-      const updateMock = vi.fn().mockReturnValue({ eq: eqMock })
+      const eqTenantMock = vi.fn().mockResolvedValue({ data: null, error: dbError })
+      const eqIdMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
+      const updateMock = vi.fn().mockReturnValue({ eq: eqIdMock })
       mockFrom.mockReturnValue({ update: updateMock })
 
       await expect(updateCustomer('123', makeFormData(validCustomerData))).rejects.toEqual(dbError)
@@ -132,21 +146,23 @@ describe('customers actions', () => {
 
   describe('deleteCustomer', () => {
     it('deleta cliente por id', async () => {
-      const eqMock = vi.fn().mockResolvedValue({ data: null, error: null })
-      const deleteMock = vi.fn().mockReturnValue({ eq: eqMock })
+      const eqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
+      const eqIdMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
+      const deleteMock = vi.fn().mockReturnValue({ eq: eqIdMock })
       mockFrom.mockReturnValue({ delete: deleteMock })
 
       await deleteCustomer('123')
 
       expect(mockFrom).toHaveBeenCalledWith('customers')
-      expect(eqMock).toHaveBeenCalledWith('id', '123')
+      expect(eqIdMock).toHaveBeenCalledWith('id', '123')
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/clientes')
     })
 
     it('lanca erro quando Supabase falha', async () => {
       const dbError = { message: 'DB error' }
-      const eqMock = vi.fn().mockResolvedValue({ data: null, error: dbError })
-      const deleteMock = vi.fn().mockReturnValue({ eq: eqMock })
+      const eqTenantMock = vi.fn().mockResolvedValue({ data: null, error: dbError })
+      const eqIdMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
+      const deleteMock = vi.fn().mockReturnValue({ eq: eqIdMock })
       mockFrom.mockReturnValue({ delete: deleteMock })
 
       await expect(deleteCustomer('123')).rejects.toEqual(dbError)
