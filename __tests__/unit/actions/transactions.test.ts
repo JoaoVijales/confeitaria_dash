@@ -9,6 +9,8 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(() => mockSupabase),
 }))
 
+vi.mock('@/lib/supabase/tenant', () => ({ getTenantId: vi.fn().mockResolvedValue('test-tenant-id') }))
+
 import { getTransactions, getMonthSummary } from '@/app/actions/transactions'
 
 describe('transactions actions', () => {
@@ -28,10 +30,12 @@ describe('transactions actions', () => {
       mockFrom.mockImplementation((table: string) => {
         const chain = {
           select: vi.fn().mockReturnValue({
-            gte: vi.fn().mockReturnValue({
-              lte: vi.fn().mockResolvedValue({
-                data: table === 'revenue_entries' ? revenues : expenses,
-                error: null,
+            eq: vi.fn().mockReturnValue({
+              gte: vi.fn().mockReturnValue({
+                lte: vi.fn().mockResolvedValue({
+                  data: table === 'revenue_entries' ? revenues : expenses,
+                  error: null,
+                }),
               }),
             }),
           }),
@@ -52,10 +56,12 @@ describe('transactions actions', () => {
 
       mockFrom.mockImplementation((table: string) => ({
         select: vi.fn().mockReturnValue({
-          gte: vi.fn().mockReturnValue({
-            lte: vi.fn().mockResolvedValue({
-              data: table === 'revenue_entries' ? null : [],
-              error: table === 'revenue_entries' ? dbError : null,
+          eq: vi.fn().mockReturnValue({
+            gte: vi.fn().mockReturnValue({
+              lte: vi.fn().mockResolvedValue({
+                data: table === 'revenue_entries' ? null : [],
+                error: table === 'revenue_entries' ? dbError : null,
+              }),
             }),
           }),
         }),
@@ -69,10 +75,12 @@ describe('transactions actions', () => {
 
       mockFrom.mockImplementation((table: string) => ({
         select: vi.fn().mockReturnValue({
-          gte: vi.fn().mockReturnValue({
-            lte: vi.fn().mockResolvedValue({
-              data: table === 'expense_entries' ? null : [],
-              error: table === 'expense_entries' ? dbError : null,
+          eq: vi.fn().mockReturnValue({
+            gte: vi.fn().mockReturnValue({
+              lte: vi.fn().mockResolvedValue({
+                data: table === 'expense_entries' ? null : [],
+                error: table === 'expense_entries' ? dbError : null,
+              }),
             }),
           }),
         }),
@@ -89,10 +97,11 @@ describe('transactions actions', () => {
         single: vi.fn().mockResolvedValue({ data: summary, error: null }),
       })
       const eqMonth = vi.fn().mockReturnValue({ eq: eqYear })
+      const eqTenant = vi.fn().mockReturnValue({ eq: eqMonth })
 
       mockFrom.mockReturnValue({
         select: vi.fn().mockReturnValue({
-          eq: eqMonth,
+          eq: eqTenant,
         }),
       })
 
@@ -107,10 +116,11 @@ describe('transactions actions', () => {
         single: vi.fn().mockResolvedValue({ data: null, error: notFoundError }),
       })
       const eqMonth = vi.fn().mockReturnValue({ eq: eqYear })
+      const eqTenant = vi.fn().mockReturnValue({ eq: eqMonth })
 
       mockFrom.mockReturnValue({
         select: vi.fn().mockReturnValue({
-          eq: eqMonth,
+          eq: eqTenant,
         }),
       })
 
@@ -124,10 +134,11 @@ describe('transactions actions', () => {
         single: vi.fn().mockResolvedValue({ data: null, error: dbError }),
       })
       const eqMonth = vi.fn().mockReturnValue({ eq: eqYear })
+      const eqTenant = vi.fn().mockReturnValue({ eq: eqMonth })
 
       mockFrom.mockReturnValue({
         select: vi.fn().mockReturnValue({
-          eq: eqMonth,
+          eq: eqTenant,
         }),
       })
 
