@@ -2,12 +2,10 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getTenantId } from '@/lib/supabase/tenant'
-import { cookies } from 'next/headers'
 
 export async function getTransactions(startDate: string, endDate: string) {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-  const tenantId = await getTenantId(supabase)
+  const supabase = createClient()
+  const tenantId = await getTenantId()
 
   const { data: revenues, error: revenuesError } = await supabase
     .from('revenue_entries')
@@ -36,9 +34,8 @@ export async function getTransactions(startDate: string, endDate: string) {
 }
 
 export async function getMonthSummary(month: number, year: number) {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-  const tenantId = await getTenantId(supabase)
+  const supabase = createClient()
+  const tenantId = await getTenantId()
   const { data: monthlyClosure, error } = await supabase
     .from('monthly_closures')
     .select('*')

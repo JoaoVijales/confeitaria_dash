@@ -4,12 +4,10 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getTenantId } from '@/lib/supabase/tenant'
 import { revenueSchema } from '@/lib/validations/revenue.schema'
-import { cookies } from 'next/headers'
 
 export async function createRevenue(formData: FormData) {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-  const tenantId = await getTenantId(supabase)
+  const supabase = createClient()
+  const tenantId = await getTenantId()
   const data = Object.fromEntries(formData.entries())
   const parsed = revenueSchema.parse({
     ...data,
@@ -25,9 +23,8 @@ export async function createRevenue(formData: FormData) {
 }
 
 export async function updateRevenue(id: string, formData: FormData) {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-  const tenantId = await getTenantId(supabase)
+  const supabase = createClient()
+  const tenantId = await getTenantId()
   const data = Object.fromEntries(formData.entries())
   const parsed = revenueSchema.parse({
     ...data,
@@ -47,9 +44,8 @@ export async function updateRevenue(id: string, formData: FormData) {
 }
 
 export async function deleteRevenue(id: string) {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-  const tenantId = await getTenantId(supabase)
+  const supabase = createClient()
+  const tenantId = await getTenantId()
   const { error } = await supabase
     .from('revenue_entries')
     .delete()
@@ -61,9 +57,8 @@ export async function deleteRevenue(id: string) {
 }
 
 export async function getRevenues() {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-  const tenantId = await getTenantId(supabase)
+  const supabase = createClient()
+  const tenantId = await getTenantId()
   const { data, error } = await supabase
     .from('revenue_entries')
     .select('*')
