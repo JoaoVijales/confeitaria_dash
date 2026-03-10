@@ -3,12 +3,10 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getTenantId } from '@/lib/supabase/tenant'
-import { cookies } from 'next/headers'
 
 export async function createRecipe(data: { product_id: string; yield: number; ingredients: { ingredient_id: string; quantity: number }[] }) {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-  const tenantId = await getTenantId(supabase)
+  const supabase = createClient()
+  const tenantId = await getTenantId()
 
   const { data: recipe, error: recipeError } = await supabase
     .from('recipes')
@@ -31,9 +29,8 @@ export async function createRecipe(data: { product_id: string; yield: number; in
 }
 
 export async function updateRecipe(id: string, data: { product_id: string; yield: number; ingredients: { ingredient_id: string; quantity: number }[] }) {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-  const tenantId = await getTenantId(supabase)
+  const supabase = createClient()
+  const tenantId = await getTenantId()
 
   const { error: recipeError } = await supabase
     .from('recipes')
@@ -64,9 +61,8 @@ export async function updateRecipe(id: string, data: { product_id: string; yield
 }
 
 export async function deleteRecipe(id: string) {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-  const tenantId = await getTenantId(supabase)
+  const supabase = createClient()
+  const tenantId = await getTenantId()
   const { error } = await supabase
     .from('recipes')
     .delete()
