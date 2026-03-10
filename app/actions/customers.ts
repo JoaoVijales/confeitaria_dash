@@ -4,12 +4,10 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getTenantId } from '@/lib/supabase/tenant'
 import { customerSchema } from '@/lib/validations/customer.schema'
-import { cookies } from 'next/headers'
 
 export async function getCustomers() {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-  const tenantId = await getTenantId(supabase)
+  const supabase = createClient()
+  const tenantId = await getTenantId()
   const { data, error } = await supabase
     .from('customers')
     .select('*')
@@ -20,9 +18,8 @@ export async function getCustomers() {
 }
 
 export async function createCustomer(formData: FormData) {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-  const tenantId = await getTenantId(supabase)
+  const supabase = createClient()
+  const tenantId = await getTenantId()
   const data = Object.fromEntries(formData.entries())
   const parsed = customerSchema.parse({ ...data, is_vip: data.is_vip === 'on' })
 
@@ -33,9 +30,8 @@ export async function createCustomer(formData: FormData) {
 }
 
 export async function updateCustomer(id: string, formData: FormData) {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-  const tenantId = await getTenantId(supabase)
+  const supabase = createClient()
+  const tenantId = await getTenantId()
   const data = Object.fromEntries(formData.entries())
   const parsed = customerSchema.parse({ ...data, is_vip: data.is_vip === 'on' })
 
@@ -50,9 +46,8 @@ export async function updateCustomer(id: string, formData: FormData) {
 }
 
 export async function deleteCustomer(id: string) {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-  const tenantId = await getTenantId(supabase)
+  const supabase = createClient()
+  const tenantId = await getTenantId()
   const { error } = await supabase
     .from('customers')
     .delete()
@@ -64,9 +59,8 @@ export async function deleteCustomer(id: string) {
 }
 
 export async function updateCustomerStats(customerId: string) {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-  const tenantId = await getTenantId(supabase)
+  const supabase = createClient()
+  const tenantId = await getTenantId()
 
   const { data: orders, error: ordersError } = await supabase
     .from('orders')
@@ -89,9 +83,8 @@ export async function updateCustomerStats(customerId: string) {
 }
 
 export async function getCustomerOrders(customerId: string) {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-  const tenantId = await getTenantId(supabase)
+  const supabase = createClient()
+  const tenantId = await getTenantId()
 
   const { data, error } = await supabase
     .from('orders')

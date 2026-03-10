@@ -3,12 +3,10 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getTenantId } from '@/lib/supabase/tenant'
-import { cookies } from 'next/headers'
 
 export async function createOrder(data: { customer_id: string; items: { product_id: string; quantity: number; unit_price: number; }[]; total: number; status: string }) {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-  const tenantId = await getTenantId(supabase)
+  const supabase = createClient()
+  const tenantId = await getTenantId()
 
   const { data: orderData, error: orderError } = await supabase
     .from('orders')
@@ -46,9 +44,8 @@ export async function createOrder(data: { customer_id: string; items: { product_
 }
 
 export async function updateOrderStatus(id: string, status: string) {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-  const tenantId = await getTenantId(supabase)
+  const supabase = createClient()
+  const tenantId = await getTenantId()
   const { error } = await supabase
     .from('orders')
     .update({ status })
@@ -59,9 +56,8 @@ export async function updateOrderStatus(id: string, status: string) {
 }
 
 export async function deleteOrder(id: string) {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-  const tenantId = await getTenantId(supabase)
+  const supabase = createClient()
+  const tenantId = await getTenantId()
 
   const { error: itemsError } = await supabase
     .from('order_items')
@@ -81,9 +77,8 @@ export async function deleteOrder(id: string) {
 }
 
 export async function getOrders() {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-  const tenantId = await getTenantId(supabase)
+  const supabase = createClient()
+  const tenantId = await getTenantId()
   const { data, error } = await supabase
     .from('orders')
     .select('*, customers(name)')
@@ -95,9 +90,8 @@ export async function getOrders() {
 }
 
 export async function getOrderDetails(id: string) {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-  const tenantId = await getTenantId(supabase)
+  const supabase = createClient()
+  const tenantId = await getTenantId()
   const { data, error } = await supabase
     .from('orders')
     .select('*, customers(name, email), order_items(*, products(name))')

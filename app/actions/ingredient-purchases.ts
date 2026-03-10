@@ -3,13 +3,11 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getTenantId } from '@/lib/supabase/tenant'
-import { cookies } from 'next/headers'
 import { IngredientPurchaseFormValues } from '@/lib/validations/ingredient-purchase.schema'
 
 export async function createIngredientPurchase(data: IngredientPurchaseFormValues) {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-  const tenantId = await getTenantId(supabase)
+  const supabase = createClient()
+  const tenantId = await getTenantId()
 
   const { error } = await supabase.from('ingredient_purchases').insert({ ...data, tenant_id: tenantId })
   if (error) throw error
@@ -18,9 +16,8 @@ export async function createIngredientPurchase(data: IngredientPurchaseFormValue
 }
 
 export async function getIngredientPurchases(ingredientId?: number) {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-  const tenantId = await getTenantId(supabase)
+  const supabase = createClient()
+  const tenantId = await getTenantId()
 
   const query = supabase
     .from('ingredient_purchases')
@@ -39,9 +36,8 @@ export async function getIngredientPurchases(ingredientId?: number) {
 }
 
 export async function deleteIngredientPurchase(id: number) {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-  const tenantId = await getTenantId(supabase)
+  const supabase = createClient()
+  const tenantId = await getTenantId()
 
   const { error } = await supabase
     .from('ingredient_purchases')

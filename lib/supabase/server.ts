@@ -1,23 +1,13 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { type ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
-export function createClient(cookieStore: ReadonlyRequestCookies) {
-  // Create a server-side client for Supabase.
-  return createServerClient(
+/**
+ * Cria cliente Supabase server-side com service role key.
+ * Bypass de RLS — segurança garantida por tenant_id explícito nas queries
+ * e pela verificação de sessão Firebase em getTenantId().
+ */
+export function createClient() {
+  return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          cookieStore.set({ name, value, ...options })
-        },
-        remove(name: string, options: CookieOptions) {
-          cookieStore.set({ name, value: '', ...options })
-        },
-      },
-    }
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 }
