@@ -20,33 +20,33 @@ const mockUpdateOrderStatus = vi.fn()
 const mockDeleteOrder = vi.fn()
 
 vi.mock('@/app/actions/revenues', () => ({
-  createRevenue: (...args: any[]) => mockCreateRevenue(...args),
-  updateRevenue: (...args: any[]) => mockUpdateRevenue(...args),
-  deleteRevenue: (...args: any[]) => mockDeleteRevenue(...args),
+  createRevenue: (...args: unknown[]) => mockCreateRevenue(...args),
+  updateRevenue: (...args: unknown[]) => mockUpdateRevenue(...args),
+  deleteRevenue: (...args: unknown[]) => mockDeleteRevenue(...args),
 }))
 
 vi.mock('@/app/actions/expenses', () => ({
-  createExpense: (...args: any[]) => mockCreateExpense(...args),
-  updateExpense: (...args: any[]) => mockUpdateExpense(...args),
-  deleteExpense: (...args: any[]) => mockDeleteExpense(...args),
+  createExpense: (...args: unknown[]) => mockCreateExpense(...args),
+  updateExpense: (...args: unknown[]) => mockUpdateExpense(...args),
+  deleteExpense: (...args: unknown[]) => mockDeleteExpense(...args),
 }))
 
 vi.mock('@/app/actions/customers', () => ({
-  createCustomer: (...args: any[]) => mockCreateCustomer(...args),
-  updateCustomer: (...args: any[]) => mockUpdateCustomer(...args),
-  deleteCustomer: (...args: any[]) => mockDeleteCustomer(...args),
+  createCustomer: (...args: unknown[]) => mockCreateCustomer(...args),
+  updateCustomer: (...args: unknown[]) => mockUpdateCustomer(...args),
+  deleteCustomer: (...args: unknown[]) => mockDeleteCustomer(...args),
 }))
 
 vi.mock('@/app/actions/products', () => ({
-  createProduct: (...args: any[]) => mockCreateProduct(...args),
-  updateProduct: (...args: any[]) => mockUpdateProduct(...args),
-  deleteProduct: (...args: any[]) => mockDeleteProduct(...args),
+  createProduct: (...args: unknown[]) => mockCreateProduct(...args),
+  updateProduct: (...args: unknown[]) => mockUpdateProduct(...args),
+  deleteProduct: (...args: unknown[]) => mockDeleteProduct(...args),
 }))
 
 vi.mock('@/app/actions/orders', () => ({
-  createOrder: (...args: any[]) => mockCreateOrder(...args),
-  updateOrderStatus: (...args: any[]) => mockUpdateOrderStatus(...args),
-  deleteOrder: (...args: any[]) => mockDeleteOrder(...args),
+  createOrder: (...args: unknown[]) => mockCreateOrder(...args),
+  updateOrderStatus: (...args: unknown[]) => mockUpdateOrderStatus(...args),
+  deleteOrder: (...args: unknown[]) => mockDeleteOrder(...args),
 }))
 
 vi.mock('@/lib/validations/order.schema', () => ({
@@ -217,7 +217,7 @@ describe('useMutations', () => {
       const { result } = renderHook(() => useCreateOrder(), { wrapper: createWrapper() })
 
       await act(async () => {
-        result.current.mutate({ customer_id: 'c1', items: [] } as any)
+        result.current.mutate({ customer_id: 'c1', items: [] } as Parameters<typeof result.current.mutate>[0])
       })
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true))

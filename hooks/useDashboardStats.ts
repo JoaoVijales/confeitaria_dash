@@ -28,12 +28,16 @@ export function useDashboardStats() {
         `)
       if (productsError) throw productsError
 
-      const calculateCost = (product: any) => {
+      type RecipeIngredient = { quantity: number; ingredients: { unit_cost: number } }
+      type Recipe = { yield: number; recipe_ingredients: RecipeIngredient[] }
+      type ProductWithRecipes = { price: number; name: string; recipes: Recipe[] }
+
+      const calculateCost = (product: ProductWithRecipes) => {
         if (!product.recipes || product.recipes.length === 0) {
           return 0
         }
         const recipe = product.recipes[0]
-        const totalCost = recipe.recipe_ingredients.reduce((acc: number, ri: any) => {
+        const totalCost = recipe.recipe_ingredients.reduce((acc: number, ri: RecipeIngredient) => {
           return acc + (ri.ingredients.unit_cost * ri.quantity)
         }, 0)
         return totalCost / recipe.yield
@@ -49,7 +53,7 @@ export function useDashboardStats() {
 
       const monthlyProfit = monthlyRevenue - monthlyExpenses
 
-      const totalMargin = products.reduce((acc: number, product: any) => {
+      const totalMargin = (products as ProductWithRecipes[]).reduce((acc: number, product: ProductWithRecipes) => {
         const cost = calculateCost(product)
         if (cost === 0) return acc
         return acc + ((product.price - cost) / product.price) * 100
@@ -57,7 +61,7 @@ export function useDashboardStats() {
       const averageMargin = totalMargin / products.length
 
       const topProfitableProducts = products
-        .map((product: any) => {
+        .map((product: ProductWithRecipes) => {
           const cost = calculateCost(product)
           const profit = product.price - cost
           return { name: product.name, Lucro: profit }
