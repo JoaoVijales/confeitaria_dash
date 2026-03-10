@@ -1,21 +1,16 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Home, Package, ShoppingCart, Users, LogOut, Cake, TrendingUp, ArrowUpCircle, ArrowDownCircle } from 'lucide-react'
+import { Home, Package, ShoppingCart, Users, LogOut, Cake, TrendingUp, ArrowUpCircle, ArrowDownCircle, CreditCard } from 'lucide-react'
+import { signOut } from '@/app/actions/auth'
+import { usePlan } from '@/hooks/usePlan'
 
 export function Sidebar() {
   const pathname = usePathname()
-  const router = useRouter()
-  const supabase = createClient()
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push('/')
-  }
+  const { data: planData } = usePlan()
 
   const navItems = [
     { href: '/dashboard', label: 'Visão Geral', icon: Home },
@@ -25,6 +20,7 @@ export function Sidebar() {
     { href: '/dashboard/financeiro', label: 'Financeiro', icon: TrendingUp },
     { href: '/dashboard/entradas', label: 'Entradas', icon: ArrowUpCircle },
     { href: '/dashboard/saidas', label: 'Saídas', icon: ArrowDownCircle },
+    { href: '/dashboard/billing', label: 'Plano & Billing', icon: CreditCard },
   ]
 
   return (
@@ -53,11 +49,30 @@ export function Sidebar() {
             ))}
           </nav>
         </div>
-        <div className="mt-auto p-4 border-t border-slate-200">
-          <Button variant="ghost" size="lg" className="w-full justify-start" onClick={handleLogout}>
-            <LogOut className="mr-3 h-5 w-5" />
-            Sair
-          </Button>
+
+        {/* Upgrade banner for free plan */}
+        {planData?.plan === 'free' && (
+          <div className="mx-4 mb-2 rounded-lg bg-pink-50 border border-pink-200 p-3">
+            <p className="text-xs font-semibold text-pink-700">Plano Gratuito</p>
+            <p className="text-xs text-pink-600 mt-0.5">
+              {planData.limits.maxProducts} produtos, {planData.limits.maxOrdersPerMonth} pedidos/mês
+            </p>
+            <Link
+              href="/dashboard/billing"
+              className="mt-2 block text-xs font-semibold text-pink-700 hover:underline"
+            >
+              Fazer upgrade →
+            </Link>
+          </div>
+        )}
+
+        <div className="p-4 border-t border-slate-200">
+          <form action={signOut}>
+            <Button type="submit" variant="ghost" size="lg" className="w-full justify-start">
+              <LogOut className="mr-3 h-5 w-5" />
+              Sair
+            </Button>
+          </form>
         </div>
       </div>
     </div>
