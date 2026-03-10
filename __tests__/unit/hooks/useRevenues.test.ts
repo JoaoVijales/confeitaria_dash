@@ -6,7 +6,7 @@ import { ReactNode } from 'react'
 const mockGetRevenues = vi.fn()
 
 vi.mock('@/app/actions/revenues', () => ({
-  getRevenues: (...args: any[]) => mockGetRevenues(...args),
+  getRevenues: (...args: unknown[]) => mockGetRevenues(...args),
 }))
 
 import { useRevenues } from '@/hooks/useRevenues'

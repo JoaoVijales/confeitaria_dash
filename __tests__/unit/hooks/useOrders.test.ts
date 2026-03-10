@@ -6,7 +6,7 @@ import { ReactNode } from 'react'
 const mockGetOrders = vi.fn()
 
 vi.mock('@/app/actions/orders', () => ({
-  getOrders: (...args: any[]) => mockGetOrders(...args),
+  getOrders: (...args: unknown[]) => mockGetOrders(...args),
 }))
 
 import { useOrders } from '@/hooks/useOrders'
