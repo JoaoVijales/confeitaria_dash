@@ -35,6 +35,15 @@ export async function POST(request: NextRequest) {
       const tenantId = session.metadata?.tenant_id
       if (!tenantId) break
 
+      // Valida que o tenant realmente existe antes de atualizar (evita injeção via metadata)
+      const { data: tenantExists } = await supabase
+        .from('tenants')
+        .select('id')
+        .eq('id', tenantId)
+        .single()
+
+      if (!tenantExists) break
+
       await supabase
         .from('tenants')
         .update({

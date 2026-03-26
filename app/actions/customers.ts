@@ -10,11 +10,21 @@ export async function getCustomers() {
   const tenantId = await getTenantId()
   const { data, error } = await supabase
     .from('customers')
-    .select('*')
+    .select('*, orders(created_at, total)')
     .eq('tenant_id', tenantId)
     .order('name')
   if (error) throw error
-  return data
+  return data.map(customer => {
+    const orders = customer.orders ?? []
+    const last_purchase = orders.length > 0
+      ? [...orders].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].created_at
+      : null
+    const total_spent = orders.reduce((acc, order) => acc + order.total, 0)
+    const total_orders = orders.length
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { orders: _orders, ...customerData } = customer
+    return { ...customerData, last_purchase, total_spent, total_orders }
+  })
 }
 
 export async function createCustomer(formData: FormData) {

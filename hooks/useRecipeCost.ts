@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { createClient } from '@/lib/supabase/client'
+import { getIngredientsByIds } from '@/app/actions/ingredients'
 import { calculateTotalRecipeCost, calculateCostPerPortion } from '@/lib/utils/recipe-cost'
 
 type RecipeIngredientInput = {
@@ -9,7 +9,6 @@ type RecipeIngredientInput = {
 }
 
 export function useRecipeCost(recipeIngredients: RecipeIngredientInput[], portions: number) {
-  const supabase = createClient()
   const ingredientIds = recipeIngredients.map(ri => ri.ingredient_id)
   const enabled = ingredientIds.length > 0 && portions > 0
 
@@ -17,12 +16,7 @@ export function useRecipeCost(recipeIngredients: RecipeIngredientInput[], portio
     queryKey: ['recipe_cost', recipeIngredients, portions],
     enabled,
     queryFn: async () => {
-      const { data: ingredients, error } = await supabase
-        .from('ingredients')
-        .select('*')
-        .in('id', ingredientIds)
-
-      if (error) throw error
+      const ingredients = await getIngredientsByIds(ingredientIds)
 
       const enriched = recipeIngredients
         .map(ri => {
@@ -44,14 +38,8 @@ export function useRecipeCost(recipeIngredients: RecipeIngredientInput[], portio
     },
   })
 
-  // Expose totalCost and costPerPortion at the top level for convenience
-  // When disabled (empty ingredients), return 0; when error, return undefined
   const totalCost = enabled ? query.data?.totalCost : 0
   const costPerPortion = enabled ? query.data?.costPerPortion : 0
 
-  return {
-    ...query,
-    totalCost,
-    costPerPortion,
-  }
+  return { ...query, totalCost, costPerPortion }
 }

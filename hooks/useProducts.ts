@@ -1,27 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { createClient } from '@/lib/supabase/client'
-
-const supabase = createClient()
+import { getProducts } from '@/app/actions/products'
 
 export function useProducts() {
   return useQuery({
     queryKey: ['products'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('products')
-        .select(`
-          id,
-          name,
-          price,
-          cost,
-          stock,
-          min_stock,
-          category
-        `)
-      if (error) {
-        throw error
-      }
-      return data
-    },
+    queryFn: () => getProducts(),
   })
 }

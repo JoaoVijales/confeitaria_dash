@@ -4,6 +4,25 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getTenantId } from '@/lib/supabase/tenant'
 
+export async function getRecipes() {
+  const supabase = createClient()
+  const tenantId = await getTenantId()
+  const { data, error } = await supabase
+    .from('recipes')
+    .select(`
+      id,
+      yield,
+      products (id, name, price, cost),
+      recipe_ingredients (
+        quantity,
+        ingredients (id, name, unit, unit_cost)
+      )
+    `)
+    .eq('tenant_id', tenantId)
+  if (error) throw error
+  return data
+}
+
 export async function createRecipe(data: { product_id: string; yield: number; ingredients: { ingredient_id: string; quantity: number }[] }) {
   const supabase = createClient()
   const tenantId = await getTenantId()

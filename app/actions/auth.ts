@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { adminAuth } from '@/lib/firebase/admin'
 import { getFirebaseSession } from '@/lib/firebase/session'
 import { createClient } from '@/lib/supabase/server'
+import { getPlanLimits, Plan } from '@/lib/utils/plan-limits'
 
 const SESSION_COOKIE_DURATION_MS = 5 * 24 * 60 * 60 * 1000 // 5 days
 
@@ -73,4 +74,25 @@ export async function checkOnboarding(): Promise<boolean> {
     .single()
 
   return !!data
+}
+
+export async function getTenantPlan() {
+  const session = await getFirebaseSession()
+  if (!session) throw new Error('Usuário não autenticado')
+
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('tenants')
+    .select('plan, name')
+    .eq('owner_uid', session.uid)
+    .single()
+
+  if (error || !data) throw new Error('Tenant não encontrado')
+
+  const plan = ((data.plan as Plan) ?? 'free') as Plan
+  return {
+    plan,
+    tenantName: (data.name as string) ?? '',
+    limits: getPlanLimits(plan),
+  }
 }
