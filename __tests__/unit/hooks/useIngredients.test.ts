@@ -3,16 +3,13 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactNode } from 'react'
 
-const { mockSelect, mockFrom } = vi.hoisted(() => {
-  const mockSelect = vi.fn()
-  const mockFrom = vi.fn(() => ({ select: mockSelect }))
-  return { mockSelect, mockFrom }
-})
+const mockGetIngredients = vi.hoisted(() => vi.fn())
 
-vi.mock('@/lib/supabase/client', () => ({
-  createClient: vi.fn(() => ({
-    from: mockFrom,
-  })),
+vi.mock('@/app/actions/ingredients', () => ({
+  getIngredients: mockGetIngredients,
+  createIngredient: vi.fn(),
+  updateIngredient: vi.fn(),
+  deleteIngredient: vi.fn(),
 }))
 
 import { useIngredients } from '@/hooks/useIngredients'
@@ -27,8 +24,8 @@ function createWrapper() {
 }
 
 const mockIngredients = [
-  { id: '1', name: 'Farinha', unit: 'kg', unit_cost: 5.0, stock: 50 },
-  { id: '2', name: 'Acucar', unit: 'kg', unit_cost: 4.0, stock: 30 },
+  { id: 1, name: 'Farinha', unit: 'kg', unit_cost: 5.0, current_stock: 50, min_stock: 10, category: 'Secos', tenant_id: 't1' },
+  { id: 2, name: 'Açúcar', unit: 'kg', unit_cost: 4.0, current_stock: 30, min_stock: 5, category: 'Secos', tenant_id: 't1' },
 ]
 
 describe('useIngredients', () => {
@@ -36,8 +33,8 @@ describe('useIngredients', () => {
     vi.clearAllMocks()
   })
 
-  it('should fetch ingredients successfully', async () => {
-    mockSelect.mockResolvedValueOnce({ data: mockIngredients, error: null })
+  it('retorna lista de ingredientes da server action', async () => {
+    mockGetIngredients.mockResolvedValueOnce(mockIngredients)
 
     const { result } = renderHook(() => useIngredients(), { wrapper: createWrapper() })
 
@@ -46,17 +43,15 @@ describe('useIngredients', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
     expect(result.current.data).toEqual(mockIngredients)
-    expect(mockFrom).toHaveBeenCalledWith('ingredients')
-    expect(mockSelect).toHaveBeenCalledWith('*')
   })
 
-  it('should handle error from supabase', async () => {
-    mockSelect.mockResolvedValueOnce({ data: null, error: { message: 'DB error' } })
+  it('propaga erro da server action', async () => {
+    mockGetIngredients.mockRejectedValueOnce(new Error('DB error'))
 
     const { result } = renderHook(() => useIngredients(), { wrapper: createWrapper() })
 
     await waitFor(() => expect(result.current.isError).toBe(true))
 
-    expect(result.current.error).toEqual({ message: 'DB error' })
+    expect((result.current.error as Error).message).toBe('DB error')
   })
 })

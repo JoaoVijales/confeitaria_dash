@@ -23,9 +23,11 @@ import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
+import { useQueryClient } from '@tanstack/react-query'
 import { useIngredients } from '@/hooks/useIngredients'
 import { createIngredient, updateIngredient, deleteIngredient } from '@/app/actions/ingredients'
 import { IngredientFormDialog } from '@/components/IngredientFormDialog'
+import { toast } from 'sonner'
 
 type Ingredient = {
   id: number;
@@ -38,6 +40,7 @@ type Ingredient = {
 };
 
 export default function IngredientesPage() {
+  const queryClient = useQueryClient()
   const { data: ingredients, isLoading, error } = useIngredients()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null)
@@ -54,15 +57,23 @@ export default function IngredientesPage() {
   }
 
   const handleDeleteIngredient = async (id: number) => {
-    await deleteIngredient(id)
+    try {
+      await deleteIngredient(id)
+      queryClient.invalidateQueries({ queryKey: ['ingredients'] })
+      toast.success('Ingrediente excluído com sucesso!')
+    } catch {
+      toast.error('Erro ao excluir ingrediente.')
+    }
   }
 
   const handleSaveIngredient = async (data: Omit<Ingredient, 'id'>) => {
     if (editingIngredient) {
-      await updateIngredient(editingIngredient.id, data);
+      await updateIngredient(editingIngredient.id, data)
     } else {
-      await createIngredient(data);
+      await createIngredient(data)
     }
+    queryClient.invalidateQueries({ queryKey: ['ingredients'] })
+    toast.success(editingIngredient ? 'Ingrediente atualizado!' : 'Ingrediente criado!')
   }
 
   const filteredIngredients = ingredients?.filter(ingredient => {
