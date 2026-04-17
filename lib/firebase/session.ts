@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers'
 import { adminAuth } from './admin'
+import { logError } from '@/lib/logger'
 
 export interface FirebaseSession {
   uid: string
@@ -15,7 +16,8 @@ export async function getFirebaseSession(): Promise<FirebaseSession | null> {
   try {
     const decoded = await adminAuth.verifySessionCookie(sessionCookie, true)
     return { uid: decoded.uid, email: decoded.email }
-  } catch {
+  } catch (error) {
+    logError('Erro ao verificar sessão Firebase', error, { service: 'firebase', operation: 'verifySessionCookie' })
     return null
   }
 }

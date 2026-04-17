@@ -25,10 +25,10 @@ export function KpiCard({ title, value, icon, trend, data, prefix, suffix, gradi
     <Card className={`rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all hover:scale-[1.02] ${gradient}`}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-slate-600">{title}</CardTitle>
-        <div className="text-3xl text-slate-700">{icon}</div>
+        <div className="[&>svg]:h-6 [&>svg]:w-6 text-slate-500">{icon}</div>
       </CardHeader>
       <CardContent>
-        <div className="text-4xl font-bold text-slate-900">
+        <div className="text-2xl font-bold text-slate-900">
           {typeof value === 'number' ? (
             <CountUp start={0} end={value} duration={2.5} separator="." decimal="," prefix={prefix} suffix={suffix} />
           ) : (

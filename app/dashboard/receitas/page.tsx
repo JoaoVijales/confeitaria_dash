@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/table'
 import { PlusCircle, Edit, Trash2, Search } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { Input } from "@/components/ui/input"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/EmptyState'
@@ -87,6 +88,7 @@ export default function ReceitasPage() {
   const { data: recipes, isLoading, error } = useRecipes()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
 
   const handleAddRecipe = () => {
     setEditingRecipe(null)
@@ -110,6 +112,13 @@ export default function ReceitasPage() {
     }
   }
 
+  const filteredRecipes = recipes?.filter(recipe => {
+    const productName = recipe.products?.[0]?.name || '';
+    return productName.toLowerCase().includes(searchTerm.toLowerCase());
+  }) || [];
+
+  const totalRecipes = filteredRecipes.length;
+
   const fmt = (v: number) =>
     `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
@@ -123,12 +132,24 @@ export default function ReceitasPage() {
         <div className="flex items-center gap-3">
           <h1 className="text-3xl font-semibold text-slate-800">Receitas</h1>
           <Badge className="bg-purple-500 text-white rounded-full px-3 py-1 text-sm">
-            {recipes?.length || 0} Receitas
+            {totalRecipes} Receitas
           </Badge>
         </div>
-        <Button onClick={handleAddRecipe} className="bg-gradient-to-r from-purple-500 to-purple-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all">
-          <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Receita
-        </Button>
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              type="text"
+              placeholder="Buscar receita..."
+              className="pl-9 pr-4 py-2 w-64 rounded-lg border border-slate-200 focus:ring-purple-500 focus:border-purple-500 transition-all"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <Button onClick={handleAddRecipe} className="bg-gradient-to-r from-purple-500 to-purple-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all">
+            <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Receita
+          </Button>
+        </div>
       </div>
 
       <Card className="rounded-xl border border-slate-200 shadow-sm">
@@ -143,7 +164,7 @@ export default function ReceitasPage() {
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />
             </div>
-          ) : recipes && recipes.length > 0 ? (
+          ) : filteredRecipes.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow className="bg-slate-100 hover:bg-slate-100">
@@ -157,7 +178,7 @@ export default function ReceitasPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recipes.map((recipe) => {
+                {filteredRecipes.map((recipe) => {
                   const costPerPortion = getCostPerPortion(recipe)
                   const salePrice = recipe.products?.[0]?.price ?? 0
                   const margin = calculateMarginPercent(costPerPortion, salePrice)
@@ -167,7 +188,18 @@ export default function ReceitasPage() {
                   return (
                     <TableRow key={recipe.id} className="hover:bg-slate-50 transition-colors py-4">
                       <TableCell className="font-medium py-4 px-4">{recipe.products?.[0]?.name}</TableCell>
-                      <TableCell className="py-4 px-4">{recipe.recipe_ingredients.length} itens</TableCell>
+                      <TableCell className="py-4 px-4">
+                        <div className="flex flex-wrap gap-1 max-w-[200px]">
+                          {recipe.recipe_ingredients.slice(0, 3).map((ri, i) => (
+                            <Badge key={i} variant="secondary" className="text-[10px] px-1 py-0 h-5">
+                              {ri.ingredients?.[0]?.name || 'Ingrediente'}
+                            </Badge>
+                          ))}
+                          {recipe.recipe_ingredients.length > 3 && (
+                            <span className="text-xs text-slate-500">+{recipe.recipe_ingredients.length - 3}</span>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell className="text-right font-semibold text-slate-900 py-4 px-4">
                         {fmt(costPerPortion)}
                       </TableCell>

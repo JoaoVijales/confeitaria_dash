@@ -15,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className="font-sans antialiased bg-gradient-to-br from-slate-50 to-slate-100 text-slate-800">
+      <body className="font-sans antialiased bg-background text-foreground">
         <Providers>
           {children}
           <Toaster richColors />

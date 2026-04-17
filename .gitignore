@@ -38,3 +38,5 @@ yarn-error.log*
 
 .claude
 .temp/
+firebase_key.json
+.mcp.json

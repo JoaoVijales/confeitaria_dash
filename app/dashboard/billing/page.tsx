@@ -8,12 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { usePlan } from '@/hooks/usePlan'
-import { createCheckoutSession, createBillingPortalSession } from '@/app/actions/billing'
-
-const PRICE_IDS = {
-  basic: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_BASIC ?? 'price_basic',
-  pro: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO ?? 'price_pro',
-}
+import { createCheckoutSession, cancelSubscription } from '@/app/actions/billing'
 
 const plans = [
   {
@@ -22,7 +17,6 @@ const plans = [
     price: 'R$ 0',
     period: 'para sempre',
     limits: ['Até 30 produtos', 'Até 50 pedidos/mês', 'Todos os módulos'],
-    priceId: null,
   },
   {
     key: 'basic' as const,
@@ -30,7 +24,6 @@ const plans = [
     price: 'R$ 49',
     period: '/mês',
     limits: ['Até 200 produtos', 'Pedidos ilimitados', 'Suporte prioritário'],
-    priceId: PRICE_IDS.basic,
   },
   {
     key: 'pro' as const,
@@ -38,7 +31,6 @@ const plans = [
     price: 'R$ 99',
     period: '/mês',
     limits: ['Produtos ilimitados', 'Pedidos ilimitados', 'Analytics avançado', 'Suporte dedicado'],
-    priceId: PRICE_IDS.pro,
   },
 ]
 
@@ -55,17 +47,18 @@ function SuccessBanner() {
 export default function BillingPage() {
   const { data: planData, isLoading } = usePlan()
 
-  async function handleUpgrade(priceId: string) {
+  async function handleUpgrade(planKey: string) {
     try {
-      await createCheckoutSession(priceId)
+      await createCheckoutSession(planKey)
     } catch {
       toast.error('Erro ao iniciar checkout. Tente novamente.')
     }
   }
 
-  async function handlePortal() {
+  async function handleCancel() {
     try {
-      await createBillingPortalSession()
+      await cancelSubscription()
+      toast.success('Assinatura cancelada. Você voltará ao plano Gratuito.')
     } catch {
       toast.error('Você não possui uma assinatura ativa.')
     }
@@ -121,8 +114,13 @@ export default function BillingPage() {
             </div>
           </div>
           {currentPlan !== 'free' && (
-            <Button variant="outline" size="sm" className="mt-4" onClick={handlePortal}>
-              Gerenciar assinatura
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-4"
+              onClick={handleCancel}
+            >
+              Cancelar assinatura
             </Button>
           )}
         </CardContent>
@@ -160,9 +158,9 @@ export default function BillingPage() {
                     </li>
                   ))}
                 </ul>
-                {!isCurrent && plan.priceId && (
+                {!isCurrent && plan.key !== 'free' && (
                   <Button
-                    onClick={() => handleUpgrade(plan.priceId!)}
+                    onClick={() => handleUpgrade(plan.key)}
                     className="w-full bg-pink-500 hover:bg-pink-600"
                   >
                     Fazer upgrade

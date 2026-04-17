@@ -112,6 +112,19 @@ describe('useMutations', () => {
       expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['financials'] })
     })
 
+    it('useUpdateRevenue should call updateRevenue', async () => {
+      mockUpdateRevenue.mockResolvedValueOnce(undefined)
+
+      const { result } = renderHook(() => useUpdateRevenue(), { wrapper: createWrapper() })
+
+      await act(async () => {
+        result.current.mutate(new FormData())
+      })
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true))
+      expect(mockUpdateRevenue).toHaveBeenCalled()
+    })
+
     it('useDeleteRevenue should call deleteRevenue', async () => {
       mockDeleteRevenue.mockResolvedValueOnce(undefined)
 
@@ -138,6 +151,19 @@ describe('useMutations', () => {
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true))
       expect(mockCreateExpense).toHaveBeenCalled()
+    })
+
+    it('useUpdateExpense should call updateExpense', async () => {
+      mockUpdateExpense.mockResolvedValueOnce(undefined)
+
+      const { result } = renderHook(() => useUpdateExpense(), { wrapper: createWrapper() })
+
+      await act(async () => {
+        result.current.mutate(new FormData())
+      })
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true))
+      expect(mockUpdateExpense).toHaveBeenCalled()
     })
 
     it('useDeleteExpense should call deleteExpense', async () => {
@@ -168,6 +194,19 @@ describe('useMutations', () => {
       expect(mockCreateCustomer).toHaveBeenCalled()
     })
 
+    it('useUpdateCustomer should call updateCustomer', async () => {
+      mockUpdateCustomer.mockResolvedValueOnce(undefined)
+
+      const { result } = renderHook(() => useUpdateCustomer(), { wrapper: createWrapper() })
+
+      await act(async () => {
+        result.current.mutate(new FormData())
+      })
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true))
+      expect(mockUpdateCustomer).toHaveBeenCalled()
+    })
+
     it('useDeleteCustomer should call deleteCustomer', async () => {
       mockDeleteCustomer.mockResolvedValueOnce(undefined)
 
@@ -194,6 +233,19 @@ describe('useMutations', () => {
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true))
       expect(mockCreateProduct).toHaveBeenCalled()
+    })
+
+    it('useUpdateProduct should call updateProduct', async () => {
+      mockUpdateProduct.mockResolvedValueOnce(undefined)
+
+      const { result } = renderHook(() => useUpdateProduct(), { wrapper: createWrapper() })
+
+      await act(async () => {
+        result.current.mutate(new FormData())
+      })
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true))
+      expect(mockUpdateProduct).toHaveBeenCalled()
     })
 
     it('useDeleteProduct should call deleteProduct', async () => {

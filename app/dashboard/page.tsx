@@ -32,10 +32,21 @@ const statusColors: { [key: string]: string } = {
   Cancelado: "bg-red-100 text-red-700",
 };
 
+interface Order {
+  id: string;
+  total: number;
+  status: string;
+  created_at: string;
+  customers: {
+    name: string;
+  } | null;
+}
+
 export default function DashboardPage() {
   const { data: stats, isLoading: isLoadingStats } = useDashboardStats();
-  const { data: orders, isLoading: isLoadingOrders } = useOrders();
+  const { data: ordersData, isLoading: isLoadingOrders } = useOrders();
 
+  const orders = ordersData as unknown as Order[];
   const recentOrders = orders?.slice(0, 5) || [];
 
   return (
@@ -46,9 +57,10 @@ export default function DashboardPage() {
 
       <StockAlertBanner />
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {isLoadingStats ? (
           <>
+            <Skeleton className="h-36 w-full" />
             <Skeleton className="h-36 w-full" />
             <Skeleton className="h-36 w-full" />
             <Skeleton className="h-36 w-full" />
@@ -61,7 +73,7 @@ export default function DashboardPage() {
               title="Vendas do Dia"
               value={stats?.dailySales.total || 0}
               icon={<DollarSign />}
-              trend={5.2}
+              trend={stats?.trends.revenue}
               prefix="R$ "
               gradient="bg-gradient-to-br from-green-50 to-emerald-50"
             />
@@ -69,21 +81,19 @@ export default function DashboardPage() {
               title="Pedidos Abertos"
               value={stats?.openOrders.count || 0}
               icon={<ShoppingCart />}
-              trend={-1.5}
               gradient="bg-gradient-to-br from-blue-50 to-sky-50"
             />
             <KpiCard
               title="Mais Vendido"
               value={stats?.topSellingProduct.name || 'N/A'}
               icon={<Trophy />}
-              trend={12} // Added a placeholder trend
               gradient="bg-gradient-to-br from-amber-50 to-orange-50"
             />
             <KpiCard
               title="Lucro do Mês"
               value={stats?.monthlyProfit || 0}
               icon={<TrendingUp />}
-              trend={(stats?.monthlyProfit || 0) > 0 ? 10 : -5} // Added a placeholder trend
+              trend={stats?.trends.profit}
               prefix="R$ "
               gradient="bg-gradient-to-br from-purple-50 to-violet-50"
             />
@@ -91,15 +101,14 @@ export default function DashboardPage() {
               title="Margem Média"
               value={stats?.averageMargin || 0}
               icon={<Percent />}
-              trend={(stats?.averageMargin || 0) > 0 ? 2 : -1} // Added a placeholder trend
               suffix="%"
               gradient="bg-gradient-to-br from-pink-50 to-rose-50"
             />
             <KpiCard
               title="Balanço do Mês"
-              value={stats?.monthlyProfit || 0}
+              value={stats?.monthlyRevenue || 0}
               icon={<Wallet />}
-              trend={(stats?.monthlyProfit || 0) > 0 ? 8 : -3} // Added a placeholder trend
+              trend={stats?.trends.revenue}
               prefix="R$ "
               gradient="bg-gradient-to-br from-cyan-50 to-teal-50"
             />
@@ -209,7 +218,7 @@ export default function DashboardPage() {
                 {recentOrders.map((order) => (
                   <TableRow key={order.id} className="hover:bg-slate-50 transition-colors group">
                     <TableCell className="font-medium py-3 px-4">{order.id}</TableCell>
-                    <TableCell className="py-3 px-4">{order.customers?.[0]?.name}</TableCell>
+                    <TableCell className="py-3 px-4">{order.customers?.name || 'N/A'}</TableCell>
                     <TableCell className="text-right py-3 px-4">
                       R$ {order.total.toLocaleString("pt-BR", {
                         minimumFractionDigits: 2,
@@ -226,7 +235,7 @@ export default function DashboardPage() {
                     </TableCell>
                     <TableCell className="text-right py-3 px-4 text-slate-500">{new Date(order.created_at).toLocaleTimeString()}</TableCell>
                     <TableCell className="text-center py-3 px-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="outline" size="icon" asChild>
+                      <Button variant="outline" size="icon" asChild aria-label="Ver detalhes do pedido">
                         <Link href={`/dashboard/pedidos?id=${order.id}`}>
                           <Eye className="h-4 w-4" />
                         </Link>

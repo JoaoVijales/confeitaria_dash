@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getTenantId } from '@/lib/supabase/tenant'
 import { productSchema } from '@/lib/validations/product.schema'
+import { handleSupabaseError } from '@/lib/logger'
 
 export async function getProducts() {
   const supabase = createClient()
@@ -13,7 +14,7 @@ export async function getProducts() {
     .select('*')
     .eq('tenant_id', tenantId)
     .order('name')
-  if (error) throw error
+  handleSupabaseError(error, 'getProducts', { tenantId })
   return data
 }
 
@@ -30,7 +31,7 @@ export async function createProduct(formData: FormData) {
   })
 
   const { error } = await supabase.from('products').insert({ ...parsed, tenant_id: tenantId })
-  if (error) throw error
+  handleSupabaseError(error, 'createProduct', { tenantId, data: parsed })
 
   revalidatePath('/dashboard/produtos')
 }
@@ -52,7 +53,7 @@ export async function updateProduct(id: string, formData: FormData) {
     .update(parsed)
     .eq('id', id)
     .eq('tenant_id', tenantId)
-  if (error) throw error
+  handleSupabaseError(error, 'updateProduct', { tenantId, productId: id, data: parsed })
 
   revalidatePath('/dashboard/produtos')
 }
@@ -65,7 +66,7 @@ export async function deleteProduct(id: string) {
     .delete()
     .eq('id', id)
     .eq('tenant_id', tenantId)
-  if (error) throw error
+  handleSupabaseError(error, 'deleteProduct', { tenantId, productId: id })
 
   revalidatePath('/dashboard/produtos')
 }
@@ -78,6 +79,6 @@ export async function checkLowStock() {
     .select('name, stock, min_stock')
     .eq('tenant_id', tenantId)
 
-  if (error) throw error
+  handleSupabaseError(error, 'checkLowStock', { tenantId })
   return data.filter(p => p.stock < p.min_stock)
 }

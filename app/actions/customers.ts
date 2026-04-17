@@ -4,17 +4,29 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getTenantId } from '@/lib/supabase/tenant'
 import { customerSchema } from '@/lib/validations/customer.schema'
+import { handleSupabaseError } from '@/lib/logger'
 
 export async function getCustomers() {
   const supabase = createClient()
   const tenantId = await getTenantId()
   const { data, error } = await supabase
     .from('customers')
-    .select('*')
+    .select(`
+      id, name, email, phone, is_vip, total_orders, total_spent, created_at,
+      orders (created_at)
+    `)
     .eq('tenant_id', tenantId)
     .order('name')
-  if (error) throw error
-  return data
+  handleSupabaseError(error, 'getCustomers', { tenantId })
+
+  return (data ?? []).map(({ orders, ...customer }) => ({
+    ...customer,
+    last_purchase: orders.length > 0
+      ? [...orders].sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        )[0].created_at
+      : null,
+  }))
 }
 
 export async function createCustomer(formData: FormData) {
@@ -24,7 +36,7 @@ export async function createCustomer(formData: FormData) {
   const parsed = customerSchema.parse({ ...data, is_vip: data.is_vip === 'on' })
 
   const { error } = await supabase.from('customers').insert({ ...parsed, tenant_id: tenantId })
-  if (error) throw error
+  handleSupabaseError(error, 'createCustomer', { tenantId, data: parsed })
 
   revalidatePath('/dashboard/clientes')
 }
@@ -40,7 +52,7 @@ export async function updateCustomer(id: string, formData: FormData) {
     .update(parsed)
     .eq('id', id)
     .eq('tenant_id', tenantId)
-  if (error) throw error
+  handleSupabaseError(error, 'updateCustomer', { tenantId, customerId: id, data: parsed })
 
   revalidatePath('/dashboard/clientes')
 }
@@ -53,7 +65,7 @@ export async function deleteCustomer(id: string) {
     .delete()
     .eq('id', id)
     .eq('tenant_id', tenantId)
-  if (error) throw error
+  handleSupabaseError(error, 'deleteCustomer', { tenantId, customerId: id })
 
   revalidatePath('/dashboard/clientes')
 }
@@ -68,10 +80,11 @@ export async function updateCustomerStats(customerId: string) {
     .eq('customer_id', customerId)
     .eq('tenant_id', tenantId)
 
-  if (ordersError) throw ordersError
+  handleSupabaseError(ordersError, 'updateCustomerStats:getOrders', { tenantId, customerId })
 
-  const total_orders = orders.length
-  const total_spent = orders.reduce((acc, order) => acc + order.total, 0)
+  const safeOrders = orders ?? []
+  const total_orders = safeOrders.length
+  const total_spent = safeOrders.reduce((acc, order) => acc + order.total, 0)
 
   const { error } = await supabase
     .from('customers')
@@ -79,7 +92,7 @@ export async function updateCustomerStats(customerId: string) {
     .eq('id', customerId)
     .eq('tenant_id', tenantId)
 
-  if (error) throw error
+  handleSupabaseError(error, 'updateCustomerStats:updateCustomer', { tenantId, customerId, total_orders, total_spent })
 }
 
 export async function getCustomerOrders(customerId: string) {
@@ -93,6 +106,6 @@ export async function getCustomerOrders(customerId: string) {
     .eq('tenant_id', tenantId)
     .order('created_at', { ascending: false })
 
-  if (error) throw error
+  handleSupabaseError(error, 'getCustomerOrders', { tenantId, customerId })
   return data
 }

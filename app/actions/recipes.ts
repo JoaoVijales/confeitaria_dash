@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getTenantId } from '@/lib/supabase/tenant'
+import { handleSupabaseError } from '@/lib/logger'
 
 export async function createRecipe(data: { product_id: string; yield: number; ingredients: { ingredient_id: string; quantity: number }[] }) {
   const supabase = createClient()
@@ -14,7 +15,7 @@ export async function createRecipe(data: { product_id: string; yield: number; in
     .select()
     .single()
 
-  if (recipeError) throw recipeError
+  handleSupabaseError(recipeError, 'createRecipe:insertRecipe', { tenantId, data: { product_id: data.product_id, yield: data.yield } })
 
   const recipeIngredients = data.ingredients.map(ingredient => ({
     recipe_id: recipe.id,
@@ -23,7 +24,7 @@ export async function createRecipe(data: { product_id: string; yield: number; in
   }))
 
   const { error: ingredientsError } = await supabase.from('recipe_ingredients').insert(recipeIngredients)
-  if (ingredientsError) throw ingredientsError
+  handleSupabaseError(ingredientsError, 'createRecipe:insertIngredients', { tenantId, recipeId: recipe.id })
 
   revalidatePath('/dashboard/receitas')
 }
@@ -38,7 +39,7 @@ export async function updateRecipe(id: string, data: { product_id: string; yield
     .eq('id', id)
     .eq('tenant_id', tenantId)
 
-  if (recipeError) throw recipeError
+  handleSupabaseError(recipeError, 'updateRecipe:updateRecipe', { tenantId, recipeId: id })
 
   const { error: deleteError } = await supabase
     .from('recipe_ingredients')
@@ -46,7 +47,7 @@ export async function updateRecipe(id: string, data: { product_id: string; yield
     .eq('recipe_id', id)
     .eq('tenant_id', tenantId)
 
-  if (deleteError) throw deleteError
+  handleSupabaseError(deleteError, 'updateRecipe:deleteIngredients', { tenantId, recipeId: id })
 
   const recipeIngredients = data.ingredients.map(ingredient => ({
     recipe_id: id,
@@ -55,7 +56,7 @@ export async function updateRecipe(id: string, data: { product_id: string; yield
   }))
 
   const { error: ingredientsError } = await supabase.from('recipe_ingredients').insert(recipeIngredients)
-  if (ingredientsError) throw ingredientsError
+  handleSupabaseError(ingredientsError, 'updateRecipe:insertIngredients', { tenantId, recipeId: id })
 
   revalidatePath('/dashboard/receitas')
 }
@@ -68,6 +69,6 @@ export async function deleteRecipe(id: string) {
     .delete()
     .eq('id', id)
     .eq('tenant_id', tenantId)
-  if (error) throw error
+  handleSupabaseError(error, 'deleteRecipe', { tenantId, recipeId: id })
   revalidatePath('/dashboard/receitas')
 }

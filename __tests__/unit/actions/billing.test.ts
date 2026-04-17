@@ -12,16 +12,18 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(() => ({ from: mockFrom })),
 }))
 
-const mockCheckoutCreate = vi.hoisted(() => vi.fn())
-const mockPortalCreate = vi.hoisted(() => vi.fn())
-vi.mock('@/lib/stripe/client', () => ({
-  stripe: {
-    checkout: { sessions: { create: mockCheckoutCreate } },
-    billingPortal: { sessions: { create: mockPortalCreate } },
+const mockSubscriptionsCreate = vi.hoisted(() => vi.fn())
+const mockSubscriptionsCancel = vi.hoisted(() => vi.fn())
+vi.mock('@/lib/abacatepay/client', () => ({
+  abacatepay: {
+    subscriptions: {
+      create: mockSubscriptionsCreate,
+      cancel: mockSubscriptionsCancel,
+    },
   },
 }))
 
-import { createCheckoutSession, createBillingPortalSession } from '@/app/actions/billing'
+import { createCheckoutSession, cancelSubscription } from '@/app/actions/billing'
 import { redirect } from 'next/navigation'
 
 describe('billing actions', () => {
@@ -36,53 +38,53 @@ describe('billing actions', () => {
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
-              data: { id: 'tenant-1', stripe_customer_id: null },
+              data: { id: 'tenant-1', abacate_customer_id: null },
               error: null,
             }),
           }),
         }),
       })
-      mockCheckoutCreate.mockResolvedValue({ url: 'https://checkout.stripe.com/session/123' })
+      mockSubscriptionsCreate.mockResolvedValue({ id: 'sub_1', url: 'https://checkout.abacatepay.com/session/123' })
 
-      await createCheckoutSession('price_basic_monthly')
+      process.env.ABACATEPAY_PRODUCT_ID_BASIC = 'prod_basic'
+      await createCheckoutSession('basic')
 
-      expect(mockCheckoutCreate).toHaveBeenCalledWith(
+      expect(mockSubscriptionsCreate).toHaveBeenCalledWith(
         expect.objectContaining({
-          mode: 'subscription',
-          line_items: [{ price: 'price_basic_monthly', quantity: 1 }],
+          items: [{ productId: 'prod_basic', quantity: 1 }],
+          metadata: { tenant_id: 'tenant-1' },
         })
       )
-      expect(redirect).toHaveBeenCalledWith('https://checkout.stripe.com/session/123')
+      expect(redirect).toHaveBeenCalledWith('https://checkout.abacatepay.com/session/123')
     })
 
-    it('reutiliza stripe_customer_id existente', async () => {
+    it('reutiliza abacate_customer_id existente', async () => {
       mockGetFirebaseSession.mockResolvedValue({ uid: 'user-123' })
       mockFrom.mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
-              data: { id: 'tenant-1', stripe_customer_id: 'cus_existing' },
+              data: { id: 'tenant-1', abacate_customer_id: 'cus_existing' },
               error: null,
             }),
           }),
         }),
       })
-      mockCheckoutCreate.mockResolvedValue({ url: 'https://checkout.stripe.com/session/456' })
+      mockSubscriptionsCreate.mockResolvedValue({ id: 'sub_2', url: 'https://checkout.abacatepay.com/session/456' })
 
-      await createCheckoutSession('price_pro_monthly')
+      process.env.ABACATEPAY_PRODUCT_ID_PRO = 'prod_pro'
+      await createCheckoutSession('pro')
 
-      expect(mockCheckoutCreate).toHaveBeenCalledWith(
-        expect.objectContaining({ customer: 'cus_existing' })
+      expect(mockSubscriptionsCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ customerId: 'cus_existing' })
       )
     })
 
     it('lança erro quando usuário não autenticado', async () => {
       mockGetFirebaseSession.mockResolvedValue(null)
 
-      await expect(createCheckoutSession('price_basic_monthly')).rejects.toThrow(
-        'Usuário não autenticado'
-      )
-      expect(mockCheckoutCreate).not.toHaveBeenCalled()
+      await expect(createCheckoutSession('basic')).rejects.toThrow('Usuário não autenticado')
+      expect(mockSubscriptionsCreate).not.toHaveBeenCalled()
     })
 
     it('lança erro quando tenant não encontrado', async () => {
@@ -95,55 +97,67 @@ describe('billing actions', () => {
         }),
       })
 
-      await expect(createCheckoutSession('price_basic_monthly')).rejects.toThrow(
-        'Tenant não encontrado'
-      )
+      await expect(createCheckoutSession('basic')).rejects.toThrow('Tenant não encontrado')
     })
-  })
 
-  describe('createBillingPortalSession', () => {
-    it('redireciona para portal do cliente', async () => {
+    it('lança erro quando planKey é inválido', async () => {
       mockGetFirebaseSession.mockResolvedValue({ uid: 'user-123' })
       mockFrom.mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
-              data: { stripe_customer_id: 'cus_existing' },
+              data: { id: 'tenant-1', abacate_customer_id: null },
               error: null,
             }),
           }),
         }),
       })
-      mockPortalCreate.mockResolvedValue({ url: 'https://billing.stripe.com/portal/123' })
 
-      await createBillingPortalSession()
+      process.env.ABACATEPAY_PRODUCT_ID_BASIC = ''
+      await expect(createCheckoutSession('basic')).rejects.toThrow('Plano inválido')
+    })
+  })
 
-      expect(mockPortalCreate).toHaveBeenCalledWith(
-        expect.objectContaining({ customer: 'cus_existing' })
-      )
-      expect(redirect).toHaveBeenCalledWith('https://billing.stripe.com/portal/123')
+  describe('cancelSubscription', () => {
+    it('cancela assinatura ativa', async () => {
+      mockGetFirebaseSession.mockResolvedValue({ uid: 'user-123' })
+      mockFrom.mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: { abacate_subscription_id: 'sub_abc123' },
+              error: null,
+            }),
+          }),
+        }),
+      })
+      mockSubscriptionsCancel.mockResolvedValue(undefined)
+
+      await cancelSubscription()
+
+      expect(mockSubscriptionsCancel).toHaveBeenCalledWith('sub_abc123')
     })
 
     it('lança erro quando usuário não autenticado', async () => {
       mockGetFirebaseSession.mockResolvedValue(null)
 
-      await expect(createBillingPortalSession()).rejects.toThrow('Usuário não autenticado')
+      await expect(cancelSubscription()).rejects.toThrow('Usuário não autenticado')
     })
 
-    it('lança erro quando não há stripe_customer_id', async () => {
+    it('lança erro quando não há assinatura ativa', async () => {
       mockGetFirebaseSession.mockResolvedValue({ uid: 'user-123' })
       mockFrom.mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
-              data: { stripe_customer_id: null },
+              data: { abacate_subscription_id: null },
               error: null,
             }),
           }),
         }),
       })
 
-      await expect(createBillingPortalSession()).rejects.toThrow('Sem assinatura ativa')
+      await expect(cancelSubscription()).rejects.toThrow('Sem assinatura ativa')
     })
   })
 })
