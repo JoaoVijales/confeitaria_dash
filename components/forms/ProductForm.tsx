@@ -123,7 +123,7 @@ export function ProductForm({
       className="space-y-5"
     >
       {/* Nome + Categoria */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="name">Nome do Produto</Label>
           <Input id="name" {...register('name')} />
@@ -346,7 +346,7 @@ export function ProductForm({
           <Separator />
 
           {/* Custo extra + custo resultante */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="extra_cost" className="text-xs text-slate-600">
                 Custo extra (embalagem, etc.)
@@ -393,7 +393,7 @@ export function ProductForm({
       </div>
 
       {/* Preço de venda + Margem */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="price">Preço de venda (R$)</Label>
           <Input
@@ -418,7 +418,7 @@ export function ProductForm({
       </div>
 
       {/* Estoque */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="stock">Estoque Atual</Label>
           <Input
