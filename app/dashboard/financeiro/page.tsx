@@ -61,7 +61,7 @@ export default function FinanceiroPage() {
     }
 
     if (filterCategory !== 'Todos') {
-      matchesCategory = transaction.description.includes(filterCategory); // This is a simplification, ideally category would be a direct property
+      matchesCategory = transaction.category === filterCategory;
     }
 
     if (filterType !== 'Todos') {

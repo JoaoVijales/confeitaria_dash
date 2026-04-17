@@ -2,13 +2,14 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { PlusCircle, Edit, Trash2, ShoppingCart, CheckCircle, Clock, Loader } from 'lucide-react'
+import { PlusCircle, Edit, Trash2, ShoppingCart, CheckCircle, Clock, Loader, Search } from 'lucide-react'
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useOrders } from '@/hooks/useOrders'
 import { useCreateOrder, useUpdateOrderStatus, useDeleteOrder } from '@/hooks/useMutations'
 import { OrderFormDialog } from '@/components/dialogs/OrderFormDialog'
@@ -103,6 +104,8 @@ export default function OrdersPage() {
     return customerName.toLowerCase().includes(searchTerm.toLowerCase()) || String(order.id).includes(searchTerm.toLowerCase());
   }) || [];
 
+  const totalOrders = filteredOrders.length;
+
   if (error) {
     return <EmptyState title="Erro ao carregar pedidos" description="Tente novamente mais tarde." icon={<ShoppingCart className="h-12 w-12" />} />
   }
@@ -111,52 +114,89 @@ export default function OrdersPage() {
     <>
       <div className="flex flex-col gap-6 p-6">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-3xl font-semibold">Pedidos</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-semibold text-slate-800">Pedidos</h1>
+            <Badge className="bg-blue-500 text-white rounded-full px-3 py-1 text-sm">
+              {totalOrders} Pedidos
+            </Badge>
+          </div>
           <div className="flex items-center gap-4">
-            <Input placeholder="Buscar por cliente ou ID..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-64" />
-            <Button onClick={() => handleOpenForm()}><PlusCircle className="mr-2 h-4 w-4" /> Novo Pedido</Button>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Buscar pedido..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 pr-4 py-2 w-64 rounded-lg border border-slate-200 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              />
+            </div>
+            <Button onClick={() => handleOpenForm()} className="bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all">
+              <PlusCircle className="mr-2 h-4 w-4" /> Novo Pedido
+            </Button>
           </div>
         </div>
 
-        <Card>
-          <CardHeader><CardTitle>Lista de Pedidos</CardTitle></CardHeader>
+        <Card className="rounded-xl border border-slate-200 shadow-sm">
+          <CardHeader className="bg-slate-100 rounded-t-xl py-3">
+            <CardTitle className="font-semibold text-slate-800">Lista de Pedidos</CardTitle>
+            <CardDescription className="text-slate-600">Acompanhe e gerencie os pedidos dos seus clientes.</CardDescription>
+          </CardHeader>
           <CardContent className="p-0">
             {isLoading ? (
-              <div className="space-y-2 p-4">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
+              <div className="space-y-4 p-4">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
             ) : filteredOrders.length > 0 ? (
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead className="text-center">Ações</TableHead>
+                  <TableRow className="bg-slate-100 hover:bg-slate-100">
+                    <TableHead className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">ID</TableHead>
+                    <TableHead className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Cliente</TableHead>
+                    <TableHead className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Data</TableHead>
+                    <TableHead className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Status</TableHead>
+                    <TableHead className="text-right py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Total</TableHead>
+                    <TableHead className="text-center py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredOrders.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell className="font-mono">#{order.id.substring(0, 6)}</TableCell>
-                      <TableCell>{order.customers?.[0]?.name || 'N/A'}</TableCell>
-                      <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
-                      <TableCell>
+                    <TableRow key={order.id} className="hover:bg-slate-50 transition-colors py-4">
+                      <TableCell className="font-mono py-4 px-4">#{order.id.substring(0, 6)}</TableCell>
+                      <TableCell className="py-4 px-4">{order.customers?.[0]?.name || 'N/A'}</TableCell>
+                      <TableCell className="py-4 px-4">{new Date(order.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell className="py-4 px-4">
                         <Badge className={`${statusColors[order.status] || "bg-gray-100"} flex items-center gap-1 w-fit`}>
                           {statusIcons[order.status]} {order.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right font-semibold">R$ {order.total.toFixed(2)}</TableCell>
-                      <TableCell className="flex justify-center gap-2">
-                        <Button variant="outline" size="icon" onClick={() => handleOpenStatus(order)}><Edit className="h-4 w-4" /></Button>
-                        <Button variant="destructive" size="icon" onClick={() => handleOpenConfirm(order)}><Trash2 className="h-4 w-4" /></Button>
+                      <TableCell className="text-right font-semibold py-4 px-4 text-slate-900">R$ {order.total.toFixed(2)}</TableCell>
+                      <TableCell className="flex justify-center gap-2 py-4 px-4">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="outline" size="icon" onClick={() => handleOpenStatus(order)} aria-label="Editar status">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Editar Status</p></TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="destructive" size="icon" onClick={() => handleOpenConfirm(order)} aria-label="Excluir pedido">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Excluir Pedido</p></TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             ) : (
-              <EmptyState title="Nenhum pedido encontrado" description="Crie um novo pedido para começar." icon={<ShoppingCart className="h-12 w-12" />} />
+              <EmptyState title="Nenhum pedido encontrado" description="Crie um novo pedido para começar." icon={<ShoppingCart className="h-12 w-12" />} action={{ label: "Novo Pedido", onClick: () => handleOpenForm() }} />
             )}
           </CardContent>
         </Card>

@@ -49,27 +49,6 @@ function makeFormData(data: Record<string, string>): FormData {
   return fd
 }
 
-// ─── Helpers de mock ─────────────────────────────────────────────────────────
-function buildSelectChain(data: unknown[] = []) {
-  const single = vi.fn().mockResolvedValue({ data: data[0] ?? null, error: null })
-  const order = vi.fn().mockResolvedValue({ data, error: null })
-  const lte = vi.fn().mockReturnValue({ data, error: null })
-  const gte = vi.fn().mockReturnValue({ lte })
-  const eqTenant = vi.fn().mockReturnValue({ order, single, gte })
-  const eqId = vi.fn().mockReturnValue({ eqTenant })
-  const select = vi.fn().mockReturnValue({ eq: eqId, order, eqTenant })
-  return { select, eqId, eqTenant, order, single }
-}
-
-function buildMutationChain() {
-  const eqTenant = vi.fn().mockResolvedValue({ data: null, error: null })
-  const eqId = vi.fn().mockReturnValue({ eq: eqTenant })
-  const insert = vi.fn().mockResolvedValue({ data: null, error: null })
-  const update = vi.fn().mockReturnValue({ eq: eqId })
-  const del = vi.fn().mockReturnValue({ eq: eqId })
-  return { insert, update, del, eqId, eqTenant }
-}
-
 // ─── CUSTOMERS ───────────────────────────────────────────────────────────────
 describe('[Segurança] customers — isolamento multi-tenant', () => {
   beforeEach(() => {

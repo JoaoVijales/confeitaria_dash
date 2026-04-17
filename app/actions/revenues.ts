@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getTenantId } from '@/lib/supabase/tenant'
 import { revenueSchema } from '@/lib/validations/revenue.schema'
+import { handleSupabaseError } from '@/lib/logger'
 
 export async function createRevenue(formData: FormData) {
   const supabase = createClient()
@@ -17,7 +18,7 @@ export async function createRevenue(formData: FormData) {
   })
 
   const { error } = await supabase.from('revenue_entries').insert({ ...parsed, tenant_id: tenantId })
-  if (error) throw error
+  handleSupabaseError(error, 'createRevenue', { tenantId, data: parsed })
 
   revalidatePath('/dashboard/entradas')
 }
@@ -38,7 +39,7 @@ export async function updateRevenue(id: string, formData: FormData) {
     .update(parsed)
     .eq('id', id)
     .eq('tenant_id', tenantId)
-  if (error) throw error
+  handleSupabaseError(error, 'updateRevenue', { tenantId, revenueId: id, data: parsed })
 
   revalidatePath('/dashboard/entradas')
 }
@@ -51,7 +52,7 @@ export async function deleteRevenue(id: string) {
     .delete()
     .eq('id', id)
     .eq('tenant_id', tenantId)
-  if (error) throw error
+  handleSupabaseError(error, 'deleteRevenue', { tenantId, revenueId: id })
 
   revalidatePath('/dashboard/entradas')
 }
@@ -64,6 +65,6 @@ export async function getRevenues() {
     .select('*')
     .eq('tenant_id', tenantId)
     .order('date', { ascending: false })
-  if (error) throw error
+  handleSupabaseError(error, 'getRevenues', { tenantId })
   return data
 }

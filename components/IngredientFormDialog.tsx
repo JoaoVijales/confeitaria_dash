@@ -10,7 +10,14 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useForm, SubmitHandler } from 'react-hook-form'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { useForm, SubmitHandler, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { useEffect } from 'react'
@@ -33,6 +40,9 @@ type IngredientFormDialogProps = {
   onSave: (data: IngredientFormValues) => void
 }
 
+const UNIT_OPTIONS = ['kg', 'g', 'L', 'ml', 'un']
+const CATEGORY_OPTIONS = ['Secos', 'Laticínios', 'Frutas', 'Embalagens', 'Outros']
+
 export function IngredientFormDialog({
   open,
   onOpenChange,
@@ -43,6 +53,7 @@ export function IngredientFormDialog({
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<IngredientFormValues>({
     resolver: zodResolver(ingredientSchema),
@@ -54,11 +65,11 @@ export function IngredientFormDialog({
     } else {
       reset({
         name: '',
-        unit: '',
+        unit: 'g',
         unit_cost: 0,
         current_stock: 0,
         min_stock: 0,
-        category: '',
+        category: 'Secos',
       })
     }
   }, [ingredient, reset])
@@ -84,15 +95,45 @@ export function IngredientFormDialog({
               {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="category">Categoria</Label>
-              <Input id="category" {...register('category')} />
+              <Label>Categoria</Label>
+              <Controller
+                name="category"
+                control={control}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORY_OPTIONS.map(opt => (
+                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
               {errors.category && <p className="text-red-500 text-sm">{errors.category.message}</p>}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="unit">Unidade</Label>
-              <Input id="unit" {...register('unit')} />
+              <Label>Unidade</Label>
+              <Controller
+                name="unit"
+                control={control}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {UNIT_OPTIONS.map(opt => (
+                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
               {errors.unit && <p className="text-red-500 text-sm">{errors.unit.message}</p>}
             </div>
             <div className="space-y-2">

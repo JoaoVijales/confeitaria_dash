@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getTenantId } from '@/lib/supabase/tenant'
+import { handleSupabaseError } from '@/lib/logger'
 
 export async function createOrder(data: { customer_id: string; items: { product_id: string; quantity: number; unit_price: number; }[]; total: number; status: string }) {
   const supabase = createClient()
@@ -19,7 +20,7 @@ export async function createOrder(data: { customer_id: string; items: { product_
     .select('id')
     .single()
 
-  if (orderError) throw orderError
+  handleSupabaseError(orderError, 'createOrder:insertOrder', { tenantId, data: { customer_id: data.customer_id, total: data.total } })
   const orderId = orderData.id
 
   const orderItems = data.items.map(item => ({
@@ -34,7 +35,7 @@ export async function createOrder(data: { customer_id: string; items: { product_
 
   if (itemsError) {
     await supabase.from('orders').delete().eq('id', orderId).eq('tenant_id', tenantId)
-    throw itemsError
+    handleSupabaseError(itemsError, 'createOrder:insertItems', { tenantId, orderId })
   }
 
   revalidatePath('/dashboard/pedidos')
@@ -51,7 +52,7 @@ export async function updateOrderStatus(id: string, status: string) {
     .update({ status })
     .eq('id', id)
     .eq('tenant_id', tenantId)
-  if (error) throw error
+  handleSupabaseError(error, 'updateOrderStatus', { tenantId, orderId: id, status })
   revalidatePath('/dashboard/pedidos')
 }
 
@@ -64,14 +65,14 @@ export async function deleteOrder(id: string) {
     .delete()
     .eq('order_id', id)
     .eq('tenant_id', tenantId)
-  if (itemsError) throw itemsError
+  handleSupabaseError(itemsError, 'deleteOrder:deleteItems', { tenantId, orderId: id })
 
   const { error: orderError } = await supabase
     .from('orders')
     .delete()
     .eq('id', id)
     .eq('tenant_id', tenantId)
-  if (orderError) throw orderError
+  handleSupabaseError(orderError, 'deleteOrder:deleteOrder', { tenantId, orderId: id })
 
   revalidatePath('/dashboard/pedidos')
 }
@@ -85,7 +86,7 @@ export async function getOrders() {
     .eq('tenant_id', tenantId)
     .order('created_at', { ascending: false })
 
-  if (error) throw error
+  handleSupabaseError(error, 'getOrders', { tenantId })
   return data
 }
 
@@ -99,6 +100,6 @@ export async function getOrderDetails(id: string) {
     .eq('tenant_id', tenantId)
     .single()
 
-  if (error) throw error
+  handleSupabaseError(error, 'getOrderDetails', { tenantId, orderId: id })
   return data
 }

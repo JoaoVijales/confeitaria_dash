@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Home, Package, ShoppingCart, Users, LogOut, Cake, TrendingUp, ArrowUpCircle, ArrowDownCircle, CreditCard } from 'lucide-react'
+import { Home, Package, ShoppingCart, Users, LogOut, Cake, TrendingUp, ArrowUpCircle, ArrowDownCircle, CreditCard, Wheat, ChefHat } from 'lucide-react'
 import { signOut } from '@/app/actions/auth'
 import { usePlan } from '@/hooks/usePlan'
 
@@ -16,6 +16,8 @@ export function Sidebar() {
     { href: '/dashboard', label: 'Visão Geral', icon: Home },
     { href: '/dashboard/pedidos', label: 'Pedidos', icon: ShoppingCart },
     { href: '/dashboard/produtos', label: 'Produtos', icon: Package },
+    { href: '/dashboard/ingredientes', label: 'Ingredientes', icon: Wheat },
+    { href: '/dashboard/receitas', label: 'Receitas', icon: ChefHat },
     { href: '/dashboard/clientes', label: 'Clientes', icon: Users },
     { href: '/dashboard/financeiro', label: 'Financeiro', icon: TrendingUp },
     { href: '/dashboard/entradas', label: 'Entradas', icon: ArrowUpCircle },
