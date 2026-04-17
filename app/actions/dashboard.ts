@@ -106,11 +106,11 @@ export async function getDashboardStats() {
   handleSupabaseError(orderItemsErr, 'getDashboardStats:orderItems', { tenantId })
 
   // ── Cálculos ──────────────────────────────────────────────────────────────
-  const monthlyRevenue = curOrders.reduce((acc, o) => acc + o.total, 0)
-  const prevMonthRevenue = prevOrders.reduce((acc, o) => acc + o.total, 0)
+  const monthlyRevenue = (curOrders ?? []).reduce((acc, o) => acc + o.total, 0)
+  const prevMonthRevenue = (prevOrders ?? []).reduce((acc, o) => acc + o.total, 0)
 
-  const monthlyExpenses = curExpenses.reduce((acc, e) => acc + e.amount, 0)
-  const prevMonthExpenses = prevExpenses.reduce((acc, e) => acc + e.amount, 0)
+  const monthlyExpenses = (curExpenses ?? []).reduce((acc, e) => acc + e.amount, 0)
+  const prevMonthExpenses = (prevExpenses ?? []).reduce((acc, e) => acc + e.amount, 0)
 
   const monthlyProfit = monthlyRevenue - monthlyExpenses
   const prevMonthProfit = prevMonthRevenue - prevMonthExpenses
@@ -132,16 +132,16 @@ export async function getDashboardStats() {
     .sort((a, b) => b.Lucro - a.Lucro)
     .slice(0, 5)
 
-  const expensesByCategoryData = curExpenses.reduce((acc, e) => {
+  const expensesByCategoryData = (curExpenses ?? []).reduce((acc, e) => {
     acc[e.category] = (acc[e.category] ?? 0) + e.amount
     return acc
   }, {} as Record<string, number>)
   const expensesByCategoryChartData = Object.entries(expensesByCategoryData)
     .map(([name, value]) => ({ name, value }))
 
-  const dailySalesTotal = dailySales.reduce((acc, o) => acc + o.total, 0)
+  const dailySalesTotal = (dailySales ?? []).reduce((acc, o) => acc + o.total, 0)
 
-  const productSales = orderItems.reduce((acc, item) => {
+  const productSales = (orderItems ?? []).reduce((acc, item) => {
     const name = Array.isArray(item.products) && item.products[0]?.name
       ? item.products[0].name as string
       : null
@@ -155,7 +155,7 @@ export async function getDashboardStats() {
 
   return {
     dailySales: { total: dailySalesTotal },
-    openOrders: { count: openOrders.length },
+    openOrders: { count: (openOrders ?? []).length },
     topSellingProduct,
     monthlyRevenue,
     monthlyExpenses,

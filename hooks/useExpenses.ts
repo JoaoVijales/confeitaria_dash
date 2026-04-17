@@ -5,7 +5,7 @@ export function useExpenses(page: number, pageSize: number) {
   return useQuery({
     queryKey: ['expenses', page, pageSize],
     queryFn: async () => {
-      const data = await getExpenses()
+      const data = (await getExpenses()) ?? []
 
       const expensesByCategory = data.reduce((acc, entry) => {
         if (!acc[entry.category]) {

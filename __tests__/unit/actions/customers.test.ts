@@ -36,19 +36,33 @@ describe('customers actions', () => {
   })
 
   describe('getCustomers', () => {
-    it('retorna lista de clientes', async () => {
-      const customers = [{ id: '1', name: 'Maria' }]
+    it('retorna lista de clientes com last_purchase calculado', async () => {
+      const rawCustomers = [{ id: '1', name: 'Maria', orders: [{ created_at: '2024-03-01T10:00:00Z' }] }]
       mockFrom.mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            order: vi.fn().mockResolvedValue({ data: customers, error: null }),
+            order: vi.fn().mockResolvedValue({ data: rawCustomers, error: null }),
           }),
         }),
       })
 
       const result = await getCustomers()
       expect(mockFrom).toHaveBeenCalledWith('customers')
-      expect(result).toEqual(customers)
+      expect(result).toEqual([{ id: '1', name: 'Maria', last_purchase: '2024-03-01T10:00:00Z' }])
+    })
+
+    it('retorna last_purchase null quando cliente sem pedidos', async () => {
+      const rawCustomers = [{ id: '1', name: 'Maria', orders: [] }]
+      mockFrom.mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            order: vi.fn().mockResolvedValue({ data: rawCustomers, error: null }),
+          }),
+        }),
+      })
+
+      const result = await getCustomers()
+      expect(result).toEqual([{ id: '1', name: 'Maria', last_purchase: null }])
     })
 
     it('lanca erro quando Supabase falha', async () => {

@@ -21,7 +21,7 @@ export async function createOrder(data: { customer_id: string; items: { product_
     .single()
 
   handleSupabaseError(orderError, 'createOrder:insertOrder', { tenantId, data: { customer_id: data.customer_id, total: data.total } })
-  const orderId = orderData.id
+  const orderId = orderData!.id
 
   const orderItems = data.items.map(item => ({
     order_id: orderId,
