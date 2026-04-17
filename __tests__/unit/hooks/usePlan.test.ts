@@ -3,16 +3,10 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createElement } from 'react'
 
-const mockSingle = vi.hoisted(() => vi.fn())
+const mockGetTenantPlan = vi.hoisted(() => vi.fn())
 
-vi.mock('@/lib/supabase/client', () => ({
-  createClient: vi.fn(() => ({
-    from: vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        single: mockSingle,
-      }),
-    }),
-  })),
+vi.mock('@/app/actions/billing', () => ({
+  getTenantPlan: mockGetTenantPlan,
 }))
 
 import { usePlan } from '@/hooks/usePlan'
@@ -28,7 +22,7 @@ describe('usePlan', () => {
   })
 
   it('retorna plano gratuito quando tenant tem plano free', async () => {
-    mockSingle.mockResolvedValue({ data: { plan: 'free', name: 'Minha Confeitaria' }, error: null })
+    mockGetTenantPlan.mockResolvedValue({ plan: 'free', name: 'Minha Confeitaria' })
 
     const { result } = renderHook(() => usePlan(), { wrapper })
 
@@ -40,7 +34,7 @@ describe('usePlan', () => {
   })
 
   it('retorna plano básico com limites corretos', async () => {
-    mockSingle.mockResolvedValue({ data: { plan: 'basic', name: 'Confeitaria Pro' }, error: null })
+    mockGetTenantPlan.mockResolvedValue({ plan: 'basic', name: 'Confeitaria Pro' })
 
     const { result } = renderHook(() => usePlan(), { wrapper })
 
@@ -51,8 +45,8 @@ describe('usePlan', () => {
     expect(result.current.data?.limits.maxOrdersPerMonth).toBe(Infinity)
   })
 
-  it('usa plano free como fallback quando dado é null', async () => {
-    mockSingle.mockResolvedValue({ data: null, error: { code: 'PGRST116' } })
+  it('usa plano free como fallback quando ação retorna fallback', async () => {
+    mockGetTenantPlan.mockResolvedValue({ plan: 'free', name: '' })
 
     const { result } = renderHook(() => usePlan(), { wrapper })
 

@@ -80,5 +80,5 @@ export async function checkLowStock() {
     .eq('tenant_id', tenantId)
 
   handleSupabaseError(error, 'checkLowStock', { tenantId })
-  return data.filter(p => p.stock < p.min_stock)
+  return (data ?? []).filter(p => p.stock < p.min_stock)
 }

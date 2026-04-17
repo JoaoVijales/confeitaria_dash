@@ -27,8 +27,8 @@ export async function getTransactions(startDate: string, endDate: string) {
   handleSupabaseError(expensesError, 'getTransactions:expenses', { tenantId, startDate, endDate })
 
   const allTransactions = [
-    ...revenues.map(r => ({ ...r, type: 'Receita' as const, category: null })),
-    ...expenses.map(e => ({ ...e, type: 'Despesa' as const, total: -e.total })),
+    ...(revenues ?? []).map(r => ({ ...r, type: 'Receita' as const, category: null })),
+    ...(expenses ?? []).map(e => ({ ...e, type: 'Despesa' as const, total: -e.total })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
   return allTransactions
@@ -70,8 +70,8 @@ export async function getFinancialSummary() {
 
   handleSupabaseError(expensesError, 'getFinancialSummary:expenses', { tenantId })
 
-  const totalRevenue = allRevenues.reduce((acc, e) => acc + e.total, 0)
-  const totalExpenses = allExpenses.reduce((acc, e) => acc + e.total, 0)
+  const totalRevenue = (allRevenues ?? []).reduce((acc, e) => acc + e.total, 0)
+  const totalExpenses = (allExpenses ?? []).reduce((acc, e) => acc + e.total, 0)
   const netProfit = totalRevenue - totalExpenses
   const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0
 
@@ -82,14 +82,14 @@ export async function getFinancialSummary() {
     const year = d.getFullYear()
     const monthName = d.toLocaleString('pt-BR', { month: 'short' })
 
-    const monthlyRevenues = allRevenues
+    const monthlyRevenues = (allRevenues ?? [])
       .filter(r => {
         const date = new Date(r.created_at)
         return date.getMonth() + 1 === month && date.getFullYear() === year
       })
       .reduce((sum, r) => sum + r.total, 0)
 
-    const monthlyExpenses = allExpenses
+    const monthlyExpenses = (allExpenses ?? [])
       .filter(e => {
         const date = new Date(e.created_at)
         return date.getMonth() + 1 === month && date.getFullYear() === year
@@ -100,7 +100,7 @@ export async function getFinancialSummary() {
   })
 
   const expensesByCategoryChartData = Object.entries(
-    allExpenses.reduce((acc, e) => {
+    (allExpenses ?? []).reduce((acc, e) => {
       acc[e.category] = (acc[e.category] ?? 0) + e.total
       return acc
     }, {} as Record<string, number>)

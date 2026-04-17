@@ -8,6 +8,13 @@ vi.mock('@/hooks/useRecipes', () => ({
   useRecipes: vi.fn(),
 }))
 
+// Mock de server actions para evitar inicialização do Firebase Admin
+vi.mock('@/app/actions/recipes', () => ({
+  createRecipe: vi.fn(),
+  updateRecipe: vi.fn(),
+  deleteRecipe: vi.fn(),
+}))
+
 // Mock de components que podem dar problema no render unitário
 vi.mock('@/components/RecipeFormDialog', () => ({
   RecipeFormDialog: () => <div data-testid="recipe-form-dialog" />,

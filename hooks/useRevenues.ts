@@ -5,7 +5,7 @@ export function useRevenues(page: number, pageSize: number) {
   return useQuery({
     queryKey: ['revenues', page, pageSize],
     queryFn: async () => {
-      const data = await getRevenues()
+      const data = (await getRevenues()) ?? []
 
       const totalAmount = data.reduce((acc, entry) => acc + entry.total, 0);
 
