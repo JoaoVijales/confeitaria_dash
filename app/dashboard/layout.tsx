@@ -9,7 +9,7 @@ export default function DashboardLayout({
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[260px_1fr] lg:grid-cols-[260px_1fr]">
       <Sidebar />
-      <main className="flex flex-col">
+      <main className="flex flex-col min-w-0">
         <MobileHeader />
         <div className="flex-1">
             {children}

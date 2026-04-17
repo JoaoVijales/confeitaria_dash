@@ -50,14 +50,14 @@ export default function DashboardPage() {
   const recentOrders = orders?.slice(0, 5) || [];
 
   return (
-    <div className="flex flex-col gap-6 p-6 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
-      <h1 className="text-3xl font-semibold tracking-tight text-slate-800">
+    <div className="flex flex-col gap-6 p-4 md:p-6 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+      <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-800">
         Visão Geral
       </h1>
 
       <StockAlertBanner />
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-4 md:gap-6 md:grid-cols-3 xl:grid-cols-6">
         {isLoadingStats ? (
           <>
             <Skeleton className="h-36 w-full" />
@@ -141,7 +141,7 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:col-span-5">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
         <Card className="col-span-1 lg:col-span-3 rounded-xl border border-slate-200 shadow-sm">
           <CardHeader>
             <CardTitle className="font-semibold text-slate-800">Top 5 Produtos Mais Lucrativos</CardTitle>
@@ -193,9 +193,9 @@ export default function DashboardPage() {
             Últimos 5 pedidos recebidos.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {isLoadingOrders ? (
-            <div className="space-y-4">
+            <div className="p-4 space-y-4">
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />
@@ -203,6 +203,7 @@ export default function DashboardPage() {
               <Skeleton className="h-12 w-full" />
             </div>
           ) : recentOrders.length > 0 ? (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -245,6 +246,7 @@ export default function DashboardPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           ) : (
             <EmptyState
               title="Nenhum pedido hoje"

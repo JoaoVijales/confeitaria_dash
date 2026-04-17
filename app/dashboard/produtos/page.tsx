@@ -111,26 +111,26 @@ export default function ProductsPage() {
 
   return (
     <>
-      <div className="flex flex-col gap-6 p-6">
-        <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col gap-6 p-4 md:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-semibold text-slate-800">Produtos</h1>
+            <h1 className="text-2xl md:text-3xl font-semibold text-slate-800">Produtos</h1>
             <Badge className="bg-pink-500 text-white rounded-full px-3 py-1 text-sm">
               {totalProducts} Produtos
             </Badge>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="Buscar produto..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 pr-4 py-2 w-64 rounded-lg border border-slate-200 focus:ring-pink-500 focus:border-pink-500 transition-all"
+                className="pl-9 pr-4 py-2 w-full sm:w-64 rounded-lg border border-slate-200 focus:ring-pink-500 focus:border-pink-500 transition-all"
               />
             </div>
             <Select onValueChange={setFilterCategory} value={filterCategory}>
-              <SelectTrigger className="w-[180px] rounded-lg border-slate-200"><SelectValue placeholder="Categoria" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[180px] rounded-lg border-slate-200"><SelectValue placeholder="Categoria" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="Todos">Todas as Categorias</SelectItem>
                 <SelectItem value="Bolos">Bolos</SelectItem>
@@ -154,6 +154,7 @@ export default function ProductsPage() {
             {isLoading ? (
               <div className="space-y-4 p-4">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
             ) : filteredProducts.length > 0 ? (
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-100 hover:bg-slate-100">
@@ -228,6 +229,7 @@ export default function ProductsPage() {
                   })}
                 </TableBody>
               </Table>
+              </div>
             ) : (
               <EmptyState title="Nenhum produto encontrado" description="Adicione um novo produto para começar." icon={<Package className="h-12 w-12" />} action={{ label: "Adicionar Produto", onClick: () => handleOpenForm() }} />
             )}

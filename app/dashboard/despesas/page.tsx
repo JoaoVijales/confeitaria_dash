@@ -102,27 +102,27 @@ export default function DespesasPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <div className="flex justify-between items-center mb-4">
+    <div className="flex flex-col gap-6 p-4 md:p-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
         <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-semibold text-slate-800">Despesas</h1>
+          <h1 className="text-2xl md:text-3xl font-semibold text-slate-800">Despesas</h1>
           <Badge className="bg-red-500 text-white rounded-full px-3 py-1 text-sm">
             {filteredExpenses.length} Despesas
           </Badge>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
               type="text"
               placeholder="Buscar despesa..."
-              className="pl-9 pr-4 py-2 rounded-lg border border-slate-200 focus:ring-red-500 focus:border-red-500 transition-all"
+              className="pl-9 pr-4 py-2 w-full sm:w-64 rounded-lg border border-slate-200 focus:ring-red-500 focus:border-red-500 transition-all"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <Select onValueChange={setFilterCategory} value={filterCategory}>
-            <SelectTrigger className="w-[180px] rounded-lg border border-slate-200 focus:ring-red-500 focus:border-red-500 transition-all">
+            <SelectTrigger className="w-full sm:w-[180px] rounded-lg border border-slate-200 focus:ring-red-500 focus:border-red-500 transition-all">
               <SelectValue placeholder="Filtrar por Categoria" />
             </SelectTrigger>
             <SelectContent>
@@ -159,6 +159,7 @@ export default function DespesasPage() {
               <Skeleton className="h-12 w-full" />
             </div>
           ) : filteredExpenses.length > 0 ? (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="bg-slate-100 hover:bg-slate-100">
@@ -220,6 +221,7 @@ export default function DespesasPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           ) : (
             <EmptyState
               title="Nenhuma despesa encontrada"
