@@ -94,8 +94,8 @@ export default function FinanceiroPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <h1 className="text-3xl font-semibold tracking-tight text-slate-800">
+    <div className="flex flex-col gap-6 p-4 md:p-6">
+      <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-800">
         Financeiro
       </h1>
 
@@ -187,9 +187,9 @@ export default function FinanceiroPage() {
           <CardTitle className="font-semibold text-slate-800">Últimas Transações</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex flex-wrap items-center gap-3 mb-4">
             <Select onValueChange={setFilterPeriod} value={filterPeriod}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Filtrar por Período" />
               </SelectTrigger>
               <SelectContent>
@@ -200,7 +200,7 @@ export default function FinanceiroPage() {
               </SelectContent>
             </Select>
             <Select onValueChange={setFilterCategory} value={filterCategory}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Filtrar por Categoria" />
               </SelectTrigger>
               <SelectContent>
@@ -212,7 +212,7 @@ export default function FinanceiroPage() {
               </SelectContent>
             </Select>
             <Select onValueChange={setFilterType} value={filterType}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Filtrar por Tipo" />
               </SelectTrigger>
               <SelectContent>
@@ -224,6 +224,7 @@ export default function FinanceiroPage() {
               </SelectContent>
             </Select>
           </div>
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -250,6 +251,7 @@ export default function FinanceiroPage() {
               ))}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
