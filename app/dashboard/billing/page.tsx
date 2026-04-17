@@ -67,7 +67,7 @@ export default function BillingPage() {
   const currentPlan = planData?.plan ?? 'free'
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-4 md:p-6 max-w-4xl mx-auto">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900">Plano & Billing</h1>
         <p className="text-slate-600 mt-1">Gerencie sua assinatura e plano atual.</p>
@@ -80,7 +80,7 @@ export default function BillingPage() {
       {/* Current plan summary */}
       <Card className="mb-8 border-pink-200 bg-pink-50">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <CardTitle className="text-slate-800">Plano atual</CardTitle>
               <CardDescription>
@@ -93,7 +93,7 @@ export default function BillingPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-6 text-sm text-slate-700">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-slate-700">
             <div className="flex items-center gap-2">
               <CreditCard className="h-4 w-4 text-pink-500" />
               <span>
