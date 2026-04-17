@@ -25,7 +25,8 @@ import { useEffect, useState } from 'react'
 const ingredientSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   unit: z.string().min(1, 'Unidade é obrigatória'),
-  unit_cost: z.number().min(0, 'Custo unitário deve ser positivo'),
+  quantity: z.number().positive('Quantidade deve ser maior que zero'),
+  price_for_quantity: z.number().min(0, 'Preço deve ser positivo'),
   current_stock: z.number().min(0, 'Estoque atual deve ser positivo'),
   min_stock: z.number().min(0, 'Estoque mínimo deve ser positivo'),
   category: z.string().min(1, 'Categoria é obrigatória'),
@@ -36,7 +37,7 @@ type IngredientFormValues = z.infer<typeof ingredientSchema>
 type IngredientFormDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  ingredient: IngredientFormValues & { id?: number } | null
+  ingredient: (IngredientFormValues & { id?: number }) | null
   onSave: (data: IngredientFormValues) => Promise<void>
 }
 
@@ -55,6 +56,7 @@ export function IngredientFormDialog({
     handleSubmit,
     reset,
     control,
+    watch,
     formState: { errors },
   } = useForm<IngredientFormValues>({
     resolver: zodResolver(ingredientSchema),
@@ -67,13 +69,19 @@ export function IngredientFormDialog({
       reset({
         name: '',
         unit: 'g',
-        unit_cost: 0,
+        quantity: 100,
+        price_for_quantity: 0,
         current_stock: 0,
         min_stock: 0,
         category: 'Secos',
       })
     }
   }, [ingredient, reset])
+
+  const quantity = watch('quantity') ?? 1
+  const priceForQty = watch('price_for_quantity') ?? 0
+  const unit = watch('unit') ?? ''
+  const unitCostPreview = quantity > 0 ? priceForQty / quantity : 0
 
   const onSubmit: SubmitHandler<IngredientFormValues> = async (data) => {
     setIsSaving(true)
@@ -121,7 +129,8 @@ export function IngredientFormDialog({
               {errors.category && <p className="text-red-500 text-sm">{errors.category.message}</p>}
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Unidade</Label>
               <Controller
@@ -143,11 +152,21 @@ export function IngredientFormDialog({
               {errors.unit && <p className="text-red-500 text-sm">{errors.unit.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="unit_cost">Custo Unitário</Label>
-              <Input id="unit_cost" type="number" step="0.01" {...register('unit_cost', { valueAsNumber: true })} />
-              {errors.unit_cost && <p className="text-red-500 text-sm">{errors.unit_cost.message}</p>}
+              <Label htmlFor="quantity">Quantidade</Label>
+              <Input id="quantity" type="number" step="0.001" {...register('quantity', { valueAsNumber: true })} />
+              {errors.quantity && <p className="text-red-500 text-sm">{errors.quantity.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="price_for_quantity">Preço (R$)</Label>
+              <Input id="price_for_quantity" type="number" step="0.01" {...register('price_for_quantity', { valueAsNumber: true })} />
+              {errors.price_for_quantity && <p className="text-red-500 text-sm">{errors.price_for_quantity.message}</p>}
             </div>
           </div>
+
+          <p className="text-xs text-slate-500">
+            Custo unitário: R$ {unitCostPreview.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })} / {unit || '—'}
+          </p>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="current_stock">Estoque Atual</Label>

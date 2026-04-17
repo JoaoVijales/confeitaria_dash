@@ -18,7 +18,8 @@ import { revalidatePath } from 'next/cache'
 const validIngredientData = {
   name: 'Farinha de Trigo',
   unit: 'kg',
-  unit_cost: 5.50,
+  quantity: 1,
+  price_for_quantity: 5.50,
   current_stock: 20,
   min_stock: 5,
   category: 'Farinhas',
@@ -37,7 +38,14 @@ describe('ingredients actions', () => {
       await createIngredient(validIngredientData)
 
       expect(mockFrom).toHaveBeenCalledWith('ingredients')
-      expect(insertMock).toHaveBeenCalledWith(expect.objectContaining(validIngredientData))
+      expect(insertMock).toHaveBeenCalledWith(expect.objectContaining({
+        name: validIngredientData.name,
+        unit: validIngredientData.unit,
+        quantity: validIngredientData.quantity,
+        price_for_quantity: validIngredientData.price_for_quantity,
+        unit_cost: validIngredientData.price_for_quantity / validIngredientData.quantity,
+        tenant_id: 'test-tenant-id',
+      }))
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/ingredientes')
     })
 
@@ -60,7 +68,10 @@ describe('ingredients actions', () => {
       await updateIngredient(1, validIngredientData)
 
       expect(mockFrom).toHaveBeenCalledWith('ingredients')
-      expect(updateMock).toHaveBeenCalledWith(validIngredientData)
+      expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({
+        name: validIngredientData.name,
+        unit_cost: validIngredientData.price_for_quantity / validIngredientData.quantity,
+      }))
       expect(eqIdMock).toHaveBeenCalledWith('id', 1)
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/ingredientes')
     })

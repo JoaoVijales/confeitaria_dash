@@ -17,20 +17,34 @@ export async function getIngredients() {
   return data ?? []
 }
 
-export async function createIngredient(data: { name: string; unit: string; unit_cost: number; current_stock: number; min_stock: number; category: string }) {
+type IngredientData = {
+  name: string
+  unit: string
+  quantity: number
+  price_for_quantity: number
+  current_stock: number
+  min_stock: number
+  category: string
+}
+
+export async function createIngredient(data: IngredientData) {
   const supabase = createClient()
   const tenantId = await getTenantId()
-  const { error } = await supabase.from('ingredients').insert({ ...data, tenant_id: tenantId })
+  const unit_cost = data.quantity > 0 ? data.price_for_quantity / data.quantity : 0
+  const { error } = await supabase
+    .from('ingredients')
+    .insert({ ...data, unit_cost, tenant_id: tenantId })
   handleSupabaseError(error, 'createIngredient', { tenantId, data })
   revalidatePath('/dashboard/ingredientes')
 }
 
-export async function updateIngredient(id: number, data: { name: string; unit: string; unit_cost: number; current_stock: number; min_stock: number; category: string }) {
+export async function updateIngredient(id: number, data: IngredientData) {
   const supabase = createClient()
   const tenantId = await getTenantId()
+  const unit_cost = data.quantity > 0 ? data.price_for_quantity / data.quantity : 0
   const { error } = await supabase
     .from('ingredients')
-    .update(data)
+    .update({ ...data, unit_cost })
     .eq('id', id)
     .eq('tenant_id', tenantId)
   handleSupabaseError(error, 'updateIngredient', { tenantId, ingredientId: id, data })
