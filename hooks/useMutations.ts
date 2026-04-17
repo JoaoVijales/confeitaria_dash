@@ -5,6 +5,7 @@ import { createCustomer, updateCustomer, deleteCustomer } from '@/app/actions/cu
 import { createProduct, updateProduct, deleteProduct } from '@/app/actions/products'
 import { createOrder, updateOrderStatus, deleteOrder } from '@/app/actions/orders'
 import { OrderFormValues } from '@/lib/validations/order.schema'
+import { ProductFormValues } from '@/lib/validations/product.schema'
 
 // Revenue Mutations
 export function useCreateRevenue() {
@@ -103,7 +104,7 @@ export function useDeleteCustomer() {
 export function useCreateProduct() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (data: FormData) => createProduct(data),
+    mutationFn: (data: ProductFormValues) => createProduct(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['products'] }),
   })
 }
@@ -111,7 +112,7 @@ export function useCreateProduct() {
 export function useUpdateProduct() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: FormData }) => updateProduct(id, data),
+    mutationFn: ({ id, data }: { id: string; data: ProductFormValues }) => updateProduct(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['products'] }),
   })
 }

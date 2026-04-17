@@ -5,17 +5,66 @@ import { createClient } from '@/lib/supabase/server'
 import { getTenantId } from '@/lib/supabase/tenant'
 import { handleSupabaseError } from '@/lib/logger'
 
-export async function createRecipe(data: { product_id: string; yield: number; ingredients: { ingredient_id: string; quantity: number }[] }) {
+export async function getRecipes() {
+  const supabase = createClient()
+  const tenantId = await getTenantId()
+
+  const { data, error } = await supabase
+    .from('recipes')
+    .select(`
+      id,
+      yield,
+      yield_unit,
+      products (id, name, price, cost),
+      recipe_ingredients (
+        quantity,
+        ingredients (id, name, unit, unit_cost)
+      )
+    `)
+    .eq('tenant_id', tenantId)
+
+  handleSupabaseError(error, 'getRecipes', { tenantId })
+
+  return (data ?? []).map(recipe => {
+    const ris = (recipe.recipe_ingredients ?? []) as { quantity: number; ingredients: { unit_cost: number }[] }[]
+    const totalCost = ris.reduce((sum: number, ri) => {
+      return sum + (ri.ingredients?.[0]?.unit_cost ?? 0) * ri.quantity
+    }, 0)
+    const cost_per_yield_unit = recipe.yield > 0 ? totalCost / recipe.yield : 0
+
+    // Normalise products to always be an array (recipe page expects products?.[0])
+    const rawProducts = recipe.products
+    const products = Array.isArray(rawProducts)
+      ? rawProducts
+      : rawProducts
+      ? [rawProducts]
+      : null
+
+    return { ...recipe, products, cost_per_yield_unit }
+  })
+}
+
+export async function createRecipe(data: {
+  product_id: string
+  yield: number
+  yield_unit?: string
+  ingredients: { ingredient_id: string; quantity: number }[]
+}) {
   const supabase = createClient()
   const tenantId = await getTenantId()
 
   const { data: recipe, error: recipeError } = await supabase
     .from('recipes')
-    .insert({ product_id: data.product_id, yield: data.yield, tenant_id: tenantId })
+    .insert({
+      product_id: data.product_id,
+      yield: data.yield,
+      yield_unit: data.yield_unit ?? 'un',
+      tenant_id: tenantId,
+    })
     .select()
     .single()
 
-  handleSupabaseError(recipeError, 'createRecipe:insertRecipe', { tenantId, data: { product_id: data.product_id, yield: data.yield } })
+  handleSupabaseError(recipeError, 'createRecipe:insertRecipe', { tenantId })
 
   const recipeIngredients = data.ingredients.map(ingredient => ({
     recipe_id: recipe.id,
@@ -29,13 +78,21 @@ export async function createRecipe(data: { product_id: string; yield: number; in
   revalidatePath('/dashboard/receitas')
 }
 
-export async function updateRecipe(id: string, data: { product_id: string; yield: number; ingredients: { ingredient_id: string; quantity: number }[] }) {
+export async function updateRecipe(
+  id: string,
+  data: {
+    product_id: string
+    yield: number
+    yield_unit?: string
+    ingredients: { ingredient_id: string; quantity: number }[]
+  },
+) {
   const supabase = createClient()
   const tenantId = await getTenantId()
 
   const { error: recipeError } = await supabase
     .from('recipes')
-    .update({ product_id: data.product_id, yield: data.yield })
+    .update({ product_id: data.product_id, yield: data.yield, yield_unit: data.yield_unit ?? 'un' })
     .eq('id', id)
     .eq('tenant_id', tenantId)
 

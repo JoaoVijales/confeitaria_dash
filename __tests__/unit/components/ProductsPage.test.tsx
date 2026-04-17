@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
-import ProductsPage from '@/app/dashboard/produtos/page.tsx'
+import ProductsPage from '@/app/dashboard/produtos/page'
 import { useProducts } from '@/hooks/useProducts'
 import * as mutations from '@/hooks/useMutations'
 

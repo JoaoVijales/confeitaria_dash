@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
-import ReceitasPage from '@/app/dashboard/receitas/page.tsx'
+import ReceitasPage from '@/app/dashboard/receitas/page'
 import { useRecipes } from '@/hooks/useRecipes'
 
 // Mock do hook useRecipes

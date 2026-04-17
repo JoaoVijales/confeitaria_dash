@@ -28,6 +28,8 @@ type Product = {
   stock: number;
   min_stock: number;
   category: string;
+  is_compound: boolean;
+  extra_cost: number;
 };
 
 const categoryColors: { [key: string]: string } = {
@@ -60,11 +62,8 @@ export default function ProductsPage() {
   }
 
   const handleFormSubmit = (data: ProductFormValues) => {
-    const formData = new FormData()
-    Object.entries(data).forEach(([key, value]) => formData.append(key, String(value)))
-
     if (selectedProduct) {
-      updateProductMutation.mutate({ id: selectedProduct.id, data: formData }, {
+      updateProductMutation.mutate({ id: selectedProduct.id, data }, {
         onSuccess: () => {
           toast.success('Produto atualizado com sucesso!')
           setIsFormOpen(false)
@@ -72,7 +71,7 @@ export default function ProductsPage() {
         onError: () => toast.error('Erro ao atualizar produto.'),
       })
     } else {
-      createProductMutation.mutate(formData, {
+      createProductMutation.mutate(data, {
         onSuccess: () => {
           toast.success('Produto criado com sucesso!')
           setIsFormOpen(false)

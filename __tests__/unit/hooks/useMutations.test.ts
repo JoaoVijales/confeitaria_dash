@@ -118,7 +118,7 @@ describe('useMutations', () => {
       const { result } = renderHook(() => useUpdateRevenue(), { wrapper: createWrapper() })
 
       await act(async () => {
-        result.current.mutate(new FormData())
+        result.current.mutate({ id: 'rev-1', data: new FormData() })
       })
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true))
@@ -159,7 +159,7 @@ describe('useMutations', () => {
       const { result } = renderHook(() => useUpdateExpense(), { wrapper: createWrapper() })
 
       await act(async () => {
-        result.current.mutate(new FormData())
+        result.current.mutate({ id: 'exp-1', data: new FormData() })
       })
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true))
@@ -200,7 +200,7 @@ describe('useMutations', () => {
       const { result } = renderHook(() => useUpdateCustomer(), { wrapper: createWrapper() })
 
       await act(async () => {
-        result.current.mutate(new FormData())
+        result.current.mutate({ id: 'cust-1', data: new FormData() })
       })
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true))
@@ -222,17 +222,22 @@ describe('useMutations', () => {
   })
 
   describe('Product Mutations', () => {
+    const mockProductData = {
+      name: 'Bolo', category: 'Bolos', price: 20, cost: 10,
+      stock: 5, min_stock: 2, is_compound: false, extra_cost: 0, components: [],
+    }
+
     it('useCreateProduct should call createProduct', async () => {
-      mockCreateProduct.mockResolvedValueOnce({ id: '1' })
+      mockCreateProduct.mockResolvedValueOnce(undefined)
 
       const { result } = renderHook(() => useCreateProduct(), { wrapper: createWrapper() })
 
       await act(async () => {
-        result.current.mutate(new FormData())
+        result.current.mutate(mockProductData)
       })
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true))
-      expect(mockCreateProduct).toHaveBeenCalled()
+      expect(mockCreateProduct).toHaveBeenCalledWith(mockProductData)
     })
 
     it('useUpdateProduct should call updateProduct', async () => {
@@ -241,7 +246,7 @@ describe('useMutations', () => {
       const { result } = renderHook(() => useUpdateProduct(), { wrapper: createWrapper() })
 
       await act(async () => {
-        result.current.mutate(new FormData())
+        result.current.mutate({ id: 'prod-1', data: mockProductData })
       })
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true))
@@ -269,7 +274,7 @@ describe('useMutations', () => {
       const { result } = renderHook(() => useCreateOrder(), { wrapper: createWrapper() })
 
       await act(async () => {
-        result.current.mutate({ customer_id: 'c1', items: [] } as Parameters<typeof result.current.mutate>[0])
+        result.current.mutate({ customer_id: 'c1', items: [] } as unknown as Parameters<typeof result.current.mutate>[0])
       })
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true))

@@ -3,16 +3,13 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactNode } from 'react'
 
-const { mockSelect, mockFrom } = vi.hoisted(() => {
-  const mockSelect = vi.fn()
-  const mockFrom = vi.fn(() => ({ select: mockSelect }))
-  return { mockSelect, mockFrom }
-})
+const mockGetRecipes = vi.hoisted(() => vi.fn())
 
-vi.mock('@/lib/supabase/client', () => ({
-  createClient: vi.fn(() => ({
-    from: mockFrom,
-  })),
+vi.mock('@/app/actions/recipes', () => ({
+  getRecipes: mockGetRecipes,
+  createRecipe: vi.fn(),
+  updateRecipe: vi.fn(),
+  deleteRecipe: vi.fn(),
 }))
 
 import { useRecipes } from '@/hooks/useRecipes'
@@ -30,10 +27,12 @@ const mockRecipes = [
   {
     id: '1',
     yield: 10,
-    products: { id: 'p1', name: 'Bolo', price: 50, cost: 20 },
+    yield_unit: 'un',
+    products: [{ id: 'p1', name: 'Bolo', price: 50, cost: 20 }],
     recipe_ingredients: [
-      { quantity: 2, ingredients: { id: 'i1', name: 'Farinha', unit: 'kg', unit_cost: 5 } },
+      { quantity: 2, ingredients: [{ id: 1, name: 'Farinha', unit: 'kg', unit_cost: 5 }] },
     ],
+    cost_per_yield_unit: 1,
   },
 ]
 
@@ -42,8 +41,8 @@ describe('useRecipes', () => {
     vi.clearAllMocks()
   })
 
-  it('should fetch recipes successfully', async () => {
-    mockSelect.mockResolvedValueOnce({ data: mockRecipes, error: null })
+  it('retorna lista de receitas da server action', async () => {
+    mockGetRecipes.mockResolvedValueOnce(mockRecipes)
 
     const { result } = renderHook(() => useRecipes(), { wrapper: createWrapper() })
 
@@ -52,16 +51,15 @@ describe('useRecipes', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
     expect(result.current.data).toEqual(mockRecipes)
-    expect(mockFrom).toHaveBeenCalledWith('recipes')
   })
 
-  it('should handle error from supabase', async () => {
-    mockSelect.mockResolvedValueOnce({ data: null, error: { message: 'Recipe error' } })
+  it('propaga erro da server action', async () => {
+    mockGetRecipes.mockRejectedValueOnce(new Error('DB error'))
 
     const { result } = renderHook(() => useRecipes(), { wrapper: createWrapper() })
 
     await waitFor(() => expect(result.current.isError).toBe(true))
 
-    expect(result.current.error).toEqual({ message: 'Recipe error' })
+    expect((result.current.error as Error).message).toBe('DB error')
   })
 })

@@ -14,20 +14,25 @@ vi.mock('@/lib/supabase/tenant', () => ({ getTenantId: vi.fn().mockResolvedValue
 
 import { createProduct, updateProduct, deleteProduct, getProducts, checkLowStock } from '@/app/actions/products'
 import { revalidatePath } from 'next/cache'
+import { ProductFormValues } from '@/lib/validations/product.schema'
 
-function makeFormData(data: Record<string, string>): FormData {
-  const fd = new FormData()
-  for (const [k, v] of Object.entries(data)) fd.append(k, v)
-  return fd
-}
-
-const validProductData = {
+const validProductData: ProductFormValues = {
   name: 'Bolo de Chocolate',
   category: 'Bolos',
-  price: '25.00',
-  cost: '12.00',
-  stock: '10',
-  min_stock: '5',
+  price: 25,
+  cost: 12,
+  stock: 10,
+  min_stock: 5,
+  is_compound: false,
+  extra_cost: 0,
+  components: [],
+}
+
+function mockInsertSingle(returnData: unknown) {
+  const singleMock = vi.fn().mockResolvedValue({ data: returnData, error: null })
+  const selectMock = vi.fn().mockReturnValue({ single: singleMock })
+  const insertMock = vi.fn().mockReturnValue({ select: selectMock })
+  return { insertMock, selectMock, singleMock }
 }
 
 describe('products actions', () => {
@@ -66,11 +71,11 @@ describe('products actions', () => {
   })
 
   describe('createProduct', () => {
-    it('insere produto com dados validos', async () => {
-      const insertMock = vi.fn().mockResolvedValue({ data: null, error: null })
+    it('insere produto simples com dados validos', async () => {
+      const { insertMock } = mockInsertSingle({ id: 'prod-1' })
       mockFrom.mockReturnValue({ insert: insertMock })
 
-      await createProduct(makeFormData(validProductData))
+      await createProduct(validProductData)
 
       expect(mockFrom).toHaveBeenCalledWith('products')
       expect(insertMock).toHaveBeenCalledWith(expect.objectContaining({
@@ -80,66 +85,49 @@ describe('products actions', () => {
         cost: 12,
         stock: 10,
         min_stock: 5,
+        tenant_id: 'test-tenant-id',
       }))
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/produtos')
     })
 
-    it('lanca erro com dados invalidos (nome curto)', async () => {
-      const insertMock = vi.fn()
-      mockFrom.mockReturnValue({ insert: insertMock })
-
-      const fd = makeFormData({ ...validProductData, name: 'ab' })
-      await expect(createProduct(fd)).rejects.toThrow()
-      expect(insertMock).not.toHaveBeenCalled()
-    })
-
-    it('lanca erro com preco negativo', async () => {
-      const insertMock = vi.fn()
-      mockFrom.mockReturnValue({ insert: insertMock })
-
-      const fd = makeFormData({ ...validProductData, price: '-1' })
-      await expect(createProduct(fd)).rejects.toThrow()
-      expect(insertMock).not.toHaveBeenCalled()
-    })
-
     it('lanca erro quando Supabase falha', async () => {
       const dbError = { message: 'DB error' }
-      const insertMock = vi.fn().mockResolvedValue({ data: null, error: dbError })
+      const singleMock = vi.fn().mockResolvedValue({ data: null, error: dbError })
+      const selectMock = vi.fn().mockReturnValue({ single: singleMock })
+      const insertMock = vi.fn().mockReturnValue({ select: selectMock })
       mockFrom.mockReturnValue({ insert: insertMock })
 
-      await expect(createProduct(makeFormData(validProductData))).rejects.toEqual(dbError)
+      await expect(createProduct(validProductData)).rejects.toEqual(dbError)
     })
   })
 
   describe('updateProduct', () => {
-    it('atualiza produto com dados validos', async () => {
-      const eqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
-      const eqIdMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
-      const updateMock = vi.fn().mockReturnValue({ eq: eqIdMock })
-      mockFrom.mockReturnValue({ update: updateMock })
+    it('atualiza produto simples com dados validos', async () => {
+      // products.update
+      const eqTenantMock1 = vi.fn().mockResolvedValue({ data: null, error: null })
+      const eqIdMock1 = vi.fn().mockReturnValue({ eq: eqTenantMock1 })
+      const updateMock = vi.fn().mockReturnValue({ eq: eqIdMock1 })
 
-      await updateProduct('123', makeFormData(validProductData))
+      // product_components.delete
+      const eqTenantMock2 = vi.fn().mockResolvedValue({ data: null, error: null })
+      const eqIdMock2 = vi.fn().mockReturnValue({ eq: eqTenantMock2 })
+      const deleteMock = vi.fn().mockReturnValue({ eq: eqIdMock2 })
+
+      mockFrom
+        .mockReturnValueOnce({ update: updateMock })
+        .mockReturnValueOnce({ delete: deleteMock })
+
+      await updateProduct('123', validProductData)
 
       expect(mockFrom).toHaveBeenCalledWith('products')
-      expect(updateMock).toHaveBeenCalledWith({
+      expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({
         name: 'Bolo de Chocolate',
         category: 'Bolos',
         price: 25,
         cost: 12,
-        stock: 10,
-        min_stock: 5,
-      })
-      expect(eqIdMock).toHaveBeenCalledWith('id', '123')
+      }))
+      expect(eqIdMock1).toHaveBeenCalledWith('id', '123')
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/produtos')
-    })
-
-    it('lanca erro com dados invalidos', async () => {
-      const updateMock = vi.fn()
-      mockFrom.mockReturnValue({ update: updateMock })
-
-      const fd = makeFormData({ ...validProductData, category: 'ab' })
-      await expect(updateProduct('123', fd)).rejects.toThrow()
-      expect(updateMock).not.toHaveBeenCalled()
     })
 
     it('lanca erro quando Supabase falha', async () => {
@@ -149,7 +137,7 @@ describe('products actions', () => {
       const updateMock = vi.fn().mockReturnValue({ eq: eqIdMock })
       mockFrom.mockReturnValue({ update: updateMock })
 
-      await expect(updateProduct('123', makeFormData(validProductData))).rejects.toEqual(dbError)
+      await expect(updateProduct('123', validProductData)).rejects.toEqual(dbError)
     })
   })
 

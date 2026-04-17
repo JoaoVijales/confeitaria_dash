@@ -151,18 +151,25 @@ describe('[Segurança] products — isolamento multi-tenant', () => {
     expect(mockFrom).not.toHaveBeenCalled()
   })
 
+  const validProductData = {
+    name: 'Bolo de Chocolate',
+    category: 'Bolos',
+    price: 50,
+    cost: 20,
+    stock: 10,
+    min_stock: 2,
+    is_compound: false,
+    extra_cost: 0,
+    components: [] as [],
+  }
+
   it('createProduct: inclui tenant_id no INSERT', async () => {
-    const insertMock = vi.fn().mockResolvedValue({ data: null, error: null })
+    const singleMock = vi.fn().mockResolvedValue({ data: { id: 'p1' }, error: null })
+    const selectMock = vi.fn().mockReturnValue({ single: singleMock })
+    const insertMock = vi.fn().mockReturnValue({ select: selectMock })
     mockFrom.mockReturnValue({ insert: insertMock })
 
-    await createProduct(makeFormData({
-      name: 'Bolo de Chocolate',
-      category: 'bolo',
-      price: '50',
-      cost: '20',
-      stock: '10',
-      min_stock: '2',
-    }))
+    await createProduct(validProductData)
 
     expect(insertMock).toHaveBeenCalledWith(
       expect.objectContaining({ tenant_id: TENANT_A })
@@ -170,21 +177,21 @@ describe('[Segurança] products — isolamento multi-tenant', () => {
   })
 
   it('updateProduct: filtra UPDATE por tenant_id', async () => {
-    const eqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
-    const eqIdMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
-    const updateMock = vi.fn().mockReturnValue({ eq: eqIdMock })
-    mockFrom.mockReturnValue({ update: updateMock })
+    const eqTenantMock1 = vi.fn().mockResolvedValue({ data: null, error: null })
+    const eqIdMock1 = vi.fn().mockReturnValue({ eq: eqTenantMock1 })
+    const updateMock = vi.fn().mockReturnValue({ eq: eqIdMock1 })
 
-    await updateProduct('prod-1', makeFormData({
-      name: 'Bolo de Chocolate',
-      category: 'bolo',
-      price: '50',
-      cost: '20',
-      stock: '10',
-      min_stock: '2',
-    }))
+    const eqTenantMock2 = vi.fn().mockResolvedValue({ data: null, error: null })
+    const eqIdMock2 = vi.fn().mockReturnValue({ eq: eqTenantMock2 })
+    const deleteMock = vi.fn().mockReturnValue({ eq: eqIdMock2 })
 
-    expect(eqTenantMock).toHaveBeenCalledWith('tenant_id', TENANT_A)
+    mockFrom
+      .mockReturnValueOnce({ update: updateMock })
+      .mockReturnValueOnce({ delete: deleteMock })
+
+    await updateProduct('prod-1', validProductData)
+
+    expect(eqTenantMock1).toHaveBeenCalledWith('tenant_id', TENANT_A)
   })
 
   it('deleteProduct: filtra DELETE por tenant_id', async () => {
@@ -306,18 +313,21 @@ describe('[Segurança] ingredients — isolamento multi-tenant', () => {
     mockGetTenantId.mockResolvedValue(TENANT_A)
   })
 
+  const validIngredientData = {
+    name: 'Farinha',
+    unit: 'kg',
+    quantity: 1,
+    price_for_quantity: 5,
+    current_stock: 10,
+    min_stock: 2,
+    category: 'seco',
+  }
+
   it('createIngredient: inclui tenant_id no INSERT', async () => {
     const insertMock = vi.fn().mockResolvedValue({ data: null, error: null })
     mockFrom.mockReturnValue({ insert: insertMock })
 
-    await createIngredient({
-      name: 'Farinha',
-      unit: 'kg',
-      unit_cost: 5,
-      current_stock: 10,
-      min_stock: 2,
-      category: 'seco',
-    })
+    await createIngredient(validIngredientData)
 
     expect(insertMock).toHaveBeenCalledWith(
       expect.objectContaining({ tenant_id: TENANT_A })
@@ -330,14 +340,7 @@ describe('[Segurança] ingredients — isolamento multi-tenant', () => {
     const updateMock = vi.fn().mockReturnValue({ eq: eqIdMock })
     mockFrom.mockReturnValue({ update: updateMock })
 
-    await updateIngredient(1, {
-      name: 'Farinha',
-      unit: 'kg',
-      unit_cost: 5,
-      current_stock: 10,
-      min_stock: 2,
-      category: 'seco',
-    })
+    await updateIngredient(1, validIngredientData)
 
     expect(eqTenantMock).toHaveBeenCalledWith('tenant_id', TENANT_A)
   })
@@ -356,14 +359,7 @@ describe('[Segurança] ingredients — isolamento multi-tenant', () => {
   it('aborta sem tocar no banco quando não há autenticação', async () => {
     mockGetTenantId.mockRejectedValue(new Error('Usuário não autenticado'))
 
-    await expect(createIngredient({
-      name: 'Farinha',
-      unit: 'kg',
-      unit_cost: 5,
-      current_stock: 10,
-      min_stock: 2,
-      category: 'seco',
-    })).rejects.toThrow()
+    await expect(createIngredient(validIngredientData)).rejects.toThrow()
     expect(mockFrom).not.toHaveBeenCalled()
   })
 })

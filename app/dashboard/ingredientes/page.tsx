@@ -33,6 +33,8 @@ type Ingredient = {
   id: number;
   name: string;
   unit: string;
+  quantity: number;
+  price_for_quantity: number;
   unit_cost: number;
   current_stock: number;
   min_stock: number;
@@ -66,7 +68,7 @@ export default function IngredientesPage() {
     }
   }
 
-  const handleSaveIngredient = async (data: Omit<Ingredient, 'id'>) => {
+  const handleSaveIngredient = async (data: Omit<Ingredient, 'id' | 'unit_cost'>) => {
     if (editingIngredient) {
       await updateIngredient(editingIngredient.id, data)
     } else {
@@ -148,7 +150,8 @@ export default function IngredientesPage() {
                     <TableCell className="font-medium py-4 px-4">{ingredient.name}</TableCell>
                     <TableCell className="py-4 px-4">{ingredient.category}</TableCell>
                     <TableCell className="text-right font-semibold text-slate-900 py-4 px-4">
-                      R$ {ingredient.unit_cost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} / {ingredient.unit}
+                      R$ {(ingredient.price_for_quantity ?? ingredient.unit_cost ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      {' / '}{ingredient.quantity ?? 1} {ingredient.unit}
                     </TableCell>
                     <TableCell className="text-right py-4 px-4">
                       {ingredient.current_stock} {ingredient.unit}

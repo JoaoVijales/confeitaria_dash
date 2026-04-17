@@ -3,16 +3,15 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactNode } from 'react'
 
-const { mockSelect, mockFrom } = vi.hoisted(() => {
-  const mockSelect = vi.fn()
-  const mockFrom = vi.fn(() => ({ select: mockSelect }))
-  return { mockSelect, mockFrom }
-})
+const mockGetProducts = vi.hoisted(() => vi.fn())
 
-vi.mock('@/lib/supabase/client', () => ({
-  createClient: vi.fn(() => ({
-    from: mockFrom,
-  })),
+vi.mock('@/app/actions/products', () => ({
+  getProducts: mockGetProducts,
+  createProduct: vi.fn(),
+  updateProduct: vi.fn(),
+  deleteProduct: vi.fn(),
+  checkLowStock: vi.fn(),
+  getProductComponents: vi.fn(),
 }))
 
 import { useProducts } from '@/hooks/useProducts'
@@ -36,8 +35,8 @@ describe('useProducts', () => {
     vi.clearAllMocks()
   })
 
-  it('should fetch products successfully', async () => {
-    mockSelect.mockResolvedValueOnce({ data: mockProducts, error: null })
+  it('retorna lista de produtos da server action', async () => {
+    mockGetProducts.mockResolvedValueOnce(mockProducts)
 
     const { result } = renderHook(() => useProducts(), { wrapper: createWrapper() })
 
@@ -46,16 +45,15 @@ describe('useProducts', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
     expect(result.current.data).toEqual(mockProducts)
-    expect(mockFrom).toHaveBeenCalledWith('products')
   })
 
-  it('should handle error from supabase', async () => {
-    mockSelect.mockResolvedValueOnce({ data: null, error: { message: 'Database error' } })
+  it('propaga erro da server action', async () => {
+    mockGetProducts.mockRejectedValueOnce(new Error('DB error'))
 
     const { result } = renderHook(() => useProducts(), { wrapper: createWrapper() })
 
     await waitFor(() => expect(result.current.isError).toBe(true))
 
-    expect(result.current.error).toEqual({ message: 'Database error' })
+    expect((result.current.error as Error).message).toBe('DB error')
   })
 })

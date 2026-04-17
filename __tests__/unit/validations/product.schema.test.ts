@@ -8,6 +8,9 @@ const validProduct = {
   cost: 20.0,
   stock: 10,
   min_stock: 2,
+  is_compound: false,
+  extra_cost: 0,
+  components: [],
 }
 
 describe('productSchema', () => {
