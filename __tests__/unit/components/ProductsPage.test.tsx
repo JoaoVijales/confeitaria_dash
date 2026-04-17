@@ -38,7 +38,7 @@ describe('ProductsPage', () => {
       }
     ]
 
-    ;(useProducts as any).mockReturnValue({
+    ;(useProducts as ReturnType<typeof vi.fn>).mockReturnValue({
       data: mockProducts,
       isLoading: false,
       error: null,

@@ -20,7 +20,7 @@ import {
 import { useForm, SubmitHandler, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 const ingredientSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -37,7 +37,7 @@ type IngredientFormDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   ingredient: IngredientFormValues & { id?: number } | null
-  onSave: (data: IngredientFormValues) => void
+  onSave: (data: IngredientFormValues) => Promise<void>
 }
 
 const UNIT_OPTIONS = ['kg', 'g', 'L', 'ml', 'un']
@@ -49,6 +49,7 @@ export function IngredientFormDialog({
   ingredient,
   onSave,
 }: IngredientFormDialogProps) {
+  const [isSaving, setIsSaving] = useState(false)
   const {
     register,
     handleSubmit,
@@ -74,9 +75,14 @@ export function IngredientFormDialog({
     }
   }, [ingredient, reset])
 
-  const onSubmit: SubmitHandler<IngredientFormValues> = (data) => {
-    onSave(data)
-    onOpenChange(false)
+  const onSubmit: SubmitHandler<IngredientFormValues> = async (data) => {
+    setIsSaving(true)
+    try {
+      await onSave(data)
+      onOpenChange(false)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -155,10 +161,12 @@ export function IngredientFormDialog({
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
               Cancelar
             </Button>
-            <Button type="submit">Salvar</Button>
+            <Button type="submit" disabled={isSaving}>
+              {isSaving ? 'Salvando...' : 'Salvar'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

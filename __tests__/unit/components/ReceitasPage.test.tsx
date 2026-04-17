@@ -42,7 +42,7 @@ describe('ReceitasPage', () => {
       }
     ]
 
-    ;(useRecipes as any).mockReturnValue({
+    ;(useRecipes as ReturnType<typeof vi.fn>).mockReturnValue({
       data: mockRecipes,
       isLoading: false,
       error: null,
