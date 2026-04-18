@@ -99,4 +99,14 @@ describe('revenueSchema', () => {
     const result = revenueSchema.safeParse({ ...validRevenue, total: 0 })
     expect(result.success).toBe(true)
   })
+
+  it('deve rejeitar total acima do limite maximo', () => {
+    const result = revenueSchema.safeParse({ ...validRevenue, total: 10_000_001 })
+    expect(result.success).toBe(false)
+  })
+
+  it('deve rejeitar unit_price acima do limite maximo', () => {
+    const result = revenueSchema.safeParse({ ...validRevenue, unit_price: 10_000_001 })
+    expect(result.success).toBe(false)
+  })
 })

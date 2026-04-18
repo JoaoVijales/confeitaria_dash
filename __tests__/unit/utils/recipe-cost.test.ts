@@ -83,9 +83,12 @@ describe('calculateCostPerPortion', () => {
     expect(calculateCostPerPortion(10.0, 5)).toBe(2.0)
   })
 
-  it('retorna Infinity ou lanca erro quando porcoes e zero', () => {
-    const result = calculateCostPerPortion(10.0, 0)
-    expect(result === Infinity || isNaN(result)).toBe(true)
+  it('lanca erro quando porcoes e zero', () => {
+    expect(() => calculateCostPerPortion(10.0, 0)).toThrow()
+  })
+
+  it('lanca erro quando porcoes e negativo', () => {
+    expect(() => calculateCostPerPortion(10.0, -1)).toThrow()
   })
 
   it('calcula fracao corretamente', () => {
@@ -116,6 +119,14 @@ describe('calculatePriceWithMargin', () => {
   it('calcula margem percentual alta: custo=20, margem=50%', () => {
     // 20 / (1 - 0.50) = 40.00
     expect(calculatePriceWithMargin(20, 50, 'percent')).toBeCloseTo(40.0, 2)
+  })
+
+  it('lanca erro quando margem percentual e igual a 100', () => {
+    expect(() => calculatePriceWithMargin(10, 100, 'percent')).toThrow()
+  })
+
+  it('lanca erro quando margem percentual e maior que 100', () => {
+    expect(() => calculatePriceWithMargin(10, 150, 'percent')).toThrow()
   })
 })
 
