@@ -268,10 +268,14 @@ describe('useMutations', () => {
   })
 
   describe('Order Mutations', () => {
-    it('useCreateOrder should call createOrder', async () => {
+    it('useCreateOrder should call createOrder and invalidate dashboard-stats', async () => {
       mockCreateOrder.mockResolvedValueOnce({ id: '1' })
+      const queryClient = createTestQueryClient()
+      const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+      const wrapper = ({ children }: { children: ReactNode }) =>
+        QueryClientProvider({ client: queryClient, children })
 
-      const { result } = renderHook(() => useCreateOrder(), { wrapper: createWrapper() })
+      const { result } = renderHook(() => useCreateOrder(), { wrapper })
 
       await act(async () => {
         result.current.mutate({ customer_id: 'c1', items: [] } as unknown as Parameters<typeof result.current.mutate>[0])
@@ -279,12 +283,17 @@ describe('useMutations', () => {
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true))
       expect(mockCreateOrder).toHaveBeenCalled()
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['dashboard-stats'] })
     })
 
-    it('useUpdateOrderStatus should call updateOrderStatus', async () => {
+    it('useUpdateOrderStatus should call updateOrderStatus and invalidate dashboard-stats', async () => {
       mockUpdateOrderStatus.mockResolvedValueOnce(undefined)
+      const queryClient = createTestQueryClient()
+      const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+      const wrapper = ({ children }: { children: ReactNode }) =>
+        QueryClientProvider({ client: queryClient, children })
 
-      const { result } = renderHook(() => useUpdateOrderStatus(), { wrapper: createWrapper() })
+      const { result } = renderHook(() => useUpdateOrderStatus(), { wrapper })
 
       await act(async () => {
         result.current.mutate({ id: 'ord-1', status: 'Entregue' })
@@ -292,12 +301,17 @@ describe('useMutations', () => {
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true))
       expect(mockUpdateOrderStatus).toHaveBeenCalledWith('ord-1', 'Entregue')
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['dashboard-stats'] })
     })
 
-    it('useDeleteOrder should call deleteOrder', async () => {
+    it('useDeleteOrder should call deleteOrder and invalidate dashboard-stats', async () => {
       mockDeleteOrder.mockResolvedValueOnce(undefined)
+      const queryClient = createTestQueryClient()
+      const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+      const wrapper = ({ children }: { children: ReactNode }) =>
+        QueryClientProvider({ client: queryClient, children })
 
-      const { result } = renderHook(() => useDeleteOrder(), { wrapper: createWrapper() })
+      const { result } = renderHook(() => useDeleteOrder(), { wrapper })
 
       await act(async () => {
         result.current.mutate('ord-1')
@@ -305,6 +319,7 @@ describe('useMutations', () => {
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true))
       expect(mockDeleteOrder).toHaveBeenCalledWith('ord-1')
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['dashboard-stats'] })
     })
   })
 })

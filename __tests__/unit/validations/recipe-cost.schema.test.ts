@@ -66,4 +66,24 @@ describe('recipeCostSchema', () => {
     const result = recipeCostSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
+
+  it('rejeita margin_value igual a 100 quando margin_type e percent', () => {
+    const result = recipeCostSchema.safeParse({ ...validDataPercent, margin_value: 100 })
+    expect(result.success).toBe(false)
+  })
+
+  it('rejeita margin_value maior que 100 quando margin_type e percent', () => {
+    const result = recipeCostSchema.safeParse({ ...validDataPercent, margin_value: 150 })
+    expect(result.success).toBe(false)
+  })
+
+  it('aceita margin_value igual a 99.99 quando margin_type e percent', () => {
+    const result = recipeCostSchema.safeParse({ ...validDataPercent, margin_value: 99.99 })
+    expect(result.success).toBe(true)
+  })
+
+  it('aceita margin_value qualquer quando margin_type e fixed', () => {
+    const result = recipeCostSchema.safeParse({ ...validDataFixed, margin_value: 1000 })
+    expect(result.success).toBe(true)
+  })
 })

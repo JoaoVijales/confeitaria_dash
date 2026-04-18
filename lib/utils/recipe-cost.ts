@@ -42,6 +42,7 @@ export function calculateTotalRecipeCost(
 
 // Cost divided by number of portions
 export function calculateCostPerPortion(totalCost: number, portions: number): number {
+  if (portions <= 0) throw new Error('Portions must be greater than zero')
   return totalCost / portions
 }
 
@@ -57,7 +58,7 @@ export function calculatePriceWithMargin(
     return cost + margin
   }
   // percent
-  if (margin >= 100) return Infinity
+  if (margin >= 100) throw new Error('Percent margin must be less than 100')
   const result = cost / (1 - margin / 100)
   return Math.round(result * 100) / 100
 }
