@@ -133,6 +133,7 @@ export function useCreateOrder() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] })
       queryClient.invalidateQueries({ queryKey: ['customers'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
   })
 }
@@ -141,7 +142,10 @@ export function useUpdateOrderStatus() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => updateOrderStatus(id, status),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['orders'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
+    },
   })
 }
 
@@ -149,6 +153,9 @@ export function useDeleteOrder() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: string) => deleteOrder(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['orders'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
+    },
   })
 }
