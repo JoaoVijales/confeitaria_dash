@@ -107,4 +107,14 @@ describe('expenseSchema', () => {
     const result = expenseSchema.safeParse({ ...validExpense, total: 0 })
     expect(result.success).toBe(true)
   })
+
+  it('deve rejeitar total acima do limite maximo', () => {
+    const result = expenseSchema.safeParse({ ...validExpense, total: 10_000_001 })
+    expect(result.success).toBe(false)
+  })
+
+  it('deve rejeitar unit_price acima do limite maximo', () => {
+    const result = expenseSchema.safeParse({ ...validExpense, unit_price: 10_000_001 })
+    expect(result.success).toBe(false)
+  })
 })
