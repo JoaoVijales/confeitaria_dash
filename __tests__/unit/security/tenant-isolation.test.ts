@@ -204,6 +204,97 @@ describe('[Segurança] products — isolamento multi-tenant', () => {
 
     expect(eqTenantMock).toHaveBeenCalledWith('tenant_id', TENANT_A)
   })
+
+  it('createProduct composto: inclui tenant_id no INSERT de product_components', async () => {
+    const compoundProduct = {
+      name: 'Bolo Composto',
+      category: 'Bolos',
+      price: 80,
+      cost: 0,
+      stock: 5,
+      min_stock: 1,
+      is_compound: true as const,
+      extra_cost: 5,
+      components: [
+        { component_type: 'ingredient' as const, ingredient_id: 'ing-1', recipe_id: null, quantity: 2 },
+      ],
+    }
+
+    // from('recipes') — consulta de custo (recipeIds vazio neste caso)
+    // from('ingredients') — consulta de custo
+    const eqIngCost = vi.fn().mockResolvedValue({ data: [], error: null })
+    const inIngCost = vi.fn().mockReturnValue({ eq: eqIngCost })
+    const selectIngCost = vi.fn().mockReturnValue({ in: inIngCost })
+
+    // from('products').insert — retorna o produto criado
+    const singleMock = vi.fn().mockResolvedValue({ data: { id: 'p-compound' }, error: null })
+    const selectProductMock = vi.fn().mockReturnValue({ single: singleMock })
+    const insertProductMock = vi.fn().mockReturnValue({ select: selectProductMock })
+
+    // from('product_components').insert
+    const insertComponentsMock = vi.fn().mockResolvedValue({ data: null, error: null })
+
+    mockFrom
+      .mockReturnValueOnce({ select: selectIngCost })      // ingredients cost lookup
+      .mockReturnValueOnce({ insert: insertProductMock })  // products insert
+      .mockReturnValueOnce({ insert: insertComponentsMock }) // product_components insert
+
+    await createProduct(compoundProduct)
+
+    expect(insertComponentsMock).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ tenant_id: TENANT_A }),
+      ])
+    )
+  })
+
+  it('updateProduct composto: inclui tenant_id no INSERT de product_components', async () => {
+    const compoundProduct = {
+      name: 'Bolo Composto',
+      category: 'Bolos',
+      price: 80,
+      cost: 0,
+      stock: 5,
+      min_stock: 1,
+      is_compound: true as const,
+      extra_cost: 5,
+      components: [
+        { component_type: 'ingredient' as const, ingredient_id: 'ing-1', recipe_id: null, quantity: 2 },
+      ],
+    }
+
+    // ingredients cost lookup
+    const eqIngCost = vi.fn().mockResolvedValue({ data: [], error: null })
+    const inIngCost = vi.fn().mockReturnValue({ eq: eqIngCost })
+    const selectIngCost = vi.fn().mockReturnValue({ in: inIngCost })
+
+    // products update
+    const eqTenantUpdate = vi.fn().mockResolvedValue({ data: null, error: null })
+    const eqIdUpdate = vi.fn().mockReturnValue({ eq: eqTenantUpdate })
+    const updateMock = vi.fn().mockReturnValue({ eq: eqIdUpdate })
+
+    // product_components delete (limpa antes de reinserir)
+    const eqTenantDel = vi.fn().mockResolvedValue({ data: null, error: null })
+    const eqIdDel = vi.fn().mockReturnValue({ eq: eqTenantDel })
+    const deleteMock = vi.fn().mockReturnValue({ eq: eqIdDel })
+
+    // product_components insert
+    const insertComponentsMock = vi.fn().mockResolvedValue({ data: null, error: null })
+
+    mockFrom
+      .mockReturnValueOnce({ select: selectIngCost })      // ingredients cost lookup
+      .mockReturnValueOnce({ update: updateMock })         // products update
+      .mockReturnValueOnce({ delete: deleteMock })         // product_components delete
+      .mockReturnValueOnce({ insert: insertComponentsMock }) // product_components insert
+
+    await updateProduct('prod-1', compoundProduct)
+
+    expect(insertComponentsMock).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ tenant_id: TENANT_A }),
+      ])
+    )
+  })
 })
 
 // ─── ORDERS ──────────────────────────────────────────────────────────────────
