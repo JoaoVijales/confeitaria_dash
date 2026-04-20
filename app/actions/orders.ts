@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getTenantId } from '@/lib/supabase/tenant'
 import { handleSupabaseError } from '@/lib/logger'
+import { orderStatusSchema } from '@/lib/validations/order.schema'
 
 export async function createOrder(data: { customer_id: string; items: { product_id: string; quantity: number; unit_price: number; }[]; total: number; status: string }) {
   const supabase = createClient()
@@ -45,14 +46,15 @@ export async function createOrder(data: { customer_id: string; items: { product_
 }
 
 export async function updateOrderStatus(id: string, status: string) {
+  const validStatus = orderStatusSchema.parse(status)
   const supabase = createClient()
   const tenantId = await getTenantId()
   const { error } = await supabase
     .from('orders')
-    .update({ status })
+    .update({ status: validStatus })
     .eq('id', id)
     .eq('tenant_id', tenantId)
-  handleSupabaseError(error, 'updateOrderStatus', { tenantId, orderId: id, status })
+  handleSupabaseError(error, 'updateOrderStatus', { tenantId, orderId: id, status: validStatus })
   revalidatePath('/dashboard/pedidos')
 }
 

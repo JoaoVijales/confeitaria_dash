@@ -372,7 +372,7 @@ describe('[Segurança] orders — isolamento multi-tenant', () => {
     const updateMock = vi.fn().mockReturnValue({ eq: eqIdMock })
     mockFrom.mockReturnValue({ update: updateMock })
 
-    await updateOrderStatus('order-1', 'concluido')
+    await updateOrderStatus('order-1', 'Finalizado')
 
     expect(eqTenantMock).toHaveBeenCalledWith('tenant_id', TENANT_A)
   })

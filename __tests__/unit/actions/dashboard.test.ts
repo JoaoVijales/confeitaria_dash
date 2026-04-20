@@ -68,7 +68,8 @@ describe('getDashboardStats', () => {
         ordersCallCount++
         if (ordersCallCount === 1) {
           // current month orders
-          const gte = vi.fn().mockResolvedValue({ data: curOrders, error: null })
+          const lte = vi.fn().mockResolvedValue({ data: curOrders, error: null })
+          const gte = vi.fn().mockReturnValue({ lte })
           return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ gte }) }) }
         }
         if (ordersCallCount === 2) {
@@ -90,7 +91,8 @@ describe('getDashboardStats', () => {
       if (table === 'expenses') {
         expensesCallCount++
         if (expensesCallCount === 1) {
-          const gte = vi.fn().mockResolvedValue({ data: curExpenses, error: null })
+          const lte = vi.fn().mockResolvedValue({ data: curExpenses, error: null })
+          const gte = vi.fn().mockReturnValue({ lte })
           return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ gte }) }) }
         }
         // previous month expenses
@@ -128,7 +130,8 @@ describe('getDashboardStats', () => {
       if (table === 'orders') {
         ordersCallCount++
         if (ordersCallCount === 1) {
-          const gte = vi.fn().mockResolvedValue({ data: [{ total: 400 }], error: null })
+          const lte = vi.fn().mockResolvedValue({ data: [{ total: 400 }], error: null })
+          const gte = vi.fn().mockReturnValue({ lte })
           return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ gte }) }) }
         }
         if (ordersCallCount === 2) {
@@ -147,7 +150,8 @@ describe('getDashboardStats', () => {
       if (table === 'expenses') {
         expensesCallCount++
         if (expensesCallCount === 1) {
-          const gte = vi.fn().mockResolvedValue({ data: [{ amount: 100, category: 'Fixo' }], error: null })
+          const lte = vi.fn().mockResolvedValue({ data: [{ amount: 100, category: 'Fixo' }], error: null })
+          const gte = vi.fn().mockReturnValue({ lte })
           return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ gte }) }) }
         }
         const lte = vi.fn().mockResolvedValue({ data: [{ amount: 80 }], error: null })
@@ -175,7 +179,8 @@ describe('getDashboardStats', () => {
       if (table === 'orders') {
         ordersCallCount++
         if (ordersCallCount === 1) {
-          const gte = vi.fn().mockResolvedValue({ data: [{ total: 500 }], error: null })
+          const lte = vi.fn().mockResolvedValue({ data: [{ total: 500 }], error: null })
+          const gte = vi.fn().mockReturnValue({ lte })
           return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ gte }) }) }
         }
         if (ordersCallCount === 2) {
@@ -194,8 +199,9 @@ describe('getDashboardStats', () => {
       if (table === 'expenses') {
         expensesCallCount++
         if (expensesCallCount === 1) {
-          // curExpenses — awaita gte diretamente
-          const gte = vi.fn().mockResolvedValue({ data: [], error: null })
+          // curExpenses — gte().lte()
+          const lte = vi.fn().mockResolvedValue({ data: [], error: null })
+          const gte = vi.fn().mockReturnValue({ lte })
           return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ gte }) }) }
         }
         // prevExpenses — gte().lte()
@@ -234,7 +240,8 @@ describe('getDashboardStats', () => {
       if (table === 'orders') {
         ordersCallCount++
         if (ordersCallCount === 1) {
-          const gte = vi.fn().mockResolvedValue({ data: [], error: null })
+          const lte = vi.fn().mockResolvedValue({ data: [], error: null })
+          const gte = vi.fn().mockReturnValue({ lte })
           return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ gte }) }) }
         }
         if (ordersCallCount === 2) {
@@ -253,7 +260,8 @@ describe('getDashboardStats', () => {
       // expenses
       expensesCallCount++
       if (expensesCallCount === 1) {
-        const gte = vi.fn().mockResolvedValue({ data: [], error: null })
+        const lte = vi.fn().mockResolvedValue({ data: [], error: null })
+        const gte = vi.fn().mockReturnValue({ lte })
         return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ gte }) }) }
       }
       const lte = vi.fn().mockResolvedValue({ data: [], error: null })
@@ -273,7 +281,9 @@ describe('getDashboardStats', () => {
     mockFrom.mockReturnValue({
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
-          gte: vi.fn().mockResolvedValue({ data: null, error: dbError }),
+          gte: vi.fn().mockReturnValue({
+            lte: vi.fn().mockResolvedValue({ data: null, error: dbError }),
+          }),
         }),
       }),
     })
