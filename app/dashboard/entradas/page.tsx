@@ -106,7 +106,7 @@ export default function EntradasPage() {
               placeholder="Buscar entrada..."
               className="pl-9 pr-4 py-2 w-full sm:w-64 rounded-lg border border-slate-200 focus:ring-blue-500 focus:border-blue-500 transition-all"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1) }}
             />
           </div>
           <Button onClick={handleAddRevenue} className="bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all">
