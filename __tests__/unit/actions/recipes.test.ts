@@ -93,6 +93,11 @@ describe('recipes actions', () => {
                 }),
               }),
             }),
+            delete: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
+            }),
           }
         }
         if (table === 'recipe_ingredients') {
@@ -104,6 +109,34 @@ describe('recipes actions', () => {
       })
 
       await expect(createRecipe(validRecipeData)).rejects.toEqual(ingredientsError)
+    })
+
+    it('faz rollback (deleta receita) quando insert de ingredientes falha', async () => {
+      const ingredientsError = { message: 'Ingredients error' }
+      const recipeDeleteEqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
+      const recipeDeleteEqIdMock = vi.fn().mockReturnValue({ eq: recipeDeleteEqTenantMock })
+      const recipeDeleteMock = vi.fn().mockReturnValue({ eq: recipeDeleteEqIdMock })
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'recipes') {
+          return {
+            insert: vi.fn().mockReturnValue({
+              select: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: { id: 'recipe-1' }, error: null }),
+              }),
+            }),
+            delete: recipeDeleteMock,
+          }
+        }
+        if (table === 'recipe_ingredients') {
+          return { insert: vi.fn().mockResolvedValue({ data: null, error: ingredientsError }) }
+        }
+        return {}
+      })
+
+      await expect(createRecipe(validRecipeData)).rejects.toEqual(ingredientsError)
+      expect(recipeDeleteMock).toHaveBeenCalled()
+      expect(recipeDeleteEqIdMock).toHaveBeenCalledWith('id', 'recipe-1')
     })
   })
 
@@ -123,6 +156,11 @@ describe('recipes actions', () => {
         }
         if (table === 'recipe_ingredients') {
           return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+              }),
+            }),
             delete: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
                 eq: vi.fn().mockResolvedValue({ data: null, error: null }),
@@ -156,6 +194,15 @@ describe('recipes actions', () => {
             }),
           }
         }
+        if (table === 'recipe_ingredients') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+              }),
+            }),
+          }
+        }
         return {}
       })
 
@@ -177,6 +224,11 @@ describe('recipes actions', () => {
         }
         if (table === 'recipe_ingredients') {
           return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+              }),
+            }),
             delete: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
                 eq: vi.fn().mockResolvedValue({ data: null, error: deleteError }),
@@ -188,6 +240,49 @@ describe('recipes actions', () => {
       })
 
       await expect(updateRecipe('recipe-1', validRecipeData)).rejects.toEqual(deleteError)
+    })
+
+    it('faz rollback (restaura ingredientes) quando insert de novos ingredientes falha', async () => {
+      const insertError = { message: 'Insert error' }
+      const oldIngredients = [{ recipe_id: 'recipe-1', ingredient_id: 'ing-old', quantity: 5, tenant_id: 'test-tenant-id' }]
+      let insertCallCount = 0
+      const insertMock = vi.fn().mockImplementation(() => {
+        insertCallCount++
+        if (insertCallCount === 1) return Promise.resolve({ data: null, error: insertError })
+        return Promise.resolve({ data: null, error: null })
+      })
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'recipes') {
+          return {
+            update: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
+            }),
+          }
+        }
+        if (table === 'recipe_ingredients') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({ data: oldIngredients, error: null }),
+              }),
+            }),
+            delete: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
+            }),
+            insert: insertMock,
+          }
+        }
+        return {}
+      })
+
+      await expect(updateRecipe('recipe-1', validRecipeData)).rejects.toEqual(insertError)
+      expect(insertMock).toHaveBeenCalledTimes(2)
+      expect(insertMock).toHaveBeenNthCalledWith(2, oldIngredients)
     })
   })
 
