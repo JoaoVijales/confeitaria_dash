@@ -1,6 +1,7 @@
 import { Sidebar } from '@/components/Sidebar'
 import { MobileHeader } from '@/components/MobileHeader'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 export default function DashboardLayout({
   children,
@@ -13,9 +14,11 @@ export default function DashboardLayout({
       <main className="flex flex-col min-w-0">
         <MobileHeader />
         <TooltipProvider>
-          <div className="flex-1">
-            {children}
-          </div>
+          <ErrorBoundary>
+            <div className="flex-1">
+              {children}
+            </div>
+          </ErrorBoundary>
         </TooltipProvider>
       </main>
     </div>
