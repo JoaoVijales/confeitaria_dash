@@ -123,18 +123,28 @@ describe('orders actions', () => {
   })
 
   describe('updateOrderStatus', () => {
-    it('atualiza status do pedido', async () => {
+    it('atualiza status do pedido com valor válido', async () => {
       const eqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
       const eqIdMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
       const updateMock = vi.fn().mockReturnValue({ eq: eqIdMock })
       mockFrom.mockReturnValue({ update: updateMock })
 
-      await updateOrderStatus('order-1', 'completed')
+      await updateOrderStatus('order-1', 'Finalizado')
 
       expect(mockFrom).toHaveBeenCalledWith('orders')
-      expect(updateMock).toHaveBeenCalledWith({ status: 'completed' })
+      expect(updateMock).toHaveBeenCalledWith({ status: 'Finalizado' })
       expect(eqIdMock).toHaveBeenCalledWith('id', 'order-1')
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/pedidos')
+    })
+
+    it('rejeita status inválido sem tocar no banco', async () => {
+      await expect(updateOrderStatus('order-1', 'INVALIDO')).rejects.toThrow()
+      expect(mockFrom).not.toHaveBeenCalled()
+    })
+
+    it('rejeita string vazia', async () => {
+      await expect(updateOrderStatus('order-1', '')).rejects.toThrow()
+      expect(mockFrom).not.toHaveBeenCalled()
     })
 
     it('lanca erro quando Supabase falha', async () => {
@@ -144,7 +154,7 @@ describe('orders actions', () => {
       const updateMock = vi.fn().mockReturnValue({ eq: eqIdMock })
       mockFrom.mockReturnValue({ update: updateMock })
 
-      await expect(updateOrderStatus('order-1', 'completed')).rejects.toEqual(dbError)
+      await expect(updateOrderStatus('order-1', 'Pendente')).rejects.toEqual(dbError)
     })
   })
 
