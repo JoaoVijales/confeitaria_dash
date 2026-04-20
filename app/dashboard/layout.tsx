@@ -1,5 +1,6 @@
 import { Sidebar } from '@/components/Sidebar'
 import { MobileHeader } from '@/components/MobileHeader'
+import { TooltipProvider } from '@/components/ui/tooltip'
 
 export default function DashboardLayout({
   children,
@@ -11,9 +12,11 @@ export default function DashboardLayout({
       <Sidebar />
       <main className="flex flex-col min-w-0">
         <MobileHeader />
-        <div className="flex-1">
+        <TooltipProvider>
+          <div className="flex-1">
             {children}
-        </div>
+          </div>
+        </TooltipProvider>
       </main>
     </div>
   )

@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import ReceitasPage from '@/app/dashboard/receitas/page'
 import { useRecipes } from '@/hooks/useRecipes'
 
@@ -48,7 +49,7 @@ describe('ReceitasPage', () => {
       error: null,
     })
 
-    render(<ReceitasPage />)
+    render(<TooltipProvider><ReceitasPage /></TooltipProvider>)
 
     // Verifica se os nomes dos ingredientes aparecem
     expect(screen.getByText('Cenoura')).toBeInTheDocument()

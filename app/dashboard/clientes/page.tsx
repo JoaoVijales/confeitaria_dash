@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useCustomers } from '@/hooks/useCustomers'
 import { useCreateCustomer, useUpdateCustomer, useDeleteCustomer } from '@/hooks/useMutations'
 import { CustomerFormDialog } from '@/components/dialogs/CustomerFormDialog'
@@ -178,27 +178,23 @@ export default function CustomersPage() {
                       <TableCell className="text-right font-semibold text-green-600 py-4 px-4">R$ {customer.total_spent.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</TableCell>
                       <TableCell className="py-4 px-4 text-slate-600">{customer.last_purchase ? new Date(customer.last_purchase).toLocaleDateString() : '-'}</TableCell>
                       <TableCell className="flex justify-center gap-2 py-4 px-4">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button variant="outline" size="icon" onClick={() => handleOpenForm(customer)} aria-label="Editar cliente">
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent><p>Editar Cliente</p></TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="outline" size="icon" onClick={() => handleOpenForm(customer)} aria-label="Editar cliente">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent><p>Editar Cliente</p></TooltipContent>
+                        </Tooltip>
 
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button variant="destructive" size="icon" onClick={() => handleOpenConfirm(customer)} aria-label="Excluir cliente">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent><p>Excluir Cliente</p></TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="destructive" size="icon" onClick={() => handleOpenConfirm(customer)} aria-label="Excluir cliente">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent><p>Excluir Cliente</p></TooltipContent>
+                        </Tooltip>
                       </TableCell>
                     </TableRow>
                   ))}

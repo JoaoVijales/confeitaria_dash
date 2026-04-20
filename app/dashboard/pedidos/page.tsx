@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useOrders } from '@/hooks/useOrders'
 import { useCreateOrder, useUpdateOrderStatus, useDeleteOrder } from '@/hooks/useMutations'
 import { OrderFormDialog } from '@/components/dialogs/OrderFormDialog'
@@ -170,27 +170,23 @@ export default function OrdersPage() {
                       </TableCell>
                       <TableCell className="text-right font-semibold py-4 px-4 text-slate-900">R$ {order.total.toFixed(2)}</TableCell>
                       <TableCell className="flex justify-center gap-2 py-4 px-4">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button variant="outline" size="icon" onClick={() => handleOpenStatus(order)} aria-label="Editar status">
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent><p>Editar Status</p></TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="outline" size="icon" onClick={() => handleOpenStatus(order)} aria-label="Editar status">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent><p>Editar Status</p></TooltipContent>
+                        </Tooltip>
 
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button variant="destructive" size="icon" onClick={() => handleOpenConfirm(order)} aria-label="Excluir pedido">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent><p>Excluir Pedido</p></TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="destructive" size="icon" onClick={() => handleOpenConfirm(order)} aria-label="Excluir pedido">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent><p>Excluir Pedido</p></TooltipContent>
+                        </Tooltip>
                       </TableCell>
                     </TableRow>
                   ))}
