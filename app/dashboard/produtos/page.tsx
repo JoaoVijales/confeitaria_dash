@@ -18,7 +18,7 @@ import { ConfirmDialog } from '@/components/dialogs/ConfirmDialog'
 import { ProductFormValues } from '@/lib/validations/product.schema'
 import { toast } from 'sonner'
 import Link from 'next/link'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 type Product = {
   id: string;
@@ -189,40 +189,34 @@ export default function ProductsPage() {
                           </div>
                         </TableCell>
                         <TableCell className="flex justify-center gap-2 py-4 px-4">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button variant="outline" size="icon" asChild>
-                                  <Link href={`/dashboard/receitas?product_id=${product.id}`} aria-label="Ver Receita">
-                                    <ChefHat className="h-4 w-4" />
-                                  </Link>
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent><p>Ver Receita</p></TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="outline" size="icon" asChild>
+                                <Link href={`/dashboard/receitas?product_id=${product.id}`} aria-label="Ver Receita">
+                                  <ChefHat className="h-4 w-4" />
+                                </Link>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Ver Receita</p></TooltipContent>
+                          </Tooltip>
 
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button variant="outline" size="icon" onClick={() => handleOpenForm(product)} aria-label="Editar Produto">
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent><p>Editar Produto</p></TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="outline" size="icon" onClick={() => handleOpenForm(product)} aria-label="Editar Produto">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Editar Produto</p></TooltipContent>
+                          </Tooltip>
 
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button variant="destructive" size="icon" onClick={() => handleOpenConfirm(product)} aria-label="Excluir Produto">
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent><p>Excluir Produto</p></TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="destructive" size="icon" onClick={() => handleOpenConfirm(product)} aria-label="Excluir Produto">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Excluir Produto</p></TooltipContent>
+                          </Tooltip>
                         </TableCell>
                       </TableRow>
                     )

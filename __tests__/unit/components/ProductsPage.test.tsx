@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import ProductsPage from '@/app/dashboard/produtos/page'
 import { useProducts } from '@/hooks/useProducts'
 import * as mutations from '@/hooks/useMutations'
@@ -44,7 +45,7 @@ describe('ProductsPage', () => {
       error: null,
     })
 
-    render(<ProductsPage />)
+    render(<TooltipProvider><ProductsPage /></TooltipProvider>)
 
     // O botão deve ter o ícone ChefHat ou ser identificável
     // Como ainda não implementamos, este teste deve falhar ao procurar pelo botão/link específico
