@@ -26,7 +26,6 @@ export async function createExpense(formData: FormData) {
 
   handleSupabaseError(error, 'createExpense', { tenantId, data: parsed })
 
-  revalidatePath('/dashboard/despesas')
   revalidatePath('/dashboard/financeiro')
   revalidatePath('/dashboard/saidas')
 }
@@ -50,7 +49,6 @@ export async function updateExpense(id: string, formData: FormData) {
 
   handleSupabaseError(error, 'updateExpense', { tenantId, expenseId: id, data: parsed })
 
-  revalidatePath('/dashboard/despesas')
   revalidatePath('/dashboard/financeiro')
   revalidatePath('/dashboard/saidas')
 }
@@ -66,7 +64,6 @@ export async function deleteExpense(id: string) {
 
   handleSupabaseError(error, 'deleteExpense', { tenantId, expenseId: id })
 
-  revalidatePath('/dashboard/despesas')
   revalidatePath('/dashboard/financeiro')
   revalidatePath('/dashboard/saidas')
 }
