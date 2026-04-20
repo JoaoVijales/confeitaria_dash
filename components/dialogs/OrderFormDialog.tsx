@@ -3,8 +3,8 @@
 import { OrderForm } from '@/components/forms/OrderForm'
 import { OrderFormValues } from '@/lib/validations/order.schema'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
-
-// Assuming you'll pass customer and product data needed for the form
+import { useCustomers } from '@/hooks/useCustomers'
+import { useProducts } from '@/hooks/useProducts'
 
 type OrderFormDialogProps = {
   open: boolean
@@ -18,6 +18,12 @@ export function OrderFormDialog({ open, onOpenChange, order, onSubmit, isSubmitt
   const title = order ? 'Editar Pedido' : 'Novo Pedido'
   const description = order ? 'Atualize os detalhes do pedido.' : 'Preencha os detalhes do novo pedido.'
 
+  const { data: customersData } = useCustomers()
+  const { data: productsData } = useProducts()
+
+  const customers = (customersData ?? []).map(c => ({ id: c.id, name: c.name }))
+  const products = (productsData ?? []).map(p => ({ id: p.id, name: p.name, price: p.price }))
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -25,10 +31,12 @@ export function OrderFormDialog({ open, onOpenChange, order, onSubmit, isSubmitt
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <OrderForm 
-          defaultValues={order} 
-          onSubmit={onSubmit} 
-          isSubmitting={isSubmitting} 
+        <OrderForm
+          customers={customers}
+          products={products}
+          defaultValues={order}
+          onSubmit={onSubmit}
+          isSubmitting={isSubmitting}
         />
       </DialogContent>
     </Dialog>
