@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/server'
 import { getTenantId } from '@/lib/supabase/tenant'
 import { handleSupabaseError } from '@/lib/logger'
 import { ProductFormValues } from '@/lib/validations/product.schema'
+import { getTenantPlan } from '@/lib/supabase/tenant'
+import { isAtProductLimit } from '@/lib/utils/plan-limits'
 
 export async function getProducts() {
   const supabase = createClient()
@@ -84,6 +86,16 @@ async function computeProductCost(
 export async function createProduct(data: ProductFormValues) {
   const supabase = createClient()
   const tenantId = await getTenantId()
+
+  const { count: productCount } = await supabase
+    .from('products')
+    .select('id', { count: 'exact', head: true })
+    .eq('tenant_id', tenantId)
+
+  const plan = await getTenantPlan(tenantId)
+  if (isAtProductLimit(plan, productCount ?? 0)) {
+    throw new Error(`Limite de produtos atingido para o plano ${plan}`)
+  }
 
   const cost = data.is_compound && data.components.length > 0
     ? await computeProductCost(supabase, tenantId, data.components, data.extra_cost)

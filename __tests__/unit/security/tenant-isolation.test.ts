@@ -24,6 +24,7 @@ const { mockGetTenantId, mockFrom } = vi.hoisted(() => ({
 
 vi.mock('@/lib/supabase/tenant', () => ({
   getTenantId: mockGetTenantId,
+  getTenantPlan: vi.fn().mockResolvedValue('pro'),
 }))
 
 // mockSupabase como objeto estático — createClient como função pura (não vi.fn())
@@ -164,10 +165,16 @@ describe('[Segurança] products — isolamento multi-tenant', () => {
   }
 
   it('createProduct: inclui tenant_id no INSERT', async () => {
+    const countEqMock = vi.fn().mockResolvedValue({ count: 0, error: null })
+    const countSelectMock = vi.fn().mockReturnValue({ eq: countEqMock })
+
     const singleMock = vi.fn().mockResolvedValue({ data: { id: 'p1' }, error: null })
     const selectMock = vi.fn().mockReturnValue({ single: singleMock })
     const insertMock = vi.fn().mockReturnValue({ select: selectMock })
-    mockFrom.mockReturnValue({ insert: insertMock })
+
+    mockFrom
+      .mockReturnValueOnce({ select: countSelectMock })
+      .mockReturnValue({ insert: insertMock })
 
     await createProduct(validProductData)
 
@@ -234,9 +241,13 @@ describe('[Segurança] products — isolamento multi-tenant', () => {
     // from('product_components').insert
     const insertComponentsMock = vi.fn().mockResolvedValue({ data: null, error: null })
 
+    const countEqMock2 = vi.fn().mockResolvedValue({ count: 0, error: null })
+    const countSelectMock2 = vi.fn().mockReturnValue({ eq: countEqMock2 })
+
     mockFrom
-      .mockReturnValueOnce({ select: selectIngCost })      // ingredients cost lookup
-      .mockReturnValueOnce({ insert: insertProductMock })  // products insert
+      .mockReturnValueOnce({ select: countSelectMock2 })    // products count query
+      .mockReturnValueOnce({ select: selectIngCost })       // ingredients cost lookup
+      .mockReturnValueOnce({ insert: insertProductMock })   // products insert
       .mockReturnValueOnce({ insert: insertComponentsMock }) // product_components insert
 
     await createProduct(compoundProduct)
@@ -341,7 +352,12 @@ describe('[Segurança] orders — isolamento multi-tenant', () => {
     const eqUpdateId = vi.fn().mockReturnValue({ eq: eqUpdateTenant })
     const updateStatsMock = vi.fn().mockReturnValue({ eq: eqUpdateId })
 
+    const countGteMock = vi.fn().mockResolvedValue({ count: 0, error: null })
+    const countEqMock = vi.fn().mockReturnValue({ gte: countGteMock })
+    const countSelectMock = vi.fn().mockReturnValue({ eq: countEqMock })
+
     mockFrom
+      .mockReturnValueOnce({ select: countSelectMock })   // orders count query
       .mockReturnValueOnce({ insert: insertOrderMock })   // orders insert
       .mockReturnValueOnce({ insert: insertItemsMock })   // order_items insert
       .mockReturnValueOnce({ select: selectStatsMock })   // orders select (updateCustomerStats)
@@ -605,7 +621,15 @@ describe('[Segurança] ingredient-purchases — isolamento multi-tenant', () => 
 
   it('createIngredientPurchase: inclui tenant_id no INSERT', async () => {
     const insertMock = vi.fn().mockResolvedValue({ data: null, error: null })
-    mockFrom.mockReturnValue({ insert: insertMock })
+    const updateEqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
+    const updateEqIdMock = vi.fn().mockReturnValue({ eq: updateEqTenantMock })
+    const updateMock = vi.fn().mockReturnValue({ eq: updateEqIdMock })
+
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'ingredient_purchases') return { insert: insertMock }
+      if (table === 'ingredients') return { update: updateMock }
+      return {}
+    })
 
     await createIngredientPurchase({
       ingredient_id: 1,
