@@ -118,10 +118,10 @@ export default function SaidasPage() {
               placeholder="Buscar saída..."
               className="pl-9 pr-4 py-2 w-full sm:w-64 rounded-lg border border-slate-200 focus:ring-red-500 focus:border-red-500 transition-all"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1) }}
             />
           </div>
-          <Select onValueChange={setFilterCategory} value={filterCategory}>
+          <Select onValueChange={(v) => { setFilterCategory(v); setCurrentPage(1) }} value={filterCategory}>
             <SelectTrigger className="w-full sm:w-[180px] rounded-lg border border-slate-200 focus:ring-red-500 focus:border-red-500 transition-all">
               <SelectValue placeholder="Filtrar por Categoria" />
             </SelectTrigger>
