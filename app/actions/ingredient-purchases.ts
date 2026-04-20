@@ -13,6 +13,13 @@ export async function createIngredientPurchase(data: IngredientPurchaseFormValue
   const { error } = await supabase.from('ingredient_purchases').insert({ ...data, tenant_id: tenantId })
   handleSupabaseError(error, 'createIngredientPurchase', { tenantId, data })
 
+  const { error: updateError } = await supabase
+    .from('ingredients')
+    .update({ unit_cost: data.unit_cost })
+    .eq('id', data.ingredient_id)
+    .eq('tenant_id', tenantId)
+  handleSupabaseError(updateError, 'createIngredientPurchase:updateUnitCost', { tenantId, ingredientId: data.ingredient_id })
+
   revalidatePath('/dashboard/ingredientes')
 }
 

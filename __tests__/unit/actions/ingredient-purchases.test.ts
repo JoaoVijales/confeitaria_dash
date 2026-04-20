@@ -35,10 +35,11 @@ describe('ingredient-purchases actions', () => {
   })
 
   describe('createIngredientPurchase', () => {
-    it('insere compra e atualiza estoque do ingrediente', async () => {
+    it('insere compra e atualiza unit_cost do ingrediente', async () => {
       const insertMock = vi.fn().mockResolvedValue({ data: null, error: null })
-      const updateEqMock = vi.fn().mockResolvedValue({ data: null, error: null })
-      const updateMock = vi.fn().mockReturnValue({ eq: updateEqMock })
+      const updateEqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
+      const updateEqIdMock = vi.fn().mockReturnValue({ eq: updateEqTenantMock })
+      const updateMock = vi.fn().mockReturnValue({ eq: updateEqIdMock })
 
       mockFrom.mockImplementation((table: string) => {
         if (table === 'ingredient_purchases') return { insert: insertMock }
@@ -49,6 +50,9 @@ describe('ingredient-purchases actions', () => {
       await createIngredientPurchase(validPurchaseData)
 
       expect(insertMock).toHaveBeenCalledWith(expect.objectContaining(validPurchaseData))
+      expect(updateMock).toHaveBeenCalledWith({ unit_cost: validPurchaseData.unit_cost })
+      expect(updateEqIdMock).toHaveBeenCalledWith('id', validPurchaseData.ingredient_id)
+      expect(updateEqTenantMock).toHaveBeenCalledWith('tenant_id', 'test-tenant-id')
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/ingredientes')
     })
 
@@ -57,6 +61,23 @@ describe('ingredient-purchases actions', () => {
       mockFrom.mockImplementation(() => ({
         insert: vi.fn().mockResolvedValue({ data: null, error: dbError }),
       }))
+
+      await expect(createIngredientPurchase(validPurchaseData)).rejects.toEqual(dbError)
+      expect(revalidatePath).not.toHaveBeenCalled()
+    })
+
+    it('lanca erro quando update de unit_cost falha', async () => {
+      const dbError = { message: 'Update error' }
+      const insertMock = vi.fn().mockResolvedValue({ data: null, error: null })
+      const updateEqTenantMock = vi.fn().mockResolvedValue({ data: null, error: dbError })
+      const updateEqIdMock = vi.fn().mockReturnValue({ eq: updateEqTenantMock })
+      const updateMock = vi.fn().mockReturnValue({ eq: updateEqIdMock })
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'ingredient_purchases') return { insert: insertMock }
+        if (table === 'ingredients') return { update: updateMock }
+        return {}
+      })
 
       await expect(createIngredientPurchase(validPurchaseData)).rejects.toEqual(dbError)
       expect(revalidatePath).not.toHaveBeenCalled()
