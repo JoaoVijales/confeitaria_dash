@@ -30,6 +30,7 @@ import { useDeleteRevenue } from '@/hooks/useMutations'
 import { RevenueFormValues } from '@/lib/validations/revenue.schema'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
+import { logError } from '@/lib/logger'
 
 type Revenue = RevenueFormValues & { id: string };
 
@@ -71,7 +72,7 @@ export default function EntradasPage() {
       toast.success('Entrada excluída com sucesso!')
     } catch (error) {
       toast.error('Erro ao excluir entrada.')
-      console.error(error)
+      logError('Erro ao excluir entrada', error, { service: 'other', operation: 'deleteRevenue' })
       // Rollback on error
       queryClient.setQueryData(['revenues', currentPage, itemsPerPage], previousRevenues);
     }
