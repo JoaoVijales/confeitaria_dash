@@ -20,7 +20,7 @@ import {
 import { PlusCircle, Edit, Trash2, Search } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Input } from "@/components/ui/input"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/EmptyState'
 import { useRecipes } from '@/hooks/useRecipes'
@@ -208,16 +208,14 @@ export default function ReceitasPage() {
                         {salePrice > 0 ? (
                           <span className="text-slate-800">{fmt(salePrice)}</span>
                         ) : (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger>
-                                <span className="text-slate-400 text-xs">Sugerido: {fmt(suggestedPrice)}</span>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Preço sugerido com 30% de margem</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <span className="text-slate-400 text-xs">Sugerido: {fmt(suggestedPrice)}</span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Preço sugerido com 30% de margem</p>
+                            </TooltipContent>
+                          </Tooltip>
                         )}
                       </TableCell>
                       <TableCell className="text-right py-4 px-4">
@@ -239,26 +237,22 @@ export default function ReceitasPage() {
                       </TableCell>
                       <TableCell className="text-right py-4 px-4">{recipe.yield} porções</TableCell>
                       <TableCell className="flex justify-center gap-2 py-4 px-4">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button variant="outline" size="icon" onClick={() => handleEditRecipe(recipe)}>
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent><p>Editar receita</p></TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button variant="destructive" size="icon" onClick={() => handleDeleteRecipe(recipe.id)}>
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent><p>Excluir receita</p></TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="outline" size="icon" onClick={() => handleEditRecipe(recipe)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent><p>Editar receita</p></TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="destructive" size="icon" onClick={() => handleDeleteRecipe(recipe.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent><p>Excluir receita</p></TooltipContent>
+                        </Tooltip>
                       </TableCell>
                     </TableRow>
                   )
