@@ -123,6 +123,49 @@ describe('products actions', () => {
       await expect(createProduct(validProductData)).rejects.toThrow('Limite de produtos')
       expect(revalidatePath).not.toHaveBeenCalled()
     })
+
+    it('faz rollback (deleta produto) quando insert de componentes falha', async () => {
+      const componentsError = { message: 'Components error' }
+      const compoundData = { ...validProductData, is_compound: true, components: [{ component_type: 'ingredient' as const, ingredient_id: 'ing-1', quantity: 1 }] }
+      const deleteMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ data: null, error: null }) }),
+      })
+
+      let productsCallCount = 0
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'products') {
+          productsCallCount++
+          if (productsCallCount === 1) {
+            // count query
+            return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ count: 0, error: null }) }) }
+          }
+          return {
+            insert: vi.fn().mockReturnValue({
+              select: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: { id: 'prod-1' }, error: null }),
+              }),
+            }),
+            delete: deleteMock,
+          }
+        }
+        if (table === 'product_components') {
+          return { insert: vi.fn().mockResolvedValue({ data: null, error: componentsError }) }
+        }
+        if (table === 'ingredients') {
+          return {
+            select: vi.fn().mockReturnValue({
+              in: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+              }),
+            }),
+          }
+        }
+        return {}
+      })
+
+      await expect(createProduct(compoundData)).rejects.toEqual(componentsError)
+      expect(deleteMock).toHaveBeenCalled()
+    })
   })
 
   describe('updateProduct', () => {
@@ -137,8 +180,15 @@ describe('products actions', () => {
       const eqIdMock2 = vi.fn().mockReturnValue({ eq: eqTenantMock2 })
       const deleteMock = vi.fn().mockReturnValue({ eq: eqIdMock2 })
 
+      const selectCompsMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+        }),
+      })
+
       mockFrom
         .mockReturnValueOnce({ update: updateMock })
+        .mockReturnValueOnce({ select: selectCompsMock })
         .mockReturnValueOnce({ delete: deleteMock })
 
       await updateProduct('123', validProductData)
@@ -162,6 +212,59 @@ describe('products actions', () => {
       mockFrom.mockReturnValue({ update: updateMock })
 
       await expect(updateProduct('123', validProductData)).rejects.toEqual(dbError)
+    })
+
+    it('faz rollback (restaura componentes) quando insert de novos componentes falha', async () => {
+      const componentsError = { message: 'Components error' }
+      const compoundData = { ...validProductData, is_compound: true, components: [{ component_type: 'ingredient' as const, ingredient_id: 'ing-new', quantity: 1 }] }
+      const oldComponents = [{ product_id: '123', ingredient_id: 'ing-old', quantity: 5, component_type: 'ingredient', tenant_id: 'test-tenant-id' }]
+      let insertCallCount = 0
+      const insertMock = vi.fn().mockImplementation(() => {
+        insertCallCount++
+        if (insertCallCount === 1) return Promise.resolve({ data: null, error: componentsError })
+        return Promise.resolve({ data: null, error: null })
+      })
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'products') {
+          return {
+            update: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
+            }),
+          }
+        }
+        if (table === 'product_components') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({ data: oldComponents, error: null }),
+              }),
+            }),
+            delete: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
+            }),
+            insert: insertMock,
+          }
+        }
+        if (table === 'ingredients') {
+          return {
+            select: vi.fn().mockReturnValue({
+              in: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+              }),
+            }),
+          }
+        }
+        return {}
+      })
+
+      await expect(updateProduct('123', compoundData)).rejects.toEqual(componentsError)
+      expect(insertMock).toHaveBeenCalledTimes(2)
+      expect(insertMock).toHaveBeenNthCalledWith(2, oldComponents)
     })
   })
 

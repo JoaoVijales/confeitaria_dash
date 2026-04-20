@@ -188,12 +188,17 @@ describe('[Segurança] products — isolamento multi-tenant', () => {
     const eqIdMock1 = vi.fn().mockReturnValue({ eq: eqTenantMock1 })
     const updateMock = vi.fn().mockReturnValue({ eq: eqIdMock1 })
 
+    const selectCompsMock = vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ data: [], error: null }) }),
+    })
+
     const eqTenantMock2 = vi.fn().mockResolvedValue({ data: null, error: null })
     const eqIdMock2 = vi.fn().mockReturnValue({ eq: eqTenantMock2 })
     const deleteMock = vi.fn().mockReturnValue({ eq: eqIdMock2 })
 
     mockFrom
       .mockReturnValueOnce({ update: updateMock })
+      .mockReturnValueOnce({ select: selectCompsMock })
       .mockReturnValueOnce({ delete: deleteMock })
 
     await updateProduct('prod-1', validProductData)
@@ -292,10 +297,15 @@ describe('[Segurança] products — isolamento multi-tenant', () => {
     // product_components insert
     const insertComponentsMock = vi.fn().mockResolvedValue({ data: null, error: null })
 
+    const selectCompsMock = vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ data: [], error: null }) }),
+    })
+
     mockFrom
-      .mockReturnValueOnce({ select: selectIngCost })      // ingredients cost lookup
-      .mockReturnValueOnce({ update: updateMock })         // products update
-      .mockReturnValueOnce({ delete: deleteMock })         // product_components delete
+      .mockReturnValueOnce({ select: selectIngCost })        // ingredients cost lookup
+      .mockReturnValueOnce({ update: updateMock })           // products update
+      .mockReturnValueOnce({ select: selectCompsMock })      // product_components select (rollback data)
+      .mockReturnValueOnce({ delete: deleteMock })           // product_components delete
       .mockReturnValueOnce({ insert: insertComponentsMock }) // product_components insert
 
     await updateProduct('prod-1', compoundProduct)
