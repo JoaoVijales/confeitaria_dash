@@ -1,8 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
+import { ORDER_STATUSES } from '@/lib/validations/order.schema'
 
 type UpdateOrderStatusDialogProps = {
   open: boolean
@@ -12,10 +14,8 @@ type UpdateOrderStatusDialogProps = {
   currentStatus: string
 }
 
-const orderStatusOptions = ['Pendente', 'Em Preparo', 'Pronto para Retirada', 'Finalizado', 'Cancelado']
-
 export function UpdateOrderStatusDialog({ open, onOpenChange, onSubmit, isSubmitting, currentStatus }: UpdateOrderStatusDialogProps) {
-  let newStatus = currentStatus;
+  const [newStatus, setNewStatus] = useState(currentStatus)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -25,10 +25,10 @@ export function UpdateOrderStatusDialog({ open, onOpenChange, onSubmit, isSubmit
           <DialogDescription>Selecione o novo status para este pedido.</DialogDescription>
         </DialogHeader>
         <div className="py-4">
-          <Select defaultValue={currentStatus} onValueChange={(value) => { newStatus = value }}>
+          <Select defaultValue={currentStatus} onValueChange={setNewStatus}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              {orderStatusOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              {ORDER_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>

@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getTenantId } from '@/lib/supabase/tenant'
 import { handleSupabaseError } from '@/lib/logger'
+import { buildMonthDateRange } from '@/lib/utils/date-range'
 
 type RecipeIngredient = { quantity: number; ingredients: { unit_cost: number }[] | { unit_cost: number } | null }
 type Recipe = { yield: number; recipe_ingredients: RecipeIngredient[] }
@@ -27,24 +28,14 @@ export async function getDashboardStats() {
   const supabase = createClient()
   const tenantId = await getTenantId()
 
-  const now = new Date()
-  const curYear = now.getFullYear()
-  const curMonth = now.getMonth()
-
-  const prevMonth = curMonth === 0 ? 11 : curMonth - 1
-  const prevYear = curMonth === 0 ? curYear - 1 : curYear
-
-  const curMonthStart = new Date(curYear, curMonth, 1).toISOString()
-  const prevMonthStart = new Date(prevYear, prevMonth, 1).toISOString()
-  const prevMonthEnd = new Date(curYear, curMonth, 0, 23, 59, 59).toISOString()
-  const todayStart = new Date(curYear, curMonth, now.getDate()).toISOString()
-  const todayEnd = new Date(curYear, curMonth, now.getDate() + 1).toISOString()
+  const { curMonthStart, curMonthEnd, prevMonthStart, prevMonthEnd, todayStart, todayEnd } = buildMonthDateRange(new Date())
 
   const { data: curOrders, error: curOrdersErr } = await supabase
     .from('orders')
     .select('total')
     .eq('tenant_id', tenantId)
     .gte('created_at', curMonthStart)
+    .lte('created_at', curMonthEnd)
   handleSupabaseError(curOrdersErr, 'getDashboardStats:curOrders', { tenantId })
 
   // Pedidos do mês anterior (para trend)
@@ -62,6 +53,7 @@ export async function getDashboardStats() {
     .select('amount, category')
     .eq('tenant_id', tenantId)
     .gte('date', curMonthStart)
+    .lte('date', curMonthEnd)
   handleSupabaseError(curExpensesErr, 'getDashboardStats:curExpenses', { tenantId })
 
   // Despesas do mês anterior (para trend)
