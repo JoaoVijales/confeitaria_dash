@@ -31,6 +31,7 @@ import { ExpenseFormValues } from '@/lib/validations/expense.schema'
 import { toast } from 'sonner'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useQueryClient } from '@tanstack/react-query'
+import { logError } from '@/lib/logger'
 
 
 type Expense = ExpenseFormValues & { id: string };
@@ -83,7 +84,7 @@ export default function SaidasPage() {
       toast.success('Saída excluída com sucesso!')
     } catch (error) {
       toast.error('Erro ao excluir saída.')
-      console.error(error)
+      logError('Erro ao excluir saída', error, { service: 'other', operation: 'deleteExpense' })
       // Rollback on error
       queryClient.setQueryData(['expenses', currentPage, itemsPerPage], previousExpenses);
     }
