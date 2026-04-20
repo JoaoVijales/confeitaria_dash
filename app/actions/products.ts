@@ -122,6 +122,9 @@ export async function createProduct(data: ProductFormValues) {
   if (data.is_compound && data.components.length > 0 && product) {
     const rows = data.components.map(c => ({ ...c, product_id: product.id, tenant_id: tenantId }))
     const { error: compErr } = await supabase.from('product_components').insert(rows)
+    if (compErr) {
+      await supabase.from('products').delete().eq('id', product.id).eq('tenant_id', tenantId)
+    }
     handleSupabaseError(compErr, 'createProduct:components', { tenantId })
   }
 
@@ -153,6 +156,12 @@ export async function updateProduct(id: string, data: ProductFormValues) {
 
   handleSupabaseError(error, 'updateProduct', { tenantId, productId: id })
 
+  const { data: existingComponents } = await supabase
+    .from('product_components')
+    .select('*')
+    .eq('product_id', id)
+    .eq('tenant_id', tenantId)
+
   const { error: delErr } = await supabase
     .from('product_components')
     .delete()
@@ -163,6 +172,9 @@ export async function updateProduct(id: string, data: ProductFormValues) {
   if (data.is_compound && data.components.length > 0) {
     const rows = data.components.map(c => ({ ...c, product_id: id, tenant_id: tenantId }))
     const { error: compErr } = await supabase.from('product_components').insert(rows)
+    if (compErr && existingComponents?.length) {
+      await supabase.from('product_components').insert(existingComponents)
+    }
     handleSupabaseError(compErr, 'updateProduct:components', { tenantId, productId: id })
   }
 

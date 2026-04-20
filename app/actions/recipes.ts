@@ -73,6 +73,9 @@ export async function createRecipe(data: {
   }))
 
   const { error: ingredientsError } = await supabase.from('recipe_ingredients').insert(recipeIngredients)
+  if (ingredientsError) {
+    await supabase.from('recipes').delete().eq('id', recipe.id).eq('tenant_id', tenantId)
+  }
   handleSupabaseError(ingredientsError, 'createRecipe:insertIngredients', { tenantId, recipeId: recipe.id })
 
   revalidatePath('/dashboard/receitas')
@@ -98,6 +101,12 @@ export async function updateRecipe(
 
   handleSupabaseError(recipeError, 'updateRecipe:updateRecipe', { tenantId, recipeId: id })
 
+  const { data: existingIngredients } = await supabase
+    .from('recipe_ingredients')
+    .select('*')
+    .eq('recipe_id', id)
+    .eq('tenant_id', tenantId)
+
   const { error: deleteError } = await supabase
     .from('recipe_ingredients')
     .delete()
@@ -113,6 +122,9 @@ export async function updateRecipe(
   }))
 
   const { error: ingredientsError } = await supabase.from('recipe_ingredients').insert(recipeIngredients)
+  if (ingredientsError && existingIngredients?.length) {
+    await supabase.from('recipe_ingredients').insert(existingIngredients)
+  }
   handleSupabaseError(ingredientsError, 'updateRecipe:insertIngredients', { tenantId, recipeId: id })
 
   revalidatePath('/dashboard/receitas')
