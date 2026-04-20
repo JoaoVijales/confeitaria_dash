@@ -2,13 +2,26 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { getTenantId } from '@/lib/supabase/tenant'
+import { getTenantId, getTenantPlan } from '@/lib/supabase/tenant'
 import { handleSupabaseError } from '@/lib/logger'
 import { orderStatusSchema } from '@/lib/validations/order.schema'
+import { isAtOrderLimit } from '@/lib/utils/plan-limits'
 
 export async function createOrder(data: { customer_id: string; items: { product_id: string; quantity: number; unit_price: number; }[]; total: number; status: string }) {
   const supabase = createClient()
   const tenantId = await getTenantId()
+
+  const curMonthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
+  const { count: orderCount } = await supabase
+    .from('orders')
+    .select('id', { count: 'exact', head: true })
+    .eq('tenant_id', tenantId)
+    .gte('created_at', curMonthStart)
+
+  const plan = await getTenantPlan(tenantId)
+  if (isAtOrderLimit(plan, orderCount ?? 0)) {
+    throw new Error(`Limite de pedidos mensais atingido para o plano ${plan}`)
+  }
 
   const { data: orderData, error: orderError } = await supabase
     .from('orders')

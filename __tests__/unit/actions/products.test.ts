@@ -10,11 +10,15 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(() => mockSupabase),
 }))
 
-vi.mock('@/lib/supabase/tenant', () => ({ getTenantId: vi.fn().mockResolvedValue('test-tenant-id') }))
+vi.mock('@/lib/supabase/tenant', () => ({
+  getTenantId: vi.fn().mockResolvedValue('test-tenant-id'),
+  getTenantPlan: vi.fn().mockResolvedValue('pro'),
+}))
 
 import { createProduct, updateProduct, deleteProduct, getProducts, checkLowStock } from '@/app/actions/products'
 import { revalidatePath } from 'next/cache'
 import { ProductFormValues } from '@/lib/validations/product.schema'
+import * as tenantModule from '@/lib/supabase/tenant'
 
 const validProductData: ProductFormValues = {
   name: 'Bolo de Chocolate',
@@ -71,13 +75,20 @@ describe('products actions', () => {
   })
 
   describe('createProduct', () => {
+    function mockCountQuery(count = 0) {
+      const eqMock = vi.fn().mockResolvedValue({ count, error: null })
+      const selectCountMock = vi.fn().mockReturnValue({ eq: eqMock })
+      return selectCountMock
+    }
+
     it('insere produto simples com dados validos', async () => {
       const { insertMock } = mockInsertSingle({ id: 'prod-1' })
-      mockFrom.mockReturnValue({ insert: insertMock })
+      mockFrom
+        .mockReturnValueOnce({ select: mockCountQuery(0) })
+        .mockReturnValue({ insert: insertMock })
 
       await createProduct(validProductData)
 
-      expect(mockFrom).toHaveBeenCalledWith('products')
       expect(insertMock).toHaveBeenCalledWith(expect.objectContaining({
         name: 'Bolo de Chocolate',
         category: 'Bolos',
@@ -95,9 +106,22 @@ describe('products actions', () => {
       const singleMock = vi.fn().mockResolvedValue({ data: null, error: dbError })
       const selectMock = vi.fn().mockReturnValue({ single: singleMock })
       const insertMock = vi.fn().mockReturnValue({ select: selectMock })
-      mockFrom.mockReturnValue({ insert: insertMock })
+      mockFrom
+        .mockReturnValueOnce({ select: mockCountQuery(0) })
+        .mockReturnValue({ insert: insertMock })
 
       await expect(createProduct(validProductData)).rejects.toEqual(dbError)
+    })
+
+    it('lanca erro quando limite de produtos do plano é atingido', async () => {
+      vi.mocked(tenantModule.getTenantPlan).mockResolvedValueOnce('free')
+
+      const eqMock = vi.fn().mockResolvedValue({ count: 30, error: null })
+      const selectCountMock = vi.fn().mockReturnValue({ eq: eqMock })
+      mockFrom.mockReturnValueOnce({ select: selectCountMock })
+
+      await expect(createProduct(validProductData)).rejects.toThrow('Limite de produtos')
+      expect(revalidatePath).not.toHaveBeenCalled()
     })
   })
 
