@@ -1,6 +1,7 @@
 import { getFirebaseSession } from '@/lib/firebase/session'
 import { createClient } from './server'
 import { logError } from '@/lib/logger'
+import type { Plan } from '@/lib/utils/plan-limits'
 
 /**
  * Retorna o tenant_id do usuário autenticado via Firebase Session.
@@ -34,4 +35,14 @@ export async function getTenantId(): Promise<string> {
   }
 
   return tenant.id
+}
+
+export async function getTenantPlan(tenantId: string): Promise<Plan> {
+  const supabase = createClient()
+  const { data } = await supabase
+    .from('tenants')
+    .select('plan')
+    .eq('id', tenantId)
+    .single()
+  return ((data?.plan as Plan) ?? 'free')
 }

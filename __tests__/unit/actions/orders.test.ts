@@ -10,7 +10,10 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(() => mockSupabase),
 }))
 
-vi.mock('@/lib/supabase/tenant', () => ({ getTenantId: vi.fn().mockResolvedValue('test-tenant-id') }))
+vi.mock('@/lib/supabase/tenant', () => ({
+  getTenantId: vi.fn().mockResolvedValue('test-tenant-id'),
+  getTenantPlan: vi.fn().mockResolvedValue('pro'),
+}))
 
 vi.mock('@/app/actions/customers', () => ({
   updateCustomerStats: vi.fn().mockResolvedValue(undefined),
@@ -18,6 +21,7 @@ vi.mock('@/app/actions/customers', () => ({
 
 import { createOrder, updateOrderStatus, deleteOrder, getOrders, getOrderDetails } from '@/app/actions/orders'
 import { revalidatePath } from 'next/cache'
+import * as tenantModule from '@/lib/supabase/tenant'
 
 const validOrderData = {
   customer_id: 'cust-1',
@@ -34,9 +38,16 @@ describe('orders actions', () => {
   })
 
   describe('createOrder', () => {
+    function mockOrderCountQuery(count = 0) {
+      const gteMock = vi.fn().mockResolvedValue({ count, error: null })
+      const eqMock = vi.fn().mockReturnValue({ gte: gteMock })
+      return vi.fn().mockReturnValue({ eq: eqMock })
+    }
+
     it('cria pedido e itens com dados validos', async () => {
       const itemsInsertMock = vi.fn().mockResolvedValue({ data: null, error: null })
 
+      mockFrom.mockReturnValueOnce({ select: mockOrderCountQuery(0) })
       mockFrom.mockImplementation((table: string) => {
         if (table === 'orders') {
           return {
@@ -71,6 +82,7 @@ describe('orders actions', () => {
 
     it('lanca erro quando insert do pedido falha', async () => {
       const dbError = { message: 'DB error' }
+      mockFrom.mockReturnValueOnce({ select: mockOrderCountQuery(0) })
       mockFrom.mockImplementation((table: string) => {
         if (table === 'orders') {
           return {
@@ -88,12 +100,25 @@ describe('orders actions', () => {
       expect(revalidatePath).not.toHaveBeenCalled()
     })
 
+    it('lanca erro quando limite mensal de pedidos do plano é atingido', async () => {
+      vi.mocked(tenantModule.getTenantPlan).mockResolvedValueOnce('free')
+
+      const gteMock = vi.fn().mockResolvedValue({ count: 50, error: null })
+      const eqTenantMock = vi.fn().mockReturnValue({ gte: gteMock })
+      const selectCountMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
+      mockFrom.mockReturnValueOnce({ select: selectCountMock })
+
+      await expect(createOrder(validOrderData)).rejects.toThrow('Limite de pedidos')
+      expect(revalidatePath).not.toHaveBeenCalled()
+    })
+
     it('faz rollback do pedido quando insert de itens falha', async () => {
       const itemsError = { message: 'Items error' }
       const orderDeleteEqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
       const orderDeleteEqMock = vi.fn().mockReturnValue({ eq: orderDeleteEqTenantMock })
       const orderDeleteMock = vi.fn().mockReturnValue({ eq: orderDeleteEqMock })
 
+      mockFrom.mockReturnValueOnce({ select: mockOrderCountQuery(0) })
       mockFrom.mockImplementation((table: string) => {
         if (table === 'orders') {
           return {
