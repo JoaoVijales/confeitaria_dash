@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
@@ -15,7 +15,11 @@ type UpdateOrderStatusDialogProps = {
 }
 
 export function UpdateOrderStatusDialog({ open, onOpenChange, onSubmit, isSubmitting, currentStatus }: UpdateOrderStatusDialogProps) {
-  const [newStatus, setNewStatus] = useState(currentStatus)
+  const [selectedStatus, setSelectedStatus] = useState(currentStatus)
+
+  useEffect(() => {
+    setSelectedStatus(currentStatus)
+  }, [currentStatus, open])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -25,7 +29,7 @@ export function UpdateOrderStatusDialog({ open, onOpenChange, onSubmit, isSubmit
           <DialogDescription>Selecione o novo status para este pedido.</DialogDescription>
         </DialogHeader>
         <div className="py-4">
-          <Select defaultValue={currentStatus} onValueChange={setNewStatus}>
+          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               {ORDER_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
@@ -34,7 +38,7 @@ export function UpdateOrderStatusDialog({ open, onOpenChange, onSubmit, isSubmit
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={() => onSubmit(newStatus)} disabled={isSubmitting}>
+          <Button onClick={() => onSubmit(selectedStatus)} disabled={isSubmitting}>
             {isSubmitting ? 'Salvando...' : 'Salvar'}
           </Button>
         </DialogFooter>
