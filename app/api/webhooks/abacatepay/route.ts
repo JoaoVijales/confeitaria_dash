@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createHmac, timingSafeEqual } from 'crypto'
 import { createClient } from '@/lib/supabase/server'
+import { logError } from '@/lib/logger'
 
 function getPlanFromProduct(productId: string): string {
   if (productId && productId === process.env.ABACATEPAY_PRODUCT_ID_BASIC) return 'basic'
@@ -29,6 +30,24 @@ type SubscriptionPayload = {
   }
 }
 
+async function resolveTenantId(
+  supabase: ReturnType<typeof createClient>,
+  customerId: string | undefined,
+  metadataTenantId: string | undefined,
+): Promise<string | null> {
+  // Prefer lookup by customerId — prevents metadata spoofing
+  if (customerId) {
+    const { data } = await supabase
+      .from('tenants')
+      .select('id')
+      .eq('abacate_customer_id', customerId)
+      .single()
+    if (data?.id) return data.id
+  }
+  // Fallback for first subscription (customerId not yet stored)
+  return metadataTenantId ?? null
+}
+
 export async function POST(request: NextRequest) {
   const body = await request.text()
   const signature = request.headers.get('x-webhook-signature') ?? ''
@@ -42,13 +61,19 @@ export async function POST(request: NextRequest) {
 
   switch (event.event) {
     case 'subscription.completed': {
-      const tenantId = event.data.metadata?.tenant_id
-      if (!tenantId) break
+      const tenantId = await resolveTenantId(
+        supabase,
+        event.data.customerId,
+        event.data.metadata?.tenant_id,
+      )
+      if (!tenantId) {
+        return NextResponse.json({ error: 'Tenant not found' }, { status: 404 })
+      }
 
       const productId = event.data.items?.[0]?.productId ?? ''
       const plan = getPlanFromProduct(productId)
 
-      await supabase
+      const { error } = await supabase
         .from('tenants')
         .update({
           abacate_customer_id: event.data.customerId ?? null,
@@ -57,22 +82,46 @@ export async function POST(request: NextRequest) {
           status: 'active',
         })
         .eq('id', tenantId)
+
+      if (error) {
+        logError('Webhook: falha ao atualizar tenant em subscription.completed', error, {
+          service: 'billing',
+          operation: 'webhook.subscription.completed',
+        })
+        return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+      }
       break
     }
 
     case 'subscription.renewed': {
-      await supabase
+      const { error } = await supabase
         .from('tenants')
         .update({ status: 'active' })
         .eq('abacate_subscription_id', event.data.id)
+
+      if (error) {
+        logError('Webhook: falha ao renovar assinatura', error, {
+          service: 'billing',
+          operation: 'webhook.subscription.renewed',
+        })
+        return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+      }
       break
     }
 
     case 'subscription.cancelled': {
-      await supabase
+      const { error } = await supabase
         .from('tenants')
         .update({ plan: 'free', status: 'active', abacate_subscription_id: null })
         .eq('abacate_subscription_id', event.data.id)
+
+      if (error) {
+        logError('Webhook: falha ao cancelar assinatura', error, {
+          service: 'billing',
+          operation: 'webhook.subscription.cancelled',
+        })
+        return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+      }
       break
     }
   }
