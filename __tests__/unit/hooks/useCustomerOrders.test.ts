@@ -3,7 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactNode } from 'react'
 
-const { mockOrder, mockEq, mockSelect, mockFrom } = vi.hoisted(() => {
+const { mockOrder, mockEq, mockSelect: _mockSelect, mockFrom } = vi.hoisted(() => {
   const mockOrder = vi.fn()
   const mockEq = vi.fn(() => ({ order: mockOrder }))
   const mockSelect = vi.fn(() => ({ eq: mockEq }))

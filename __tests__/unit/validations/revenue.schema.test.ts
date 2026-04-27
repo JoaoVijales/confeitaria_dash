@@ -17,7 +17,7 @@ describe('revenueSchema', () => {
 
   // date
   it('deve rejeitar quando date esta faltando', () => {
-    const { date, ...rest } = validRevenue
+    const { date: _date, ...rest } = validRevenue
     const result = revenueSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
@@ -34,7 +34,7 @@ describe('revenueSchema', () => {
 
   // description
   it('deve rejeitar quando description esta faltando', () => {
-    const { description, ...rest } = validRevenue
+    const { description: _description, ...rest } = validRevenue
     const result = revenueSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
@@ -46,7 +46,7 @@ describe('revenueSchema', () => {
 
   // quantity
   it('deve rejeitar quando quantity esta faltando', () => {
-    const { quantity, ...rest } = validRevenue
+    const { quantity: _quantity, ...rest } = validRevenue
     const result = revenueSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
@@ -68,7 +68,7 @@ describe('revenueSchema', () => {
 
   // unit_price
   it('deve rejeitar quando unit_price esta faltando', () => {
-    const { unit_price, ...rest } = validRevenue
+    const { unit_price: _unit_price, ...rest } = validRevenue
     const result = revenueSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
@@ -85,7 +85,7 @@ describe('revenueSchema', () => {
 
   // total
   it('deve rejeitar quando total esta faltando', () => {
-    const { total, ...rest } = validRevenue
+    const { total: _total, ...rest } = validRevenue
     const result = revenueSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })

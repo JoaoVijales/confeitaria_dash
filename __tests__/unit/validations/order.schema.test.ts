@@ -29,7 +29,7 @@ describe('orderSchema', () => {
 
   // customer_id
   it('deve rejeitar quando customer_id esta faltando', () => {
-    const { customer_id, ...rest } = validOrder
+    const { customer_id: _customer_id, ...rest } = validOrder
     const result = orderSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
@@ -41,7 +41,7 @@ describe('orderSchema', () => {
 
   // items
   it('deve rejeitar quando items esta faltando', () => {
-    const { items, ...rest } = validOrder
+    const { items: _items, ...rest } = validOrder
     const result = orderSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
@@ -77,7 +77,7 @@ describe('orderSchema', () => {
 
   // total
   it('deve rejeitar quando total esta faltando', () => {
-    const { total, ...rest } = validOrder
+    const { total: _total, ...rest } = validOrder
     const result = orderSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
@@ -94,7 +94,7 @@ describe('orderSchema', () => {
 
   // status
   it('deve rejeitar quando status esta faltando', () => {
-    const { status, ...rest } = validOrder
+    const { status: _status, ...rest } = validOrder
     const result = orderSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
