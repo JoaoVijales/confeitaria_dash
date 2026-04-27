@@ -3,8 +3,6 @@ import { describe, it, expect, vi } from 'vitest'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import ProductsPage from '@/app/dashboard/produtos/page'
 import { useProducts } from '@/hooks/useProducts'
-import * as mutations from '@/hooks/useMutations'
-
 // Mock do hook useProducts
 vi.mock('@/hooks/useProducts', () => ({
   useProducts: vi.fn(),
