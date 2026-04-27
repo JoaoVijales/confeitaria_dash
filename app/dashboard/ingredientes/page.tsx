@@ -18,6 +18,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { PlusCircle, Edit, Trash2, Search } from 'lucide-react'
+import { StockAlertBanner } from '@/components/StockAlertBanner'
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -94,6 +95,7 @@ export default function IngredientesPage() {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
+      <StockAlertBanner />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl md:text-3xl font-semibold text-slate-800">Ingredientes</h1>
