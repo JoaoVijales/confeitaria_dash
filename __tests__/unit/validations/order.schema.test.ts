@@ -4,7 +4,7 @@ import { orderSchema } from '@/lib/validations/order.schema'
 const validOrder = {
   customer_id: '550e8400-e29b-41d4-a716-446655440000',
   items: [
-    { product_id: 'prod-1', quantity: 2, unit_price: 25.0 },
+    { product_id: '550e8400-e29b-41d4-a716-446655440001', quantity: 2, unit_price: 25.0 },
   ],
   total: 50.0,
   status: 'Pendente' as const,
@@ -20,8 +20,8 @@ describe('orderSchema', () => {
     const result = orderSchema.safeParse({
       ...validOrder,
       items: [
-        { product_id: 'prod-1', quantity: 2, unit_price: 25.0 },
-        { product_id: 'prod-2', quantity: 1, unit_price: 30.0 },
+        { product_id: '550e8400-e29b-41d4-a716-446655440001', quantity: 2, unit_price: 25.0 },
+        { product_id: '550e8400-e29b-41d4-a716-446655440002', quantity: 1, unit_price: 30.0 },
       ],
     })
     expect(result.success).toBe(true)
@@ -54,7 +54,7 @@ describe('orderSchema', () => {
   it('deve rejeitar item com quantity menor que 1', () => {
     const result = orderSchema.safeParse({
       ...validOrder,
-      items: [{ product_id: 'prod-1', quantity: 0, unit_price: 25.0 }],
+      items: [{ product_id: '550e8400-e29b-41d4-a716-446655440001', quantity: 0, unit_price: 25.0 }],
     })
     expect(result.success).toBe(false)
   })
@@ -62,7 +62,7 @@ describe('orderSchema', () => {
   it('deve aceitar item com quantity igual a 1', () => {
     const result = orderSchema.safeParse({
       ...validOrder,
-      items: [{ product_id: 'prod-1', quantity: 1, unit_price: 25.0 }],
+      items: [{ product_id: '550e8400-e29b-41d4-a716-446655440001', quantity: 1, unit_price: 25.0 }],
     })
     expect(result.success).toBe(true)
   })
@@ -71,6 +71,14 @@ describe('orderSchema', () => {
     const result = orderSchema.safeParse({
       ...validOrder,
       items: [{ quantity: 2, unit_price: 25.0 }],
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('deve rejeitar product_id que nao e UUID', () => {
+    const result = orderSchema.safeParse({
+      ...validOrder,
+      items: [{ product_id: 'prod-nao-uuid', quantity: 1, unit_price: 10.0 }],
     })
     expect(result.success).toBe(false)
   })
