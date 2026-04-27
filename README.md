@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Confeitaria Dashboard
 
-## Getting Started
+Dashboard de gestão para confeitarias: produtos, ingredientes, receitas, pedidos, clientes e financeiro — com planos SaaS (Gratuito / Basic / Pro).
 
-First, run the development server:
+## Stack
+
+- **Framework:** Next.js 15 (App Router, Server Actions)
+- **Auth:** Firebase Authentication
+- **Banco de dados:** Supabase (PostgreSQL) com isolamento multi-tenant por `tenant_id`
+- **Pagamentos:** AbacatePay (webhooks + assinaturas)
+- **UI:** Tailwind CSS + shadcn/ui + Recharts
+- **Testes:** Vitest + Testing Library
+
+## Setup rápido
 
 ```bash
-npm run dev
-# or
+# 1. Instalar dependências
+yarn install
+
+# 2. Configurar variáveis de ambiente
+cp .env.example .env.local
+# Edite .env.local com suas chaves (Supabase, Firebase, AbacatePay)
+
+# 3. Rodar em desenvolvimento
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Acesse [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Variáveis de ambiente
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Todas as chaves necessárias estão documentadas em [`.env.example`](.env.example).
 
-## Learn More
+| Grupo | Onde obter |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_*` | Supabase Dashboard → Settings → API |
+| `NEXT_PUBLIC_FIREBASE_*` | Firebase Console → Project settings → Your apps |
+| `FIREBASE_ADMIN_*` | Firebase Console → Project settings → Service accounts |
+| `ABACATEPAY_*` | AbacatePay → Configurações → API / Webhooks |
 
-To learn more about Next.js, take a look at the following resources:
+## Arquitetura
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+Firebase Auth ──► middleware.ts ──► verifica token
+                                      │
+                                      ▼
+                              getTenantId() ──► busca tenant no Supabase
+                                      │         (via firebase_uid)
+                                      ▼
+                         Server Actions / Route Handlers
+                                      │
+                                      ▼
+                            Supabase (RLS por tenant_id)
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Cada usuário pertence a um **tenant** — todas as queries filtram por `tenant_id`.
+- Planos (`free` / `basic` / `pro`) controlam limites de produtos e pedidos.
+- Upgrades/cancelamentos são processados pelo webhook AbacatePay em `/api/webhooks/abacatepay`.
 
-## Deploy on Vercel
+Referências: [`docs/app-actions.md`](docs/app-actions.md), [`docs/hooks.md`](docs/hooks.md), [`docs/app-directory.md`](docs/app-directory.md).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Testes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+# Rodar todos os testes
+yarn test
+
+# Rodar com cobertura (mínimo: 70% linhas/funções, 60% branches)
+yarn test:coverage
+
+# Interface visual
+yarn test:ui
+```
+
+Documentação de testes em [`docs/tests.md`](docs/tests.md).
+
+## Deploy checklist
+
+- [ ] `yarn lint` — sem erros
+- [ ] `yarn test` — todos os testes passando
+- [ ] `yarn test:coverage` — thresholds atingidos
+- [ ] `yarn build` — build sem erros de tipo
+- [ ] Migrations aplicadas no Supabase (`docs/migrations/`)
+- [ ] Variáveis de ambiente configuradas no ambiente de produção
+- [ ] Webhook AbacatePay apontando para a URL de produção
