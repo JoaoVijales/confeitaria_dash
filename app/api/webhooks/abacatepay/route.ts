@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
 
       if (error) {
         logError('Webhook: falha ao atualizar tenant em subscription.completed', error, {
-          service: 'billing',
+          service: 'abacatepay',
           operation: 'webhook.subscription.completed',
         })
         return NextResponse.json({ error: 'Internal error' }, { status: 500 })
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
 
       if (error) {
         logError('Webhook: falha ao renovar assinatura', error, {
-          service: 'billing',
+          service: 'abacatepay',
           operation: 'webhook.subscription.renewed',
         })
         return NextResponse.json({ error: 'Internal error' }, { status: 500 })
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
 
       if (error) {
         logError('Webhook: falha ao cancelar assinatura', error, {
-          service: 'billing',
+          service: 'abacatepay',
           operation: 'webhook.subscription.cancelled',
         })
         return NextResponse.json({ error: 'Internal error' }, { status: 500 })

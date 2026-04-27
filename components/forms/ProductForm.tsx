@@ -4,6 +4,7 @@ import { useForm, useFieldArray, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { productSchema, ProductFormValues } from '@/lib/validations/product.schema'
 import { calculateProductCost } from '@/lib/utils/product-cost'
+import { PRODUCT_CATEGORIES } from '@/lib/constants/categories'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -41,7 +42,6 @@ type ProductFormProps = {
   recipes: RecipeOption[]
 }
 
-const CATEGORIES = ['Bolos', 'Tortas', 'Cupcakes', 'Doces', 'Outros']
 
 export function ProductForm({
   defaultValues,
@@ -140,7 +140,7 @@ export function ProductForm({
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {CATEGORIES.map(c => (
+                  {PRODUCT_CATEGORIES.map(c => (
                     <SelectItem key={c} value={c}>{c}</SelectItem>
                   ))}
                 </SelectContent>

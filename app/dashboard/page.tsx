@@ -21,16 +21,11 @@ import { EmptyState } from "@/components/EmptyState";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useOrders } from "@/hooks/useOrders";
 import { StockAlertBanner } from "@/components/StockAlertBanner";
+import { ORDER_STATUS_COLORS } from "@/lib/constants/order-status";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF1919'];
 
-const statusColors: { [key: string]: string } = {
-  Finalizado: "bg-green-100 text-green-700",
-  Pendente: "bg-amber-100 text-amber-700",
-  'Em Preparo': "bg-blue-100 text-blue-700",
-  Cancelado: "bg-red-100 text-red-700",
-};
 
 interface Order {
   id: string;
@@ -228,7 +223,7 @@ export default function DashboardPage() {
                     <TableCell className="py-3 px-4">
                       <Badge
                         className={`rounded-full px-3 py-1 text-xs font-medium ${
-                          statusColors[order.status] || "bg-gray-100 text-gray-800"
+                          ORDER_STATUS_COLORS[order.status] || "bg-gray-100 text-gray-800"
                         }`}
                       >
                         {order.status}
