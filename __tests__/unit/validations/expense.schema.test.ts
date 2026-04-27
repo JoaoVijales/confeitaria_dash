@@ -28,6 +28,11 @@ describe('expenseSchema', () => {
     expect(result.success).toBe(false)
   })
 
+  it('deve rejeitar date em formato invalido (DD/MM/YYYY)', () => {
+    const result = expenseSchema.safeParse({ ...validExpense, date: '15/01/2026' })
+    expect(result.success).toBe(false)
+  })
+
   // description
   it('deve rejeitar quando description esta faltando', () => {
     const { description, ...rest } = validExpense
