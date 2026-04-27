@@ -35,7 +35,7 @@ describe('recipeCostSchema', () => {
   })
 
   it('rejeita margin_type ausente', () => {
-    const { margin_type, ...rest } = validDataPercent
+    const { margin_type: _margin_type, ...rest } = validDataPercent
     const result = recipeCostSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
@@ -56,13 +56,13 @@ describe('recipeCostSchema', () => {
   })
 
   it('rejeita portions ausente', () => {
-    const { portions, ...rest } = validDataPercent
+    const { portions: _portions, ...rest } = validDataPercent
     const result = recipeCostSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
 
   it('rejeita margin_value ausente', () => {
-    const { margin_value, ...rest } = validDataPercent
+    const { margin_value: _margin_value, ...rest } = validDataPercent
     const result = recipeCostSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
