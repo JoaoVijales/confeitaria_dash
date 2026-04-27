@@ -21,7 +21,7 @@ describe('productSchema', () => {
 
   // name
   it('deve rejeitar quando nome esta faltando', () => {
-    const { name, ...rest } = validProduct
+    const { name: _name, ...rest } = validProduct
     const result = productSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
@@ -43,7 +43,7 @@ describe('productSchema', () => {
 
   // category
   it('deve rejeitar quando category esta faltando', () => {
-    const { category, ...rest } = validProduct
+    const { category: _category, ...rest } = validProduct
     const result = productSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
@@ -60,7 +60,7 @@ describe('productSchema', () => {
 
   // price
   it('deve rejeitar quando price esta faltando', () => {
-    const { price, ...rest } = validProduct
+    const { price: _price, ...rest } = validProduct
     const result = productSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
@@ -82,7 +82,7 @@ describe('productSchema', () => {
 
   // cost
   it('deve rejeitar quando cost esta faltando', () => {
-    const { cost, ...rest } = validProduct
+    const { cost: _cost, ...rest } = validProduct
     const result = productSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
@@ -99,7 +99,7 @@ describe('productSchema', () => {
 
   // stock
   it('deve rejeitar quando stock esta faltando', () => {
-    const { stock, ...rest } = validProduct
+    const { stock: _stock, ...rest } = validProduct
     const result = productSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
@@ -116,7 +116,7 @@ describe('productSchema', () => {
 
   // min_stock
   it('deve rejeitar quando min_stock esta faltando', () => {
-    const { min_stock, ...rest } = validProduct
+    const { min_stock: _min_stock, ...rest } = validProduct
     const result = productSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })

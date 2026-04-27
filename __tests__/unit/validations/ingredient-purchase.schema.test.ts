@@ -25,7 +25,7 @@ describe('ingredientPurchaseSchema', () => {
   })
 
   it('rejeita ingredient_id ausente', () => {
-    const { ingredient_id, ...rest } = validData
+    const { ingredient_id: _ingredient_id, ...rest } = validData
     const result = ingredientPurchaseSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })

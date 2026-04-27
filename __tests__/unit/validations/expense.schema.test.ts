@@ -18,7 +18,7 @@ describe('expenseSchema', () => {
 
   // date
   it('deve rejeitar quando date esta faltando', () => {
-    const { date, ...rest } = validExpense
+    const { date: _date, ...rest } = validExpense
     const result = expenseSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
@@ -30,7 +30,7 @@ describe('expenseSchema', () => {
 
   // description
   it('deve rejeitar quando description esta faltando', () => {
-    const { description, ...rest } = validExpense
+    const { description: _description, ...rest } = validExpense
     const result = expenseSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
@@ -42,7 +42,7 @@ describe('expenseSchema', () => {
 
   // category
   it('deve rejeitar quando category esta faltando', () => {
-    const { category, ...rest } = validExpense
+    const { category: _category, ...rest } = validExpense
     const result = expenseSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
@@ -54,7 +54,7 @@ describe('expenseSchema', () => {
 
   // quantity
   it('deve rejeitar quando quantity esta faltando', () => {
-    const { quantity, ...rest } = validExpense
+    const { quantity: _quantity, ...rest } = validExpense
     const result = expenseSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
@@ -76,7 +76,7 @@ describe('expenseSchema', () => {
 
   // unit_price
   it('deve rejeitar quando unit_price esta faltando', () => {
-    const { unit_price, ...rest } = validExpense
+    const { unit_price: _unit_price, ...rest } = validExpense
     const result = expenseSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
@@ -93,7 +93,7 @@ describe('expenseSchema', () => {
 
   // total
   it('deve rejeitar quando total esta faltando', () => {
-    const { total, ...rest } = validExpense
+    const { total: _total, ...rest } = validExpense
     const result = expenseSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })

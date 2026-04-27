@@ -21,7 +21,7 @@ describe('customerSchema', () => {
 
   // name
   it('deve rejeitar quando nome esta faltando', () => {
-    const { name, ...rest } = validCustomer
+    const { name: _name, ...rest } = validCustomer
     const result = customerSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
@@ -43,7 +43,7 @@ describe('customerSchema', () => {
 
   // email
   it('deve rejeitar quando email esta faltando', () => {
-    const { email, ...rest } = validCustomer
+    const { email: _email, ...rest } = validCustomer
     const result = customerSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
@@ -60,7 +60,7 @@ describe('customerSchema', () => {
 
   // phone
   it('deve rejeitar quando telefone esta faltando', () => {
-    const { phone, ...rest } = validCustomer
+    const { phone: _phone, ...rest } = validCustomer
     const result = customerSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
@@ -77,7 +77,7 @@ describe('customerSchema', () => {
 
   // is_vip
   it('deve rejeitar quando is_vip esta faltando', () => {
-    const { is_vip, ...rest } = validCustomer
+    const { is_vip: _is_vip, ...rest } = validCustomer
     const result = customerSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
