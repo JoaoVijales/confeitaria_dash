@@ -34,7 +34,7 @@ export async function createCheckoutSession(planKey: string) {
   if (!productId) throw new Error('Plano inválido')
 
   const checkout = await abacatepay.subscriptions.create({
-    items: [{ productId, quantity: 1 }],
+    items: [{ id: productId, quantity: 1 }],
     customerId: tenant.abacate_customer_id ?? undefined,
     returnUrl: `${APP_URL}/dashboard/billing`,
     completionUrl: `${APP_URL}/dashboard/billing?success=true`,

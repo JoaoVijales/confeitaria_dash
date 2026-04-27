@@ -29,7 +29,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 }
 
 export interface SubscriptionCreateParams {
-  items: Array<{ productId: string; quantity: number }>
+  items: Array<{ id: string; quantity: number }>
   customerId?: string
   returnUrl?: string
   completionUrl?: string
