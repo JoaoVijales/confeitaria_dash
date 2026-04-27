@@ -16,6 +16,7 @@ import { OrderFormDialog } from '@/components/dialogs/OrderFormDialog'
 import { ConfirmDialog } from '@/components/dialogs/ConfirmDialog'
 import { UpdateOrderStatusDialog } from '@/components/dialogs/UpdateOrderStatusDialog'
 import { OrderFormValues } from '@/lib/validations/order.schema'
+import { ORDER_STATUS_COLORS } from '@/lib/constants/order-status'
 import { toast } from 'sonner'
 
 type Order = {
@@ -26,12 +27,6 @@ type Order = {
   customers: { name: string }[] | null;
 };
 
-const statusColors: { [key: string]: string } = {
-  Finalizado: "bg-green-100 text-green-700",
-  Pendente: "bg-amber-100 text-amber-700",
-  'Em Preparo': "bg-blue-100 text-blue-700",
-  Cancelado: "bg-red-100 text-red-700",
-};
 
 const statusIcons: { [key: string]: React.ReactNode } = {
   Finalizado: <CheckCircle className="h-3 w-3" />,
@@ -164,7 +159,7 @@ export default function OrdersPage() {
                       <TableCell className="py-4 px-4">{order.customers?.[0]?.name || 'N/A'}</TableCell>
                       <TableCell className="py-4 px-4">{new Date(order.created_at).toLocaleDateString()}</TableCell>
                       <TableCell className="py-4 px-4">
-                        <Badge className={`${statusColors[order.status] || "bg-gray-100"} flex items-center gap-1 w-fit`}>
+                        <Badge className={`${ORDER_STATUS_COLORS[order.status] || "bg-gray-100"} flex items-center gap-1 w-fit`}>
                           {statusIcons[order.status]} {order.status}
                         </Badge>
                       </TableCell>

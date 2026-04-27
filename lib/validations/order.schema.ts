@@ -1,7 +1,9 @@
 import * as z from 'zod'
+import { ORDER_STATUSES } from '@/lib/constants/order-status'
 
-export const ORDER_STATUSES = ['Pendente', 'Em Preparo', 'Pronto para Retirada', 'Finalizado', 'Cancelado'] as const
-export type OrderStatus = typeof ORDER_STATUSES[number]
+export { ORDER_STATUSES } from '@/lib/constants/order-status'
+export type { OrderStatus } from '@/lib/constants/order-status'
+
 export const orderStatusSchema = z.enum(ORDER_STATUSES)
 
 const orderItemSchema = z.object({

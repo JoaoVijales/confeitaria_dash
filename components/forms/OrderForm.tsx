@@ -4,13 +4,13 @@ import { useEffect } from 'react'
 import { useForm, useFieldArray, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { orderSchema, OrderFormValues } from '@/lib/validations/order.schema'
+import { ORDER_STATUSES } from '@/lib/constants/order-status'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Trash2 } from 'lucide-react'
 
-const orderStatusOptions = ['Pendente', 'Em Preparo', 'Pronto para Retirada', 'Finalizado', 'Cancelado']
 
 type Customer = { id: string; name: string }
 type Product = { id: string; name: string; price: number }
@@ -110,7 +110,7 @@ export function OrderForm({ customers, products, defaultValues, onSubmit, isSubm
             <Select onValueChange={field.onChange} value={field.value}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {orderStatusOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                {ORDER_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>
             </Select>
           )}

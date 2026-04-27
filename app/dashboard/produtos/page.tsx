@@ -16,6 +16,7 @@ import { useCreateProduct, useUpdateProduct, useDeleteProduct } from '@/hooks/us
 import { ProductFormDialog } from '@/components/dialogs/ProductFormDialog'
 import { ConfirmDialog } from '@/components/dialogs/ConfirmDialog'
 import { ProductFormValues } from '@/lib/validations/product.schema'
+import { PRODUCT_CATEGORIES, CATEGORY_COLORS } from '@/lib/constants/categories'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { StockAlertBanner } from '@/components/StockAlertBanner'
@@ -33,12 +34,6 @@ type Product = {
   extra_cost: number;
 };
 
-const categoryColors: { [key: string]: string } = {
-  Bolos: "bg-blue-100 text-blue-800",
-  Tortas: "bg-orange-100 text-orange-800",
-  Cupcakes: "bg-green-100 text-green-800",
-  Doces: "bg-purple-100 text-purple-800",
-};
 
 export default function ProductsPage() {
   const { data: products, isLoading, error } = useProducts() as { data: Product[] | undefined; isLoading: boolean; error: Error | null };
@@ -135,10 +130,7 @@ export default function ProductsPage() {
               <SelectTrigger className="w-full sm:w-[180px] rounded-lg border-slate-200"><SelectValue placeholder="Categoria" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="Todos">Todas as Categorias</SelectItem>
-                <SelectItem value="Bolos">Bolos</SelectItem>
-                <SelectItem value="Tortas">Tortas</SelectItem>
-                <SelectItem value="Cupcakes">Cupcakes</SelectItem>
-                <SelectItem value="Doces">Doces</SelectItem>
+                {PRODUCT_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
               </SelectContent>
             </Select>
             <Button onClick={() => handleOpenForm()} className="bg-gradient-to-r from-pink-500 to-pink-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all">
@@ -175,7 +167,7 @@ export default function ProductsPage() {
                     return (
                       <TableRow key={product.id} className="hover:bg-slate-50 transition-colors py-4">
                         <TableCell className="font-medium py-4 px-4">{product.name}</TableCell>
-                        <TableCell className="py-4 px-4"><Badge className={`${categoryColors[product.category] || "bg-gray-100"}`}>{product.category}</Badge></TableCell>
+                        <TableCell className="py-4 px-4"><Badge className={`${CATEGORY_COLORS[product.category] || "bg-gray-100"}`}>{product.category}</Badge></TableCell>
                         <TableCell className="text-right font-semibold py-4 px-4 text-slate-900">R$ {product.price.toFixed(2)}</TableCell>
                         <TableCell className="text-right py-4 px-4 text-slate-700">R$ {product.cost.toFixed(2)}</TableCell>
                         <TableCell className="text-right py-4 px-4">
