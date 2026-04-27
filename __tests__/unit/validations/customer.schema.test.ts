@@ -75,6 +75,16 @@ describe('customerSchema', () => {
     expect(result.success).toBe(true)
   })
 
+  it('deve aceitar telefone com codigo de pais (+55)', () => {
+    const result = customerSchema.safeParse({ ...validCustomer, phone: '+5511999998888' })
+    expect(result.success).toBe(true)
+  })
+
+  it('deve rejeitar telefone com letras', () => {
+    const result = customerSchema.safeParse({ ...validCustomer, phone: '119abc98888' })
+    expect(result.success).toBe(false)
+  })
+
   // is_vip
   it('deve rejeitar quando is_vip esta faltando', () => {
     const { is_vip, ...rest } = validCustomer

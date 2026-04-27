@@ -5,9 +5,9 @@ export type OrderStatus = typeof ORDER_STATUSES[number]
 export const orderStatusSchema = z.enum(ORDER_STATUSES)
 
 const orderItemSchema = z.object({
-  product_id: z.string(),
+  product_id: z.string().uuid('Produto inválido'),
   quantity: z.number().min(1, 'Quantidade deve ser maior que zero'),
-  unit_price: z.number(),
+  unit_price: z.number().min(0, 'Preço deve ser positivo'),
 })
 
 export const orderSchema = z.object({
