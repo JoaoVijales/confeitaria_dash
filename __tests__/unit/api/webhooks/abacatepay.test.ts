@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createHmac } from 'crypto'
 import { NextRequest } from 'next/server'
 
 const mockLogError = vi.fn()
@@ -35,18 +34,13 @@ import { POST } from '@/app/api/webhooks/abacatepay/route'
 
 const WEBHOOK_SECRET = 'test-webhook-secret'
 
-function sign(body: string): string {
-  return createHmac('sha256', WEBHOOK_SECRET).update(body).digest('base64')
-}
-
-function makeRequest(body: object, signature?: string): NextRequest {
+function makeRequest(body: object, secret?: string): NextRequest {
   const bodyStr = JSON.stringify(body)
-  const sig = signature ?? sign(bodyStr)
-  return new NextRequest('http://localhost/api/webhooks/abacatepay', {
-    method: 'POST',
-    body: bodyStr,
-    headers: { 'x-webhook-signature': sig },
-  })
+  const s = secret ?? WEBHOOK_SECRET
+  return new NextRequest(
+    `http://localhost/api/webhooks/abacatepay?webhookSecret=${s}`,
+    { method: 'POST', body: bodyStr },
+  )
 }
 
 beforeEach(() => {
@@ -58,13 +52,13 @@ beforeEach(() => {
 
 describe('POST /api/webhooks/abacatepay', () => {
   describe('verificação de assinatura', () => {
-    it('retorna 400 quando assinatura é inválida', async () => {
-      const req = makeRequest({ event: 'subscription.completed', data: {} }, 'invalid-sig')
+    it('retorna 400 quando secret é inválido', async () => {
+      const req = makeRequest({ event: 'subscription.completed', data: {} }, 'wrong-secret')
       const res = await POST(req)
       expect(res.status).toBe(400)
     })
 
-    it('retorna 400 quando assinatura está ausente', async () => {
+    it('retorna 400 quando webhookSecret está ausente', async () => {
       const bodyStr = JSON.stringify({ event: 'subscription.completed', data: {} })
       const req = new NextRequest('http://localhost/api/webhooks/abacatepay', {
         method: 'POST',

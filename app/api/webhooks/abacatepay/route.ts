@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createHmac, timingSafeEqual } from 'crypto'
+import { timingSafeEqual } from 'crypto'
 import { createClient } from '@/lib/supabase/server'
 import { logError, logWarn, logInfo } from '@/lib/logger'
 
@@ -9,12 +9,13 @@ function getPlanFromProduct(productId: string): string {
   return 'free'
 }
 
-function verifySignature(body: string, signature: string): boolean {
+// AbacatePay envia o secret como query param ?webhookSecret=, não como header HMAC.
+function verifyWebhookSecret(request: NextRequest): boolean {
   const secret = process.env.ABACATEPAY_WEBHOOK_SECRET ?? ''
-  if (!secret || !signature) return false
-  const expected = createHmac('sha256', secret).update(body).digest('base64')
+  const provided = request.nextUrl.searchParams.get('webhookSecret') ?? ''
+  if (!secret || !provided) return false
   try {
-    return timingSafeEqual(Buffer.from(signature, 'base64'), Buffer.from(expected, 'base64'))
+    return timingSafeEqual(Buffer.from(provided), Buffer.from(secret))
   } catch {
     return false
   }
@@ -50,12 +51,11 @@ async function resolveTenantId(
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.text()
-  const signature = request.headers.get('x-webhook-signature') ?? ''
-
-  if (!verifySignature(body, signature)) {
-    return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
+  if (!verifyWebhookSecret(request)) {
+    return NextResponse.json({ error: 'Invalid webhook secret' }, { status: 400 })
   }
+
+  const body = await request.text()
 
   const event = JSON.parse(body) as SubscriptionPayload
   const supabase = createClient()

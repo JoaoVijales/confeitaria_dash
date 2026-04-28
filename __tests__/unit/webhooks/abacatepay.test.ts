@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createHmac } from 'crypto'
 
 const mockFrom = vi.hoisted(() => vi.fn())
 vi.mock('@/lib/supabase/server', () => ({
@@ -22,12 +21,10 @@ const WEBHOOK_SECRET = 'test-secret-123'
 
 function makeRequest(body: object, secret = WEBHOOK_SECRET): NextRequest {
   const bodyStr = JSON.stringify(body)
-  const sig = createHmac('sha256', secret).update(bodyStr).digest('base64')
-  return new NextRequest('http://localhost/api/webhooks/abacatepay', {
-    method: 'POST',
-    body: bodyStr,
-    headers: { 'x-webhook-signature': sig },
-  })
+  return new NextRequest(
+    `http://localhost/api/webhooks/abacatepay?webhookSecret=${secret}`,
+    { method: 'POST', body: bodyStr },
+  )
 }
 
 // Helpers para montar mocks do Supabase de forma legível
@@ -53,18 +50,14 @@ beforeEach(() => {
 })
 
 describe('POST /api/webhooks/abacatepay', () => {
-  describe('verificação de assinatura', () => {
-    it('retorna 400 com assinatura inválida', async () => {
-      const req = new NextRequest('http://localhost/api/webhooks/abacatepay', {
-        method: 'POST',
-        body: JSON.stringify({ event: 'subscription.completed', data: {} }),
-        headers: { 'x-webhook-signature': 'invalid-sig' },
-      })
+  describe('verificação de secret', () => {
+    it('retorna 400 com webhookSecret inválido', async () => {
+      const req = makeRequest({ event: 'subscription.completed', data: {} }, 'wrong-secret')
       const res = await POST(req)
       expect(res.status).toBe(400)
     })
 
-    it('retorna 400 sem assinatura', async () => {
+    it('retorna 400 sem webhookSecret', async () => {
       const req = new NextRequest('http://localhost/api/webhooks/abacatepay', {
         method: 'POST',
         body: JSON.stringify({ event: 'subscription.completed', data: {} }),
