@@ -173,8 +173,9 @@ describe('[Segurança] products — isolamento multi-tenant', () => {
     const insertMock = vi.fn().mockReturnValue({ select: selectMock })
 
     mockFrom
-      .mockReturnValueOnce({ select: countSelectMock })
-      .mockReturnValue({ insert: insertMock })
+      .mockReturnValueOnce({ select: countSelectMock })  // pre-insert count
+      .mockReturnValueOnce({ insert: insertMock })        // insert
+      .mockReturnValueOnce({ select: countSelectMock })  // post-insert count (validação anti-race)
 
     await createProduct(validProductData)
 
@@ -250,9 +251,10 @@ describe('[Segurança] products — isolamento multi-tenant', () => {
     const countSelectMock2 = vi.fn().mockReturnValue({ eq: countEqMock2 })
 
     mockFrom
-      .mockReturnValueOnce({ select: countSelectMock2 })    // products count query
+      .mockReturnValueOnce({ select: countSelectMock2 })    // products pre-insert count
       .mockReturnValueOnce({ select: selectIngCost })       // ingredients cost lookup
       .mockReturnValueOnce({ insert: insertProductMock })   // products insert
+      .mockReturnValueOnce({ select: countSelectMock2 })    // products post-insert count (validação anti-race)
       .mockReturnValueOnce({ insert: insertComponentsMock }) // product_components insert
 
     await createProduct(compoundProduct)
@@ -367,8 +369,9 @@ describe('[Segurança] orders — isolamento multi-tenant', () => {
     const countSelectMock = vi.fn().mockReturnValue({ eq: countEqMock })
 
     mockFrom
-      .mockReturnValueOnce({ select: countSelectMock })   // orders count query
+      .mockReturnValueOnce({ select: countSelectMock })   // orders pre-insert count
       .mockReturnValueOnce({ insert: insertOrderMock })   // orders insert
+      .mockReturnValueOnce({ select: countSelectMock })   // orders post-insert count (validação anti-race)
       .mockReturnValueOnce({ insert: insertItemsMock })   // order_items insert
       .mockReturnValueOnce({ select: selectStatsMock })   // orders select (updateCustomerStats)
       .mockReturnValueOnce({ update: updateStatsMock })   // customers update (updateCustomerStats)

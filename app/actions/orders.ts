@@ -5,13 +5,15 @@ import { createClient } from '@/lib/supabase/server'
 import { getTenantId, getTenantPlan } from '@/lib/supabase/tenant'
 import { handleSupabaseError } from '@/lib/logger'
 import { orderStatusSchema } from '@/lib/validations/order.schema'
-import { isAtOrderLimit } from '@/lib/utils/plan-limits'
+import { isAtOrderLimit, getPlanLimits } from '@/lib/utils/plan-limits'
 
 export async function createOrder(data: { customer_id: string; items: { product_id: string; quantity: number; unit_price: number; }[]; total: number; status: string }) {
   const supabase = createClient()
   const tenantId = await getTenantId()
 
-  const curMonthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
+  const now = new Date()
+  const curMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+
   const { count: orderCount } = await supabase
     .from('orders')
     .select('id', { count: 'exact', head: true })
@@ -36,6 +38,19 @@ export async function createOrder(data: { customer_id: string; items: { product_
 
   handleSupabaseError(orderError, 'createOrder:insertOrder', { tenantId, data: { customer_id: data.customer_id, total: data.total } })
   const orderId = orderData!.id
+
+  // Validação pós-insert: detecta race condition onde duas requisições simultâneas
+  // passaram na checagem pré-insert mas ambas conseguiram inserir
+  const { count: newOrderCount } = await supabase
+    .from('orders')
+    .select('id', { count: 'exact', head: true })
+    .eq('tenant_id', tenantId)
+    .gte('created_at', curMonthStart)
+
+  if ((newOrderCount ?? 0) > getPlanLimits(plan).maxOrdersPerMonth) {
+    await supabase.from('orders').delete().eq('id', orderId).eq('tenant_id', tenantId)
+    throw new Error(`Limite de pedidos mensais atingido para o plano ${plan}`)
+  }
 
   const orderItems = data.items.map(item => ({
     order_id: orderId,
