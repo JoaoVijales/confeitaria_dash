@@ -36,7 +36,7 @@ import { POST } from '@/app/api/webhooks/abacatepay/route'
 const WEBHOOK_SECRET = 'test-webhook-secret'
 
 function sign(body: string): string {
-  return createHmac('sha256', WEBHOOK_SECRET).update(body).digest('hex')
+  return createHmac('sha256', WEBHOOK_SECRET).update(body).digest('base64')
 }
 
 function makeRequest(body: object, signature?: string): NextRequest {

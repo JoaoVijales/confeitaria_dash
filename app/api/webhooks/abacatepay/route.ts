@@ -12,9 +12,9 @@ function getPlanFromProduct(productId: string): string {
 function verifySignature(body: string, signature: string): boolean {
   const secret = process.env.ABACATEPAY_WEBHOOK_SECRET ?? ''
   if (!secret || !signature) return false
-  const expected = createHmac('sha256', secret).update(body).digest('hex')
+  const expected = createHmac('sha256', secret).update(body).digest('base64')
   try {
-    return timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expected, 'hex'))
+    return timingSafeEqual(Buffer.from(signature, 'base64'), Buffer.from(expected, 'base64'))
   } catch {
     return false
   }

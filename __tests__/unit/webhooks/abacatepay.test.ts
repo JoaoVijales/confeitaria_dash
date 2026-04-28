@@ -22,7 +22,7 @@ const WEBHOOK_SECRET = 'test-secret-123'
 
 function makeRequest(body: object, secret = WEBHOOK_SECRET): NextRequest {
   const bodyStr = JSON.stringify(body)
-  const sig = createHmac('sha256', secret).update(bodyStr).digest('hex')
+  const sig = createHmac('sha256', secret).update(bodyStr).digest('base64')
   return new NextRequest('http://localhost/api/webhooks/abacatepay', {
     method: 'POST',
     body: bodyStr,
