@@ -83,9 +83,11 @@ describe('products actions', () => {
 
     it('insere produto simples com dados validos', async () => {
       const { insertMock } = mockInsertSingle({ id: 'prod-1' })
+      // Sequência: 1=count pré-insert, 2=insert, 3=count pós-insert (validação anti-race)
       mockFrom
         .mockReturnValueOnce({ select: mockCountQuery(0) })
-        .mockReturnValue({ insert: insertMock })
+        .mockReturnValueOnce({ insert: insertMock })
+        .mockReturnValueOnce({ select: mockCountQuery(1) })
 
       await createProduct(validProductData)
 
@@ -136,17 +138,25 @@ describe('products actions', () => {
         if (table === 'products') {
           productsCallCount++
           if (productsCallCount === 1) {
-            // count query
+            // pre-insert count query
             return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ count: 0, error: null }) }) }
           }
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({ data: { id: 'prod-1' }, error: null }),
+          if (productsCallCount === 2) {
+            // insert
+            return {
+              insert: vi.fn().mockReturnValue({
+                select: vi.fn().mockReturnValue({
+                  single: vi.fn().mockResolvedValue({ data: { id: 'prod-1' }, error: null }),
+                }),
               }),
-            }),
-            delete: deleteMock,
+            }
           }
+          if (productsCallCount === 3) {
+            // post-insert count query (validação anti-race)
+            return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ count: 1, error: null }) }) }
+          }
+          // productsCallCount === 4: delete (rollback)
+          return { delete: deleteMock }
         }
         if (table === 'product_components') {
           return { insert: vi.fn().mockResolvedValue({ data: null, error: componentsError }) }

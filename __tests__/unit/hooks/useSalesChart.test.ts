@@ -3,15 +3,9 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactNode } from 'react'
 
-const { mockGte, mockFrom } = vi.hoisted(() => {
-  const mockGte = vi.fn()
-  const mockSelect = vi.fn(() => ({ gte: mockGte }))
-  const mockFrom = vi.fn(() => ({ select: mockSelect }))
-  return { mockGte, mockFrom }
-})
-
-vi.mock('@/lib/supabase/client', () => ({
-  createClient: vi.fn(() => ({ from: mockFrom })),
+const mockGetSalesChartData = vi.hoisted(() => vi.fn())
+vi.mock('@/app/actions/dashboard', () => ({
+  getSalesChartData: mockGetSalesChartData,
 }))
 
 import { useSalesChart } from '@/hooks/useSalesChart'
@@ -31,53 +25,32 @@ describe('useSalesChart', () => {
   })
 
   it('retorna isLoading true inicialmente', () => {
-    mockGte.mockImplementation(() => new Promise(() => {}))
+    mockGetSalesChartData.mockImplementation(() => new Promise(() => {}))
     const { result } = renderHook(() => useSalesChart(), { wrapper: createWrapper() })
     expect(result.current.isLoading).toBe(true)
   })
 
-  it('agrupa vendas por dia da semana e retorna chartData', async () => {
-    const today = new Date().toISOString()
-
-    mockGte.mockResolvedValueOnce({
-      data: [
-        { created_at: today, total: 100 },
-        { created_at: today, total: 50 },
-      ],
-      error: null,
-    })
-
+  it('retorna dados do gráfico quando action bem-sucedida', async () => {
+    const mockData = [
+      { name: 'seg.', vendas: 150 },
+      { name: 'ter.', vendas: 200 },
+    ]
+    mockGetSalesChartData.mockResolvedValueOnce(mockData)
     const { result } = renderHook(() => useSalesChart(), { wrapper: createWrapper() })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-
-    const data = result.current.data!
-    expect(data).toHaveLength(1)
-    expect(data[0].vendas).toBe(150)
-    expect(typeof data[0].name).toBe('string')
+    expect(result.current.data).toEqual(mockData)
   })
 
-  it('retorna array vazio quando nao ha pedidos', async () => {
-    mockGte.mockResolvedValueOnce({ data: [], error: null })
-
+  it('retorna array vazio quando não há pedidos', async () => {
+    mockGetSalesChartData.mockResolvedValueOnce([])
     const { result } = renderHook(() => useSalesChart(), { wrapper: createWrapper() })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-
     expect(result.current.data).toEqual([])
   })
 
-  it('propaga erro do Supabase', async () => {
-    mockGte.mockResolvedValueOnce({ data: null, error: { message: 'DB error' } })
-
+  it('propaga erro da server action', async () => {
+    mockGetSalesChartData.mockRejectedValueOnce(new Error('DB error'))
     const { result } = renderHook(() => useSalesChart(), { wrapper: createWrapper() })
     await waitFor(() => expect(result.current.isError).toBe(true))
-  })
-
-  it('consulta a tabela orders', async () => {
-    mockGte.mockResolvedValueOnce({ data: [], error: null })
-
-    const { result } = renderHook(() => useSalesChart(), { wrapper: createWrapper() })
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-
-    expect(mockFrom).toHaveBeenCalledWith('orders')
   })
 })

@@ -47,18 +47,29 @@ describe('orders actions', () => {
     it('cria pedido e itens com dados validos', async () => {
       const itemsInsertMock = vi.fn().mockResolvedValue({ data: null, error: null })
 
-      mockFrom.mockReturnValueOnce({ select: mockOrderCountQuery(0) })
+      let ordersCallCount = 0
       mockFrom.mockImplementation((table: string) => {
         if (table === 'orders') {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: { id: 'order-1' },
-                  error: null,
+          ordersCallCount++
+          if (ordersCallCount === 1) {
+            // pre-insert count query
+            return { select: mockOrderCountQuery(0) }
+          }
+          if (ordersCallCount === 2) {
+            // insert pedido
+            return {
+              insert: vi.fn().mockReturnValue({
+                select: vi.fn().mockReturnValue({
+                  single: vi.fn().mockResolvedValue({ data: { id: 'order-1' }, error: null }),
                 }),
               }),
-            }),
+            }
+          }
+          if (ordersCallCount === 3) {
+            // post-insert count query (validação anti-race)
+            return { select: mockOrderCountQuery(1) }
+          }
+          return {
             delete: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
                 eq: vi.fn().mockResolvedValue({ data: null, error: null }),
@@ -118,25 +129,33 @@ describe('orders actions', () => {
       const orderDeleteEqMock = vi.fn().mockReturnValue({ eq: orderDeleteEqTenantMock })
       const orderDeleteMock = vi.fn().mockReturnValue({ eq: orderDeleteEqMock })
 
-      mockFrom.mockReturnValueOnce({ select: mockOrderCountQuery(0) })
+      let ordersCallCount = 0
       mockFrom.mockImplementation((table: string) => {
         if (table === 'orders') {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: { id: 'order-1' },
-                  error: null,
+          ordersCallCount++
+          if (ordersCallCount === 1) {
+            // pre-insert count query
+            return { select: mockOrderCountQuery(0) }
+          }
+          if (ordersCallCount === 2) {
+            // insert pedido
+            return {
+              insert: vi.fn().mockReturnValue({
+                select: vi.fn().mockReturnValue({
+                  single: vi.fn().mockResolvedValue({ data: { id: 'order-1' }, error: null }),
                 }),
               }),
-            }),
-            delete: orderDeleteMock,
+            }
           }
+          if (ordersCallCount === 3) {
+            // post-insert count query (validação anti-race)
+            return { select: mockOrderCountQuery(1) }
+          }
+          // ordersCallCount === 4: delete (rollback)
+          return { delete: orderDeleteMock }
         }
         if (table === 'order_items') {
-          return {
-            insert: vi.fn().mockResolvedValue({ data: null, error: itemsError }),
-          }
+          return { insert: vi.fn().mockResolvedValue({ data: null, error: itemsError }) }
         }
         return {}
       })
