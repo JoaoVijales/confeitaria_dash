@@ -51,7 +51,7 @@ describe('billing actions', () => {
 
       expect(mockSubscriptionsCreate).toHaveBeenCalledWith(
         expect.objectContaining({
-          items: [{ productId: 'prod_basic', quantity: 1 }],
+          items: [{ id: 'prod_basic', quantity: 1 }],
           metadata: { tenant_id: 'tenant-1' },
         })
       )

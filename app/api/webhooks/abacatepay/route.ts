@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createHmac, timingSafeEqual } from 'crypto'
 import { createClient } from '@/lib/supabase/server'
-import { logError } from '@/lib/logger'
+import { logError, logWarn, logInfo } from '@/lib/logger'
 
 function getPlanFromProduct(productId: string): string {
   if (productId && productId === process.env.ABACATEPAY_PRODUCT_ID_BASIC) return 'basic'
@@ -26,7 +26,8 @@ type SubscriptionPayload = {
     id: string
     customerId?: string
     metadata?: Record<string, string>
-    items?: Array<{ productId: string }>
+    // AbacatePay echoes items with `id` (same field sent on checkout creation)
+    items?: Array<{ id: string }>
   }
 }
 
@@ -70,10 +71,20 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Tenant not found' }, { status: 404 })
       }
 
-      const productId = event.data.items?.[0]?.productId ?? ''
+      const productId = event.data.items?.[0]?.id ?? ''
       const plan = getPlanFromProduct(productId)
 
-      const { error } = await supabase
+      if (plan === 'free') {
+        logWarn('Webhook: subscription.completed com productId desconhecido — verifique as env vars ABACATEPAY_PRODUCT_ID_*', {
+          service: 'abacatepay',
+          operation: 'webhook.subscription.completed',
+          tenantId,
+          productId,
+          subscriptionId: event.data.id,
+        })
+      }
+
+      const { data: updated, error } = await supabase
         .from('tenants')
         .update({
           abacate_customer_id: event.data.customerId ?? null,
@@ -82,45 +93,99 @@ export async function POST(request: NextRequest) {
           status: 'active',
         })
         .eq('id', tenantId)
+        .select('id')
 
       if (error) {
         logError('Webhook: falha ao atualizar tenant em subscription.completed', error, {
           service: 'abacatepay',
           operation: 'webhook.subscription.completed',
+          tenantId,
+          subscriptionId: event.data.id,
         })
         return NextResponse.json({ error: 'Internal error' }, { status: 500 })
       }
+
+      if (!updated || updated.length === 0) {
+        logError('Webhook: subscription.completed — nenhuma linha atualizada (tenant ausente no banco?)', null, {
+          service: 'abacatepay',
+          operation: 'webhook.subscription.completed',
+          tenantId,
+          subscriptionId: event.data.id,
+        })
+        // Retorna 200 para não forçar retentativas infinitas da AbacatePay
+        return NextResponse.json({ received: true })
+      }
+
+      logInfo('Webhook: plano atualizado com sucesso', {
+        service: 'abacatepay',
+        operation: 'webhook.subscription.completed',
+        tenantId,
+        plan,
+        subscriptionId: event.data.id,
+      })
       break
     }
 
     case 'subscription.renewed': {
-      const { error } = await supabase
+      const { data: updated, error } = await supabase
         .from('tenants')
         .update({ status: 'active' })
         .eq('abacate_subscription_id', event.data.id)
+        .select('id')
 
       if (error) {
         logError('Webhook: falha ao renovar assinatura', error, {
           service: 'abacatepay',
           operation: 'webhook.subscription.renewed',
+          subscriptionId: event.data.id,
         })
         return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+      }
+
+      if (!updated || updated.length === 0) {
+        logWarn('Webhook: subscription.renewed — subscription_id não encontrado no banco', {
+          service: 'abacatepay',
+          operation: 'webhook.subscription.renewed',
+          subscriptionId: event.data.id,
+        })
+      } else {
+        logInfo('Webhook: assinatura renovada com sucesso', {
+          service: 'abacatepay',
+          operation: 'webhook.subscription.renewed',
+          subscriptionId: event.data.id,
+        })
       }
       break
     }
 
     case 'subscription.cancelled': {
-      const { error } = await supabase
+      const { data: updated, error } = await supabase
         .from('tenants')
         .update({ plan: 'free', status: 'active', abacate_subscription_id: null })
         .eq('abacate_subscription_id', event.data.id)
+        .select('id')
 
       if (error) {
         logError('Webhook: falha ao cancelar assinatura', error, {
           service: 'abacatepay',
           operation: 'webhook.subscription.cancelled',
+          subscriptionId: event.data.id,
         })
         return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+      }
+
+      if (!updated || updated.length === 0) {
+        logWarn('Webhook: subscription.cancelled — subscription_id não encontrado no banco', {
+          service: 'abacatepay',
+          operation: 'webhook.subscription.cancelled',
+          subscriptionId: event.data.id,
+        })
+      } else {
+        logInfo('Webhook: assinatura cancelada com sucesso', {
+          service: 'abacatepay',
+          operation: 'webhook.subscription.cancelled',
+          subscriptionId: event.data.id,
+        })
       }
       break
     }

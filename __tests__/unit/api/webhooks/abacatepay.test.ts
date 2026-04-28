@@ -3,16 +3,23 @@ import { createHmac } from 'crypto'
 import { NextRequest } from 'next/server'
 
 const mockLogError = vi.fn()
+const mockLogWarn = vi.fn()
+const mockLogInfo = vi.fn()
 vi.mock('@/lib/logger', () => ({
   logError: (...args: unknown[]) => mockLogError(...args),
+  logWarn: (...args: unknown[]) => mockLogWarn(...args),
+  logInfo: (...args: unknown[]) => mockLogInfo(...args),
 }))
 
-const mockUpdate = vi.fn()
 const mockSingle = vi.fn()
 const mockEqTenant = vi.fn(() => ({ single: mockSingle }))
-const mockEqSub = vi.fn()
 const mockSelectTenants = vi.fn(() => ({ eq: mockEqTenant }))
+
+// mockEqSub agora retorna { select: fn } para suportar .eq(...).select('id')
+const mockSelectAfterUpdate = vi.fn()
+const mockEqSub = vi.fn(() => ({ select: mockSelectAfterUpdate }))
 const mockUpdateTenants = vi.fn(() => ({ eq: mockEqSub }))
+
 const mockFrom = vi.fn((table: string) => {
   if (table === 'tenants') {
     return { select: mockSelectTenants, update: mockUpdateTenants }
@@ -69,12 +76,13 @@ describe('POST /api/webhooks/abacatepay', () => {
   })
 
   describe('subscription.completed', () => {
+    // AbacatePay ecoa items com campo `id`, não `productId`
     const payload = {
       event: 'subscription.completed',
       data: {
         id: 'sub_123',
         customerId: 'cust_456',
-        items: [{ productId: 'prod_basic' }],
+        items: [{ id: 'prod_basic' }],
       },
     }
 
@@ -89,7 +97,7 @@ describe('POST /api/webhooks/abacatepay', () => {
 
     it('atualiza tenant e retorna 200 para plano basic', async () => {
       mockSingle.mockResolvedValueOnce({ data: { id: 'tenant_1' } })
-      mockEqSub.mockResolvedValueOnce({ error: null })
+      mockSelectAfterUpdate.mockResolvedValueOnce({ data: [{ id: 'tenant_1' }], error: null })
 
       const req = makeRequest(payload)
       const res = await POST(req)
@@ -102,23 +110,23 @@ describe('POST /api/webhooks/abacatepay', () => {
     it('mapeia product_id pro para plano pro', async () => {
       const proPload = {
         event: 'subscription.completed',
-        data: { id: 'sub_123', customerId: 'cust_456', items: [{ productId: 'prod_pro' }] },
+        data: { id: 'sub_123', customerId: 'cust_456', items: [{ id: 'prod_pro' }] },
       }
 
       mockSingle.mockResolvedValueOnce({ data: { id: 'tenant_1' } })
-      mockEqSub.mockResolvedValueOnce({ error: null })
+      mockSelectAfterUpdate.mockResolvedValueOnce({ data: [{ id: 'tenant_1' }], error: null })
 
       const req = makeRequest(proPload)
       await POST(req)
 
       expect(mockUpdateTenants).toHaveBeenCalledWith(
-        expect.objectContaining({ plan: 'pro' })
+        expect.objectContaining({ plan: 'pro' }),
       )
     })
 
     it('retorna 500 quando DB falha ao atualizar', async () => {
       mockSingle.mockResolvedValueOnce({ data: { id: 'tenant_1' } })
-      mockEqSub.mockResolvedValueOnce({ error: { message: 'DB error' } })
+      mockSelectAfterUpdate.mockResolvedValueOnce({ data: null, error: { message: 'DB error' } })
 
       const req = makeRequest(payload)
       const res = await POST(req)
@@ -134,11 +142,11 @@ describe('POST /api/webhooks/abacatepay', () => {
           id: 'sub_123',
           customerId: undefined,
           metadata: { tenant_id: 'tenant_meta' },
-          items: [{ productId: 'prod_basic' }],
+          items: [{ id: 'prod_basic' }],
         },
       }
 
-      mockEqSub.mockResolvedValueOnce({ error: null })
+      mockSelectAfterUpdate.mockResolvedValueOnce({ data: [{ id: 'tenant_meta' }], error: null })
 
       const req = makeRequest(payloadWithMeta)
       const res = await POST(req)
@@ -149,7 +157,7 @@ describe('POST /api/webhooks/abacatepay', () => {
 
   describe('subscription.renewed', () => {
     it('atualiza status para active e retorna 200', async () => {
-      mockEqSub.mockResolvedValueOnce({ error: null })
+      mockSelectAfterUpdate.mockResolvedValueOnce({ data: [{ id: 'tenant_1' }], error: null })
 
       const req = makeRequest({ event: 'subscription.renewed', data: { id: 'sub_123' } })
       const res = await POST(req)
@@ -159,7 +167,7 @@ describe('POST /api/webhooks/abacatepay', () => {
     })
 
     it('retorna 500 quando DB falha', async () => {
-      mockEqSub.mockResolvedValueOnce({ error: { message: 'DB error' } })
+      mockSelectAfterUpdate.mockResolvedValueOnce({ data: null, error: { message: 'DB error' } })
 
       const req = makeRequest({ event: 'subscription.renewed', data: { id: 'sub_123' } })
       const res = await POST(req)
@@ -170,7 +178,7 @@ describe('POST /api/webhooks/abacatepay', () => {
 
   describe('subscription.cancelled', () => {
     it('rebaixa para plano free e retorna 200', async () => {
-      mockEqSub.mockResolvedValueOnce({ error: null })
+      mockSelectAfterUpdate.mockResolvedValueOnce({ data: [{ id: 'tenant_1' }], error: null })
 
       const req = makeRequest({ event: 'subscription.cancelled', data: { id: 'sub_123' } })
       const res = await POST(req)
