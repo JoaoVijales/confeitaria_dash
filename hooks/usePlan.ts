@@ -1,8 +1,14 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, type UseQueryOptions } from '@tanstack/react-query'
 import { getTenantPlan } from '@/app/actions/billing'
-import { getPlanLimits } from '@/lib/utils/plan-limits'
+import { getPlanLimits, type Plan } from '@/lib/utils/plan-limits'
 
-export function usePlan() {
+export type PlanQueryData = {
+  plan: Plan
+  tenantName: string
+  limits: ReturnType<typeof getPlanLimits>
+}
+
+export function usePlan(options?: Omit<UseQueryOptions<PlanQueryData>, 'queryKey' | 'queryFn'>) {
   return useQuery({
     queryKey: ['plan'],
     queryFn: async () => {
@@ -13,5 +19,6 @@ export function usePlan() {
         limits: getPlanLimits(plan),
       }
     },
+    ...options,
   })
 }

@@ -34,18 +34,20 @@ const plans = [
   },
 ]
 
-function SuccessBanner() {
+function BillingPageContent() {
   const params = useSearchParams()
-  if (params.get('success') !== 'true') return null
-  return (
-    <div className="mb-6 rounded-lg bg-green-50 border border-green-200 p-4 text-green-800 text-sm font-medium">
-      Assinatura ativada com sucesso! Obrigado por assinar.
-    </div>
-  )
-}
+  const isSuccess = params.get('success') === 'true'
 
-export default function BillingPage() {
-  const { data: planData, isLoading } = usePlan()
+  // Quando o usuário volta do checkout com ?success=true e o plano ainda é free,
+  // o webhook da AbacatePay pode estar em trânsito — fazemos polling a cada 3s
+  // até o banco confirmar o novo plano.
+  const { data: planData, isLoading } = usePlan({
+    refetchInterval: (query) => {
+      if (!isSuccess) return false
+      if (query.state.data && query.state.data.plan !== 'free') return false
+      return 3000
+    },
+  })
 
   async function handleUpgrade(planKey: string) {
     try {
@@ -73,9 +75,13 @@ export default function BillingPage() {
         <p className="text-slate-600 mt-1">Gerencie sua assinatura e plano atual.</p>
       </div>
 
-      <Suspense>
-        <SuccessBanner />
-      </Suspense>
+      {isSuccess && (
+        <div className="mb-6 rounded-lg bg-green-50 border border-green-200 p-4 text-green-800 text-sm font-medium">
+          {currentPlan !== 'free'
+            ? 'Assinatura ativada com sucesso! Obrigado por assinar.'
+            : 'Pagamento recebido! Ativando sua assinatura…'}
+        </div>
+      )}
 
       {/* Current plan summary */}
       <Card className="mb-8 border-pink-200 bg-pink-50">
@@ -177,5 +183,13 @@ export default function BillingPage() {
         })}
       </div>
     </div>
+  )
+}
+
+export default function BillingPage() {
+  return (
+    <Suspense>
+      <BillingPageContent />
+    </Suspense>
   )
 }
