@@ -3,16 +3,9 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactNode } from 'react'
 
-const { mockOrder, mockEq, mockSelect: _mockSelect, mockFrom } = vi.hoisted(() => {
-  const mockOrder = vi.fn()
-  const mockEq = vi.fn(() => ({ order: mockOrder }))
-  const mockSelect = vi.fn(() => ({ eq: mockEq, order: mockOrder }))
-  const mockFrom = vi.fn(() => ({ select: mockSelect }))
-  return { mockOrder, mockEq, mockSelect, mockFrom }
-})
-
-vi.mock('@/lib/supabase/client', () => ({
-  createClient: vi.fn(() => ({ from: mockFrom })),
+const mockGetIngredientPurchases = vi.hoisted(() => vi.fn())
+vi.mock('@/app/actions/ingredient-purchases', () => ({
+  getIngredientPurchases: mockGetIngredientPurchases,
 }))
 
 import { useIngredientPurchases } from '@/hooks/useIngredientPurchases'
@@ -36,38 +29,26 @@ describe('useIngredientPurchases', () => {
     vi.clearAllMocks()
   })
 
-  it('busca compras de um ingrediente especifico', async () => {
-    mockOrder.mockResolvedValueOnce({ data: mockPurchases, error: null })
-
+  it('busca compras de um ingrediente específico', async () => {
+    mockGetIngredientPurchases.mockResolvedValueOnce(mockPurchases)
     const { result } = renderHook(() => useIngredientPurchases(1), { wrapper: createWrapper() })
-
     expect(result.current.isLoading).toBe(true)
-
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-
     expect(result.current.data).toEqual(mockPurchases)
-    expect(mockFrom).toHaveBeenCalledWith('ingredient_purchases')
-    expect(mockEq).toHaveBeenCalledWith('ingredient_id', 1)
+    expect(mockGetIngredientPurchases).toHaveBeenCalledWith(1)
   })
 
   it('busca todas as compras quando nenhum id passado', async () => {
-    mockOrder.mockResolvedValueOnce({ data: mockPurchases, error: null })
-
+    mockGetIngredientPurchases.mockResolvedValueOnce(mockPurchases)
     const { result } = renderHook(() => useIngredientPurchases(), { wrapper: createWrapper() })
-
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-
     expect(result.current.data).toEqual(mockPurchases)
-    expect(mockEq).not.toHaveBeenCalled()
+    expect(mockGetIngredientPurchases).toHaveBeenCalledWith(undefined)
   })
 
-  it('trata erro do supabase', async () => {
-    mockOrder.mockResolvedValueOnce({ data: null, error: { message: 'DB error' } })
-
+  it('propaga erro da server action', async () => {
+    mockGetIngredientPurchases.mockRejectedValueOnce(new Error('DB error'))
     const { result } = renderHook(() => useIngredientPurchases(1), { wrapper: createWrapper() })
-
     await waitFor(() => expect(result.current.isError).toBe(true))
-
-    expect(result.current.error).toEqual({ message: 'DB error' })
   })
 })
