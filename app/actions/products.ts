@@ -3,10 +3,10 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getTenantId } from '@/lib/supabase/tenant'
-import { handleSupabaseError } from '@/lib/logger'
+import { handleSupabaseError, logError } from '@/lib/logger'
 import { ProductFormValues } from '@/lib/validations/product.schema'
 import { getTenantPlan } from '@/lib/supabase/tenant'
-import { isAtProductLimit } from '@/lib/utils/plan-limits'
+import { isAtProductLimit, getPlanLimits } from '@/lib/utils/plan-limits'
 
 export async function getProducts() {
   const supabase = createClient()
@@ -119,6 +119,18 @@ export async function createProduct(data: ProductFormValues) {
 
   handleSupabaseError(error, 'createProduct', { tenantId })
 
+  // Validação pós-insert: detecta race condition onde duas requisições simultâneas
+  // passaram na checagem pré-insert mas ambas conseguiram inserir
+  const { count: newCount } = await supabase
+    .from('products')
+    .select('id', { count: 'exact', head: true })
+    .eq('tenant_id', tenantId)
+
+  if ((newCount ?? 0) > getPlanLimits(plan).maxProducts) {
+    if (product) await supabase.from('products').delete().eq('id', product.id).eq('tenant_id', tenantId)
+    throw new Error(`Limite de produtos atingido para o plano ${plan}`)
+  }
+
   if (data.is_compound && data.components.length > 0 && product) {
     const rows = data.components.map(c => ({ ...c, product_id: product.id, tenant_id: tenantId }))
     const { error: compErr } = await supabase.from('product_components').insert(rows)
@@ -173,7 +185,15 @@ export async function updateProduct(id: string, data: ProductFormValues) {
     const rows = data.components.map(c => ({ ...c, product_id: id, tenant_id: tenantId }))
     const { error: compErr } = await supabase.from('product_components').insert(rows)
     if (compErr && existingComponents?.length) {
-      await supabase.from('product_components').insert(existingComponents)
+      const { error: restoreErr } = await supabase.from('product_components').insert(existingComponents)
+      if (restoreErr) {
+        logError('updateProduct: falha ao restaurar componentes após erro de atualização', restoreErr, {
+          service: 'supabase',
+          operation: 'updateProduct:restoreComponents',
+          tenantId,
+          productId: id,
+        })
+      }
     }
     handleSupabaseError(compErr, 'updateProduct:components', { tenantId, productId: id })
   }
