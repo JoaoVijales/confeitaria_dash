@@ -1,8 +1,8 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { Suspense, useEffect, useRef } from 'react'
-import { Check, CreditCard, Zap } from 'lucide-react'
+import { Suspense, useEffect, useRef, useState } from 'react'
+import { Check, CreditCard, Loader2, Zap } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -46,6 +46,9 @@ function BillingPageContent() {
     if (isSuccess) pollDeadlineRef.current = Date.now() + POLL_TIMEOUT_MS
   }, [isSuccess])
 
+  const [upgradingPlan, setUpgradingPlan] = useState<string | null>(null)
+  const [cancelling, setCancelling] = useState(false)
+
   const { data: planData, isLoading } = usePlan({
     refetchInterval: (query) => {
       if (!isSuccess) return false
@@ -56,19 +59,27 @@ function BillingPageContent() {
   })
 
   async function handleUpgrade(planKey: string) {
+    if (upgradingPlan) return
+    setUpgradingPlan(planKey)
     try {
       await createCheckoutSession(planKey)
     } catch {
       toast.error('Erro ao iniciar checkout. Tente novamente.')
+      setUpgradingPlan(null)
     }
+    // Não limpa o estado em caso de sucesso — o usuário será redirecionado
   }
 
   async function handleCancel() {
+    if (cancelling) return
+    setCancelling(true)
     try {
       await cancelSubscription()
       toast.success('Assinatura cancelada. Você voltará ao plano Gratuito.')
     } catch {
       toast.error('Você não possui uma assinatura ativa.')
+    } finally {
+      setCancelling(false)
     }
   }
 
@@ -131,8 +142,10 @@ function BillingPageContent() {
               size="sm"
               className="mt-4"
               onClick={handleCancel}
+              disabled={cancelling}
             >
-              Cancelar assinatura
+              {cancelling && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {cancelling ? 'Cancelando...' : 'Cancelar assinatura'}
             </Button>
           )}
         </CardContent>
@@ -174,8 +187,12 @@ function BillingPageContent() {
                   <Button
                     onClick={() => handleUpgrade(plan.key)}
                     className="w-full bg-pink-500 hover:bg-pink-600"
+                    disabled={!!upgradingPlan}
                   >
-                    Fazer upgrade
+                    {upgradingPlan === plan.key && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    {upgradingPlan === plan.key ? 'Redirecionando...' : 'Fazer upgrade'}
                   </Button>
                 )}
                 {isCurrent && (
