@@ -56,7 +56,10 @@ export default function SaidasPage() {
 
   const { data: expensesData, isLoading, error } = useExpenses(currentPage, itemsPerPage)
   const expenses = expensesData?.entries || []
-     const totalAmount = expensesData?.expensesByCategory ? (Object.values(expensesData.expensesByCategory) as number[]).reduce((acc, val) => acc + val, 0) : 0;  const totalPages = expensesData?.totalPages || 1
+  const totalAmount = expensesData?.expensesByCategory
+    ? (Object.values(expensesData.expensesByCategory) as number[]).reduce((acc, val) => acc + val, 0)
+    : 0
+  const totalPages = expensesData?.totalPages || 1
 
   const deleteMutation = useDeleteExpense()
   const queryClient = useQueryClient()
