@@ -12,8 +12,13 @@ vi.mock('@/lib/supabase/server', () => ({
 
 vi.mock('@/lib/supabase/tenant', () => ({ getTenantId: vi.fn().mockResolvedValue('test-tenant-id') }))
 
+vi.mock('@/app/actions/products', () => ({
+  recomputeAndStoreProductCost: vi.fn().mockResolvedValue(undefined),
+}))
+
 import { createIngredient, updateIngredient, deleteIngredient } from '@/app/actions/ingredients'
 import { revalidatePath } from 'next/cache'
+import * as productsModule from '@/app/actions/products'
 
 const validIngredientData = {
   name: 'Farinha de Trigo',
@@ -23,6 +28,28 @@ const validIngredientData = {
   current_stock: 20,
   min_stock: 5,
   category: 'Farinhas',
+}
+
+function mockNoopSelect(resolvedData: unknown[] = []) {
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ data: resolvedData, error: null }),
+        }),
+      }),
+    }),
+  }
+}
+
+function mockNoopSelectTwoEqs(resolvedData: unknown[] = []) {
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ data: resolvedData, error: null }),
+      }),
+    }),
+  }
 }
 
 describe('ingredients actions', () => {
@@ -59,11 +86,17 @@ describe('ingredients actions', () => {
   })
 
   describe('updateIngredient', () => {
-    it('atualiza ingrediente com dados validos', async () => {
+    it('atualiza ingrediente sem dependentes', async () => {
       const eqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
       const eqIdMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
       const updateMock = vi.fn().mockReturnValue({ eq: eqIdMock })
-      mockFrom.mockReturnValue({ update: updateMock })
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'ingredients') return { update: updateMock }
+        if (table === 'product_components') return mockNoopSelect([])
+        if (table === 'recipe_ingredients') return mockNoopSelectTwoEqs([])
+        return {}
+      })
 
       await updateIngredient(1, validIngredientData)
 
@@ -74,6 +107,74 @@ describe('ingredients actions', () => {
       }))
       expect(eqIdMock).toHaveBeenCalledWith('id', 1)
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/ingredientes')
+      expect(productsModule.recomputeAndStoreProductCost).not.toHaveBeenCalled()
+    })
+
+    it('propaga custo para produtos que usam o ingrediente diretamente', async () => {
+      const eqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
+      const eqIdMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
+      const updateMock = vi.fn().mockReturnValue({ eq: eqIdMock })
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'ingredients') return { update: updateMock }
+        if (table === 'product_components') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockReturnValue({
+                  eq: vi.fn().mockResolvedValue({ data: [{ product_id: 'prod-1' }], error: null }),
+                }),
+              }),
+            }),
+          }
+        }
+        if (table === 'recipe_ingredients') return mockNoopSelectTwoEqs([])
+        return {}
+      })
+
+      await updateIngredient(1, validIngredientData)
+
+      expect(productsModule.recomputeAndStoreProductCost).toHaveBeenCalledWith(
+        mockSupabase, 'test-tenant-id', 'prod-1',
+      )
+    })
+
+    it('propaga custo para produtos via receitas afetadas', async () => {
+      const eqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
+      const eqIdMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
+      const updateMock = vi.fn().mockReturnValue({ eq: eqIdMock })
+
+      let productComponentsCallCount = 0
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'ingredients') return { update: updateMock }
+        if (table === 'product_components') {
+          productComponentsCallCount++
+          if (productComponentsCallCount === 1) {
+            // direct ingredient query — no direct products
+            return mockNoopSelect([])
+          }
+          // recipe-based query
+          return {
+            select: vi.fn().mockReturnValue({
+              in: vi.fn().mockReturnValue({
+                eq: vi.fn().mockReturnValue({
+                  eq: vi.fn().mockResolvedValue({ data: [{ product_id: 'prod-2' }], error: null }),
+                }),
+              }),
+            }),
+          }
+        }
+        if (table === 'recipe_ingredients') {
+          return mockNoopSelectTwoEqs([{ recipe_id: 'recipe-1' }])
+        }
+        return {}
+      })
+
+      await updateIngredient(1, validIngredientData)
+
+      expect(productsModule.recomputeAndStoreProductCost).toHaveBeenCalledWith(
+        mockSupabase, 'test-tenant-id', 'prod-2',
+      )
     })
 
     it('lanca erro quando Supabase falha', async () => {

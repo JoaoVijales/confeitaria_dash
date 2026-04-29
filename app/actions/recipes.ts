@@ -131,7 +131,24 @@ export async function updateRecipe(
   }
   handleSupabaseError(ingredientsError, 'updateRecipe:insertIngredients', { tenantId, recipeId: id })
 
+  // Propagate cost change to products using this recipe
+  const { data: affectedComponents } = await supabase
+    .from('product_components')
+    .select('product_id')
+    .eq('recipe_id', id)
+    .eq('component_type', 'recipe')
+    .eq('tenant_id', tenantId)
+
+  const affectedProductIds = [...new Set((affectedComponents ?? []).map(c => c.product_id as string))]
+  if (affectedProductIds.length > 0) {
+    const { recomputeAndStoreProductCost } = await import('@/app/actions/products')
+    for (const productId of affectedProductIds) {
+      await recomputeAndStoreProductCost(supabase, tenantId, productId)
+    }
+  }
+
   revalidatePath('/dashboard/receitas')
+  revalidatePath('/dashboard/produtos')
 }
 
 export async function deleteRecipe(id: string) {

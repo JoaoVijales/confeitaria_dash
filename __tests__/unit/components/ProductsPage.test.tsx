@@ -3,6 +3,15 @@ import { describe, it, expect, vi } from 'vitest'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import ProductsPage from '@/app/dashboard/produtos/page'
 import { useProducts } from '@/hooks/useProducts'
+
+vi.mock('@/lib/firebase/admin', () => ({
+  adminAuth: { verifySessionCookie: vi.fn(), createSessionCookie: vi.fn() },
+  getAdminApp: vi.fn(),
+}))
+vi.mock('@/lib/firebase/session', () => ({
+  getFirebaseSession: vi.fn().mockResolvedValue(null),
+}))
+
 // Mock do hook useProducts
 vi.mock('@/hooks/useProducts', () => ({
   useProducts: vi.fn(),
@@ -13,6 +22,10 @@ vi.mock('@/hooks/useMutations', () => ({
   useCreateProduct: vi.fn(() => ({ mutate: vi.fn() })),
   useUpdateProduct: vi.fn(() => ({ mutate: vi.fn() })),
   useDeleteProduct: vi.fn(() => ({ mutate: vi.fn() })),
+}))
+
+vi.mock('@/components/StockAlertBanner', () => ({
+  StockAlertBanner: () => null,
 }))
 
 // Mock de components que podem dar problema no render unitário

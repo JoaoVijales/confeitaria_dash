@@ -203,9 +203,25 @@ describe('orders actions', () => {
   })
 
   describe('deleteOrder', () => {
-    it('deleta itens e pedido', async () => {
-      const orderEqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
-      const orderEqIdMock = vi.fn().mockReturnValue({ eq: orderEqTenantMock })
+    // Helper: mock da consulta de customer_id antes do delete
+    function mockOrdersTable({ customerId = 'cust-1', deleteError = null } = {}) {
+      return {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: { customer_id: customerId }, error: null }),
+            }),
+          }),
+        }),
+        delete: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ data: null, error: deleteError }),
+          }),
+        }),
+      }
+    }
+
+    it('deleta itens e pedido e atualiza stats do cliente', async () => {
       const itemsEqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
       const itemsEqOrderIdMock = vi.fn().mockReturnValue({ eq: itemsEqTenantMock })
 
@@ -214,15 +230,17 @@ describe('orders actions', () => {
           return { delete: vi.fn().mockReturnValue({ eq: itemsEqOrderIdMock }) }
         }
         if (table === 'orders') {
-          return { delete: vi.fn().mockReturnValue({ eq: orderEqIdMock }) }
+          return mockOrdersTable()
         }
         return {}
       })
 
+      const { updateCustomerStats } = await import('@/app/actions/customers')
+
       await deleteOrder('order-1')
 
       expect(itemsEqOrderIdMock).toHaveBeenCalledWith('order_id', 'order-1')
-      expect(orderEqIdMock).toHaveBeenCalledWith('id', 'order-1')
+      expect(updateCustomerStats).toHaveBeenCalledWith('cust-1')
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/pedidos')
     })
 
@@ -237,6 +255,9 @@ describe('orders actions', () => {
               }),
             }),
           }
+        }
+        if (table === 'orders') {
+          return mockOrdersTable()
         }
         return {}
       })

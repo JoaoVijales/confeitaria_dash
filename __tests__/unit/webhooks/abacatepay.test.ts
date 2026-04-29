@@ -27,7 +27,32 @@ function makeRequest(body: object, secret = WEBHOOK_SECRET): NextRequest {
   )
 }
 
-// Helpers para montar mocks do Supabase de forma legível
+// AbacatePay v2 payload helpers
+function makeCompletedPayload(override: {
+  subscriptionId?: string
+  customerId?: string
+  metadataTenantId?: string | null
+  itemId?: string
+}) {
+  return {
+    event: 'subscription.completed',
+    data: {
+      subscription: { id: override.subscriptionId ?? 'sub_123' },
+      customer: { id: override.customerId ?? 'cus_abc' },
+      checkout: {
+        metadata: override.metadataTenantId != null
+          ? { tenant_id: override.metadataTenantId }
+          : {},
+        items: [{ id: override.itemId ?? 'prod_basic' }],
+      },
+    },
+  }
+}
+
+function makeSubscriptionPayload(event: 'subscription.renewed' | 'subscription.cancelled', subscriptionId = 'sub_123') {
+  return { event, data: { subscription: { id: subscriptionId } } }
+}
+
 function makeSelectTenantMock(result: { data: { id: string } | null; error: unknown }) {
   const singleMock = vi.fn().mockResolvedValue(result)
   const eqMock = vi.fn().mockReturnValue({ single: singleMock })
@@ -76,19 +101,14 @@ describe('POST /api/webhooks/abacatepay', () => {
         .mockReturnValueOnce({ select: selectMock })
         .mockReturnValueOnce({ update: updateMock })
 
-      const req = makeRequest({
-        event: 'subscription.completed',
-        data: {
-          id: 'sub_123',
-          customerId: 'cus_abc',
-          metadata: { tenant_id: 'DIFFERENT-TENANT-FROM-ATTACKER' },
-          items: [{ id: 'prod_basic' }],
-        },
-      })
+      const req = makeRequest(makeCompletedPayload({
+        customerId: 'cus_abc',
+        metadataTenantId: 'DIFFERENT-TENANT-FROM-ATTACKER',
+        itemId: 'prod_basic',
+      }))
       const res = await POST(req)
 
       expect(res.status).toBe(200)
-      // Deve usar tenant-from-db (lookup pelo customerId), não o metadata
       expect(eqMock).toHaveBeenCalledWith('id', 'tenant-from-db')
     })
 
@@ -100,15 +120,11 @@ describe('POST /api/webhooks/abacatepay', () => {
         .mockReturnValueOnce({ select: selectMock })
         .mockReturnValueOnce({ update: updateMock })
 
-      const req = makeRequest({
-        event: 'subscription.completed',
-        data: {
-          id: 'sub_new',
-          customerId: 'cus_new',
-          metadata: { tenant_id: 'tenant-first-time' },
-          items: [{ id: 'prod_pro' }],
-        },
-      })
+      const req = makeRequest(makeCompletedPayload({
+        customerId: 'cus_new',
+        metadataTenantId: 'tenant-first-time',
+        itemId: 'prod_pro',
+      }))
       const res = await POST(req)
 
       expect(res.status).toBe(200)
@@ -123,38 +139,31 @@ describe('POST /api/webhooks/abacatepay', () => {
         .mockReturnValueOnce({ select: selectMock })
         .mockReturnValueOnce({ update: updateMock })
 
-      const req = makeRequest({
-        event: 'subscription.completed',
-        data: {
-          id: 'sub_123',
-          customerId: 'cus_abc',
-          metadata: { tenant_id: 'tenant-ok' },
-          // AbacatePay ecoa o campo `id`, não `productId`
-          items: [{ id: 'prod_basic' }],
-        },
-      })
+      const req = makeRequest(makeCompletedPayload({
+        metadataTenantId: 'tenant-ok',
+        itemId: 'prod_basic',
+      }))
       await POST(req)
 
-      expect(um).toHaveBeenCalledWith(
-        expect.objectContaining({ plan: 'basic' }),
-      )
+      expect(um).toHaveBeenCalledWith(expect.objectContaining({ plan: 'basic' }))
     })
 
-    it('retorna 404 quando tenant não encontrado por nenhum método', async () => {
+    it('retorna 200 (não 404) quando tenant não encontrado — evita retentativas infinitas', async () => {
       const { selectMock } = makeSelectTenantMock({ data: null, error: { code: 'PGRST116' } })
       mockFrom.mockReturnValue({ select: selectMock })
 
-      const req = makeRequest({
-        event: 'subscription.completed',
-        data: {
-          id: 'sub_orphan',
-          customerId: 'cus_unknown',
-          metadata: {},
-          items: [{ id: 'prod_basic' }],
-        },
-      })
+      const req = makeRequest(makeCompletedPayload({
+        customerId: 'cus_unknown',
+        metadataTenantId: null,
+        itemId: 'prod_basic',
+      }))
       const res = await POST(req)
-      expect(res.status).toBe(404)
+      expect(res.status).toBe(200)
+      expect(mockLogError).toHaveBeenCalledWith(
+        expect.stringContaining('tenant_id ausente'),
+        null,
+        expect.objectContaining({ service: 'abacatepay' }),
+      )
     })
 
     it('retorna 500 quando Supabase falha (força retry do AbacatePay)', async () => {
@@ -165,16 +174,9 @@ describe('POST /api/webhooks/abacatepay', () => {
         .mockReturnValueOnce({ select: selectMock })
         .mockReturnValueOnce({ update: updateMock })
 
-      const req = makeRequest({
-        event: 'subscription.completed',
-        data: {
-          id: 'sub_err',
-          customerId: 'cus_abc',
-          metadata: { tenant_id: 'tenant-ok' },
-          items: [{ id: 'prod_basic' }],
-        },
-      })
+      const req = makeRequest(makeCompletedPayload({ metadataTenantId: 'tenant-ok' }))
       const res = await POST(req)
+
       expect(res.status).toBe(500)
       expect(mockLogError).toHaveBeenCalledWith(
         expect.stringContaining('subscription.completed'),
@@ -191,15 +193,10 @@ describe('POST /api/webhooks/abacatepay', () => {
         .mockReturnValueOnce({ select: selectMock })
         .mockReturnValueOnce({ update: updateMock })
 
-      const req = makeRequest({
-        event: 'subscription.completed',
-        data: {
-          id: 'sub_123',
-          customerId: 'cus_abc',
-          metadata: { tenant_id: 'tenant-ok' },
-          items: [{ id: 'prod_DESCONHECIDO' }],
-        },
-      })
+      const req = makeRequest(makeCompletedPayload({
+        metadataTenantId: 'tenant-ok',
+        itemId: 'prod_DESCONHECIDO',
+      }))
       const res = await POST(req)
 
       expect(res.status).toBe(200)
@@ -221,18 +218,9 @@ describe('POST /api/webhooks/abacatepay', () => {
         .mockReturnValueOnce({ select: selectMock })
         .mockReturnValueOnce({ update: updateMock })
 
-      const req = makeRequest({
-        event: 'subscription.completed',
-        data: {
-          id: 'sub_123',
-          customerId: 'cus_abc',
-          metadata: { tenant_id: 'tenant-ok' },
-          items: [{ id: 'prod_basic' }],
-        },
-      })
+      const req = makeRequest(makeCompletedPayload({ metadataTenantId: 'tenant-ok' }))
       const res = await POST(req)
 
-      // 200 para não forçar retentativas infinitas da AbacatePay
       expect(res.status).toBe(200)
       expect(mockLogError).toHaveBeenCalledWith(
         expect.stringContaining('nenhuma linha atualizada'),
@@ -249,15 +237,11 @@ describe('POST /api/webhooks/abacatepay', () => {
         .mockReturnValueOnce({ select: selectMock })
         .mockReturnValueOnce({ update: updateMock })
 
-      const req = makeRequest({
-        event: 'subscription.completed',
-        data: {
-          id: 'sub_123',
-          customerId: 'cus_abc',
-          metadata: { tenant_id: 'tenant-ok' },
-          items: [{ id: 'prod_pro' }],
-        },
-      })
+      const req = makeRequest(makeCompletedPayload({
+        subscriptionId: 'sub_123',
+        metadataTenantId: 'tenant-ok',
+        itemId: 'prod_pro',
+      }))
       await POST(req)
 
       expect(mockLogInfo).toHaveBeenCalledWith(
@@ -277,10 +261,7 @@ describe('POST /api/webhooks/abacatepay', () => {
       const { updateMock, eqMock } = makeUpdateMock({ data: [{ id: 'tenant-ok' }], error: null })
       mockFrom.mockReturnValue({ update: updateMock })
 
-      const req = makeRequest({
-        event: 'subscription.renewed',
-        data: { id: 'sub_123' },
-      })
+      const req = makeRequest(makeSubscriptionPayload('subscription.renewed', 'sub_123'))
       const res = await POST(req)
 
       expect(res.status).toBe(200)
@@ -296,10 +277,7 @@ describe('POST /api/webhooks/abacatepay', () => {
       const { updateMock } = makeUpdateMock({ data: [], error: null })
       mockFrom.mockReturnValue({ update: updateMock })
 
-      const req = makeRequest({
-        event: 'subscription.renewed',
-        data: { id: 'sub_fantasma' },
-      })
+      const req = makeRequest(makeSubscriptionPayload('subscription.renewed', 'sub_fantasma'))
       const res = await POST(req)
 
       expect(res.status).toBe(200)
@@ -313,10 +291,7 @@ describe('POST /api/webhooks/abacatepay', () => {
       const { updateMock } = makeUpdateMock({ data: null, error: { message: 'DB error' } })
       mockFrom.mockReturnValue({ update: updateMock })
 
-      const req = makeRequest({
-        event: 'subscription.renewed',
-        data: { id: 'sub_123' },
-      })
+      const req = makeRequest(makeSubscriptionPayload('subscription.renewed'))
       const res = await POST(req)
       expect(res.status).toBe(500)
     })
@@ -327,10 +302,7 @@ describe('POST /api/webhooks/abacatepay', () => {
       const { updateMock, eqMock } = makeUpdateMock({ data: [{ id: 'tenant-ok' }], error: null })
       mockFrom.mockReturnValue({ update: updateMock })
 
-      const req = makeRequest({
-        event: 'subscription.cancelled',
-        data: { id: 'sub_123' },
-      })
+      const req = makeRequest(makeSubscriptionPayload('subscription.cancelled', 'sub_123'))
       const res = await POST(req)
 
       expect(res.status).toBe(200)
@@ -350,10 +322,7 @@ describe('POST /api/webhooks/abacatepay', () => {
       const { updateMock } = makeUpdateMock({ data: [], error: null })
       mockFrom.mockReturnValue({ update: updateMock })
 
-      const req = makeRequest({
-        event: 'subscription.cancelled',
-        data: { id: 'sub_fantasma' },
-      })
+      const req = makeRequest(makeSubscriptionPayload('subscription.cancelled', 'sub_fantasma'))
       const res = await POST(req)
 
       expect(res.status).toBe(200)
@@ -367,17 +336,14 @@ describe('POST /api/webhooks/abacatepay', () => {
       const { updateMock } = makeUpdateMock({ data: null, error: { message: 'DB error' } })
       mockFrom.mockReturnValue({ update: updateMock })
 
-      const req = makeRequest({
-        event: 'subscription.cancelled',
-        data: { id: 'sub_123' },
-      })
+      const req = makeRequest(makeSubscriptionPayload('subscription.cancelled'))
       const res = await POST(req)
       expect(res.status).toBe(500)
     })
   })
 
   it('retorna 200 para eventos desconhecidos (idempotência)', async () => {
-    const req = makeRequest({ event: 'unknown.event', data: { id: 'x' } })
+    const req = makeRequest({ event: 'unknown.event', data: { subscription: { id: 'x' } } })
     const res = await POST(req)
     expect(res.status).toBe(200)
   })

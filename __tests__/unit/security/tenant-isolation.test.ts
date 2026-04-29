@@ -34,6 +34,11 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: () => mockSupabase,
 }))
 
+vi.mock('@/app/actions/products', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('@/app/actions/products')>()
+  return { ...mod, recomputeAndStoreProductCost: vi.fn().mockResolvedValue(undefined) }
+})
+
 // ─── Imports das actions (após os mocks) ─────────────────────────────────────
 import { getCustomers, createCustomer, updateCustomer, deleteCustomer } from '@/app/actions/customers'
 import { getProducts, createProduct, updateProduct, deleteProduct } from '@/app/actions/products'
@@ -415,9 +420,22 @@ describe('[Segurança] orders — isolamento multi-tenant', () => {
     const eqIdOrder = vi.fn().mockReturnValue({ eq: eqTenantOrder })
     const deleteOrderMock = vi.fn().mockReturnValue({ eq: eqIdOrder })
 
-    mockFrom
-      .mockReturnValueOnce({ delete: deleteItemsMock }) // order_items
-      .mockReturnValueOnce({ delete: deleteOrderMock }) // orders
+    // orders.select('customer_id') — consulta feita antes do delete para atualizar stats
+    const selectCustomerIdMock = {
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: null, error: null }),
+          }),
+        }),
+      }),
+    }
+
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'order_items') return { delete: deleteItemsMock }
+      if (table === 'orders') return { ...selectCustomerIdMock, delete: deleteOrderMock }
+      return {}
+    })
 
     await deleteOrder('order-1')
 
@@ -458,7 +476,31 @@ describe('[Segurança] ingredients — isolamento multi-tenant', () => {
     const eqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
     const eqIdMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
     const updateMock = vi.fn().mockReturnValue({ eq: eqIdMock })
-    mockFrom.mockReturnValue({ update: updateMock })
+
+    // propagation queries return empty (sem dependentes)
+    const emptySelect3 = {
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+          }),
+        }),
+      }),
+    }
+    const emptySelect2 = {
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+        }),
+      }),
+    }
+
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'ingredients') return { update: updateMock }
+      if (table === 'product_components') return emptySelect3
+      if (table === 'recipe_ingredients') return emptySelect2
+      return {}
+    })
 
     await updateIngredient(1, validIngredientData)
 

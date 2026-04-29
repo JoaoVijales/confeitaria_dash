@@ -12,6 +12,10 @@ vi.mock('@/lib/supabase/server', () => ({
 
 vi.mock('@/lib/supabase/tenant', () => ({ getTenantId: vi.fn().mockResolvedValue('test-tenant-id') }))
 
+vi.mock('@/app/actions/products', () => ({
+  recomputeAndStoreProductCost: vi.fn().mockResolvedValue(undefined),
+}))
+
 import { createRecipe, updateRecipe, deleteRecipe } from '@/app/actions/recipes'
 import { revalidatePath } from 'next/cache'
 
@@ -168,6 +172,17 @@ describe('recipes actions', () => {
               }),
             }),
             insert: ingredientsInsertMock,
+          }
+        }
+        if (table === 'product_components') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockReturnValue({
+                  eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+                }),
+              }),
+            }),
           }
         }
         return {}

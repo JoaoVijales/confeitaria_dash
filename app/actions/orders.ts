@@ -90,6 +90,14 @@ export async function deleteOrder(id: string) {
   const supabase = createClient()
   const tenantId = await getTenantId()
 
+  // Busca customer_id antes de deletar para atualizar stats depois
+  const { data: order } = await supabase
+    .from('orders')
+    .select('customer_id')
+    .eq('id', id)
+    .eq('tenant_id', tenantId)
+    .single()
+
   const { error: itemsError } = await supabase
     .from('order_items')
     .delete()
@@ -103,6 +111,11 @@ export async function deleteOrder(id: string) {
     .eq('id', id)
     .eq('tenant_id', tenantId)
   handleSupabaseError(orderError, 'deleteOrder:deleteOrder', { tenantId, orderId: id })
+
+  if (order?.customer_id) {
+    const { updateCustomerStats } = await import('@/app/actions/customers')
+    await updateCustomerStats(order.customer_id)
+  }
 
   revalidatePath('/dashboard/pedidos')
 }

@@ -32,6 +32,42 @@ export async function getProductComponents(productId: string) {
   return data ?? []
 }
 
+export async function recomputeAndStoreProductCost(
+  supabase: ReturnType<typeof createClient>,
+  tenantId: string,
+  productId: string,
+): Promise<void> {
+  const { data: product } = await supabase
+    .from('products')
+    .select('extra_cost, is_compound')
+    .eq('id', productId)
+    .eq('tenant_id', tenantId)
+    .single()
+
+  if (!product?.is_compound) return
+
+  const { data: components } = await supabase
+    .from('product_components')
+    .select('component_type, ingredient_id, recipe_id, quantity')
+    .eq('product_id', productId)
+    .eq('tenant_id', tenantId)
+
+  if (!components?.length) return
+
+  const cost = await computeProductCost(
+    supabase,
+    tenantId,
+    components as ProductFormValues['components'],
+    product.extra_cost ?? 0,
+  )
+
+  await supabase
+    .from('products')
+    .update({ cost })
+    .eq('id', productId)
+    .eq('tenant_id', tenantId)
+}
+
 async function computeProductCost(
   supabase: ReturnType<typeof createClient>,
   tenantId: string,
