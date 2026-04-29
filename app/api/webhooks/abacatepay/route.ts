@@ -21,14 +21,16 @@ function verifyWebhookSecret(request: NextRequest): boolean {
   }
 }
 
+// AbacatePay v2 payload structure (apiVersion: 2)
 type SubscriptionPayload = {
   event: string
   data: {
-    id: string
-    customerId?: string
-    metadata?: Record<string, string>
-    // AbacatePay echoes items with `id` (same field sent on checkout creation)
-    items?: Array<{ id: string }>
+    subscription: { id: string }
+    customer: { id: string }
+    checkout: {
+      metadata?: Record<string, string>
+      items?: Array<{ id: string }>
+    }
   }
 }
 
@@ -62,16 +64,24 @@ export async function POST(request: NextRequest) {
 
   switch (event.event) {
     case 'subscription.completed': {
-      const tenantId = await resolveTenantId(
-        supabase,
-        event.data.customerId,
-        event.data.metadata?.tenant_id,
-      )
+      const customerId = event.data.customer?.id
+      const metadataTenantId = event.data.checkout.metadata?.tenant_id
+      const subscriptionId = event.data.subscription.id
+
+      const tenantId = await resolveTenantId(supabase, customerId, metadataTenantId)
       if (!tenantId) {
-        return NextResponse.json({ error: 'Tenant not found' }, { status: 404 })
+        logError('Webhook: tenant_id ausente no metadata e customer não encontrado no banco', null, {
+          service: 'abacatepay',
+          operation: 'webhook.subscription.completed',
+          customerId,
+          metadataTenantId,
+          subscriptionId,
+        })
+        // Retorna 200 para evitar retentativas infinitas — sem tenant_id não há o que fazer
+        return NextResponse.json({ received: true })
       }
 
-      const productId = event.data.items?.[0]?.id ?? ''
+      const productId = event.data.checkout.items?.[0]?.id ?? ''
       const plan = getPlanFromProduct(productId)
 
       if (plan === 'free') {
@@ -80,15 +90,15 @@ export async function POST(request: NextRequest) {
           operation: 'webhook.subscription.completed',
           tenantId,
           productId,
-          subscriptionId: event.data.id,
+          subscriptionId,
         })
       }
 
       const { data: updated, error } = await supabase
         .from('tenants')
         .update({
-          abacate_customer_id: event.data.customerId ?? null,
-          abacate_subscription_id: event.data.id,
+          abacate_customer_id: customerId ?? null,
+          abacate_subscription_id: subscriptionId,
           plan,
           status: 'active',
         })
@@ -100,7 +110,7 @@ export async function POST(request: NextRequest) {
           service: 'abacatepay',
           operation: 'webhook.subscription.completed',
           tenantId,
-          subscriptionId: event.data.id,
+          subscriptionId,
         })
         return NextResponse.json({ error: 'Internal error' }, { status: 500 })
       }
@@ -110,9 +120,8 @@ export async function POST(request: NextRequest) {
           service: 'abacatepay',
           operation: 'webhook.subscription.completed',
           tenantId,
-          subscriptionId: event.data.id,
+          subscriptionId,
         })
-        // Retorna 200 para não forçar retentativas infinitas da AbacatePay
         return NextResponse.json({ received: true })
       }
 
@@ -121,23 +130,24 @@ export async function POST(request: NextRequest) {
         operation: 'webhook.subscription.completed',
         tenantId,
         plan,
-        subscriptionId: event.data.id,
+        subscriptionId,
       })
       break
     }
 
     case 'subscription.renewed': {
+      const subscriptionId = event.data.subscription.id
       const { data: updated, error } = await supabase
         .from('tenants')
         .update({ status: 'active' })
-        .eq('abacate_subscription_id', event.data.id)
+        .eq('abacate_subscription_id', subscriptionId)
         .select('id')
 
       if (error) {
         logError('Webhook: falha ao renovar assinatura', error, {
           service: 'abacatepay',
           operation: 'webhook.subscription.renewed',
-          subscriptionId: event.data.id,
+          subscriptionId,
         })
         return NextResponse.json({ error: 'Internal error' }, { status: 500 })
       }
@@ -146,30 +156,31 @@ export async function POST(request: NextRequest) {
         logWarn('Webhook: subscription.renewed — subscription_id não encontrado no banco', {
           service: 'abacatepay',
           operation: 'webhook.subscription.renewed',
-          subscriptionId: event.data.id,
+          subscriptionId,
         })
       } else {
         logInfo('Webhook: assinatura renovada com sucesso', {
           service: 'abacatepay',
           operation: 'webhook.subscription.renewed',
-          subscriptionId: event.data.id,
+          subscriptionId,
         })
       }
       break
     }
 
     case 'subscription.cancelled': {
+      const subscriptionId = event.data.subscription.id
       const { data: updated, error } = await supabase
         .from('tenants')
         .update({ plan: 'free', status: 'active', abacate_subscription_id: null })
-        .eq('abacate_subscription_id', event.data.id)
+        .eq('abacate_subscription_id', subscriptionId)
         .select('id')
 
       if (error) {
         logError('Webhook: falha ao cancelar assinatura', error, {
           service: 'abacatepay',
           operation: 'webhook.subscription.cancelled',
-          subscriptionId: event.data.id,
+          subscriptionId,
         })
         return NextResponse.json({ error: 'Internal error' }, { status: 500 })
       }
@@ -178,13 +189,13 @@ export async function POST(request: NextRequest) {
         logWarn('Webhook: subscription.cancelled — subscription_id não encontrado no banco', {
           service: 'abacatepay',
           operation: 'webhook.subscription.cancelled',
-          subscriptionId: event.data.id,
+          subscriptionId,
         })
       } else {
         logInfo('Webhook: assinatura cancelada com sucesso', {
           service: 'abacatepay',
           operation: 'webhook.subscription.cancelled',
-          subscriptionId: event.data.id,
+          subscriptionId,
         })
       }
       break

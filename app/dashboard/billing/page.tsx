@@ -1,7 +1,7 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
+import { Suspense, useEffect, useRef } from 'react'
 import { Check, CreditCard, Zap } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -34,17 +34,23 @@ const plans = [
   },
 ]
 
+// Polling para aguardar confirmação do webhook — para após 2 minutos.
+const POLL_TIMEOUT_MS = 2 * 60 * 1000
+
 function BillingPageContent() {
   const params = useSearchParams()
   const isSuccess = params.get('success') === 'true'
+  const pollDeadlineRef = useRef(isSuccess ? Date.now() + POLL_TIMEOUT_MS : 0)
 
-  // Quando o usuário volta do checkout com ?success=true e o plano ainda é free,
-  // o webhook da AbacatePay pode estar em trânsito — fazemos polling a cada 3s
-  // até o banco confirmar o novo plano.
+  useEffect(() => {
+    if (isSuccess) pollDeadlineRef.current = Date.now() + POLL_TIMEOUT_MS
+  }, [isSuccess])
+
   const { data: planData, isLoading } = usePlan({
     refetchInterval: (query) => {
       if (!isSuccess) return false
       if (query.state.data && query.state.data.plan !== 'free') return false
+      if (Date.now() > pollDeadlineRef.current) return false
       return 3000
     },
   })
