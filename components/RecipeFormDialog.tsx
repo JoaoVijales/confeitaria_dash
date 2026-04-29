@@ -15,31 +15,30 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { useEffect, useMemo } from 'react'
 import { useIngredients } from '@/hooks/useIngredients'
-import { useProducts } from '@/hooks/useProducts'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import {
   calculateTotalRecipeCost,
   calculateCostPerPortion,
-  calculatePriceWithMargin,
 } from '@/lib/utils/recipe-cost'
 
-const RECIPE_UNITS = ['g', 'ml', 'un'] as const
-type RecipeUnit = typeof RECIPE_UNITS[number]
+const INGREDIENT_UNITS = ['g', 'ml', 'un'] as const
+const YIELD_UNITS = ['un', 'g', 'kg', 'ml', 'L'] as const
+
+type IngredientUnit = typeof INGREDIENT_UNITS[number]
 
 const recipeIngredientSchema = z.object({
   ingredient_id: z.string().min(1, 'Selecione um ingrediente'),
   quantity: z.number().min(0.01, 'Quantidade deve ser positiva'),
-  unit: z.enum(['g', 'ml', 'un']),
+  unit: z.enum(INGREDIENT_UNITS),
 })
 
 const recipeSchema = z.object({
-  product_id: z.string().min(1, 'Selecione um produto'),
+  name: z.string().min(2, 'Nome deve ter ao menos 2 caracteres'),
   yield: z.number().min(1, 'Rendimento deve ser maior que zero'),
+  yield_unit: z.enum(YIELD_UNITS),
   ingredients: z.array(recipeIngredientSchema),
-  margin_type: z.enum(['percent', 'fixed']),
-  margin_value: z.number().min(0, 'Margem deve ser positiva'),
 })
 
 export type RecipeFormValues = z.infer<typeof recipeSchema>
@@ -56,17 +55,11 @@ type RecipeIngredient = {
   ingredients: IngredientInRecipe[] | null
 }
 
-type ProductInRecipe = {
-  id: string
-  name: string
-  price: number
-  cost: number
-}
-
 type Recipe = {
   id: string
+  name: string
   yield: number
-  products: ProductInRecipe[] | null
+  yield_unit: string
   recipe_ingredients: RecipeIngredient[]
 }
 
@@ -89,7 +82,6 @@ export function RecipeFormDialog({
   recipe,
   onSave,
 }: RecipeFormDialogProps) {
-  const { data: products } = useProducts()
   const { data: ingredients } = useIngredients()
 
   const {
@@ -101,10 +93,10 @@ export function RecipeFormDialog({
   } = useForm<RecipeFormValues>({
     resolver: zodResolver(recipeSchema),
     defaultValues: {
-      ingredients: [],
-      margin_type: 'percent',
-      margin_value: 30,
+      name: '',
       yield: 1,
+      yield_unit: 'un',
+      ingredients: [],
     },
   })
 
@@ -115,12 +107,10 @@ export function RecipeFormDialog({
 
   const watchedIngredients = useWatch({ control, name: 'ingredients' })
   const watchedYield = useWatch({ control, name: 'yield' })
-  const watchedMarginType = useWatch({ control, name: 'margin_type' })
-  const watchedMarginValue = useWatch({ control, name: 'margin_value' })
 
   const costSummary = useMemo(() => {
     if (!ingredients || !watchedIngredients?.length) {
-      return { totalCost: 0, costPerPortion: 0, suggestedPrice: 0 }
+      return { totalCost: 0, costPerPortion: 0 }
     }
 
     const enriched = watchedIngredients
@@ -130,41 +120,42 @@ export function RecipeFormDialog({
         if (!ing) return null
         return {
           quantity: ri.quantity,
-          unit: ri.unit as RecipeUnit,
+          unit: ri.unit as IngredientUnit,
           unit_cost: ing.unit_cost,
           base_unit: mapBaseUnit(ing.unit),
         }
       })
-      .filter(Boolean) as Array<{ quantity: number; unit: RecipeUnit; unit_cost: number; base_unit: 'kg' | 'L' | 'un' }>
+      .filter(Boolean) as Array<{
+        quantity: number
+        unit: IngredientUnit
+        unit_cost: number
+        base_unit: 'kg' | 'L' | 'un'
+      }>
 
     const totalCost = calculateTotalRecipeCost(enriched)
     const portions = watchedYield > 0 ? watchedYield : 1
     const costPerPortion = calculateCostPerPortion(totalCost, portions)
-    const marginValue = watchedMarginValue ?? 0
-    const suggestedPrice = calculatePriceWithMargin(costPerPortion, marginValue, watchedMarginType ?? 'percent')
 
-    return { totalCost, costPerPortion, suggestedPrice }
-  }, [watchedIngredients, watchedYield, watchedMarginType, watchedMarginValue, ingredients])
+    return { totalCost, costPerPortion }
+  }, [watchedIngredients, watchedYield, ingredients])
 
   useEffect(() => {
     if (recipe) {
       reset({
-        product_id: recipe.products?.[0]?.id ?? '',
+        name: recipe.name,
         yield: recipe.yield,
-        margin_type: 'percent',
-        margin_value: 30,
+        yield_unit: (recipe.yield_unit as typeof YIELD_UNITS[number]) ?? 'un',
         ingredients: recipe.recipe_ingredients.map((ri: RecipeIngredient) => ({
           ingredient_id: ri.ingredients?.[0]?.id ?? '',
           quantity: ri.quantity,
-          unit: (ri.unit as RecipeUnit) ?? 'g',
+          unit: (ri.unit as IngredientUnit) ?? 'g',
         })),
       })
     } else {
       reset({
-        product_id: '',
+        name: '',
         yield: 1,
-        margin_type: 'percent',
-        margin_value: 30,
+        yield_unit: 'un',
         ingredients: [],
       })
     }
@@ -187,34 +178,39 @@ export function RecipeFormDialog({
           <DialogTitle>{recipe ? 'Editar Receita' : 'Adicionar Receita'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          {/* Produto + Rendimento */}
+
+          {/* Nome */}
+          <div className="space-y-2">
+            <Label htmlFor="name">Nome da Receita</Label>
+            <Input id="name" placeholder="Ex: Massa de Bolo de Chocolate" {...register('name')} />
+            {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
+          </div>
+
+          {/* Rendimento */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Produto</Label>
+              <Label htmlFor="yield">Rendimento</Label>
+              <Input id="yield" type="number" min={1} step="0.01" {...register('yield', { valueAsNumber: true })} />
+              {errors.yield && <p className="text-red-500 text-sm">{errors.yield.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label>Unidade do Rendimento</Label>
               <Controller
-                name="product_id"
+                name="yield_unit"
                 control={control}
                 render={({ field }) => (
                   <Select onValueChange={field.onChange} value={field.value}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione um produto" />
+                      <SelectValue placeholder="Unidade" />
                     </SelectTrigger>
                     <SelectContent>
-                      {products?.map((product) => (
-                        <SelectItem key={product.id} value={String(product.id)}>
-                          {product.name}
-                        </SelectItem>
+                      {YIELD_UNITS.map(u => (
+                        <SelectItem key={u} value={u}>{u}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 )}
               />
-              {errors.product_id && <p className="text-red-500 text-sm">{errors.product_id.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="yield">Rendimento (porções)</Label>
-              <Input id="yield" type="number" min={1} {...register('yield', { valueAsNumber: true })} />
-              {errors.yield && <p className="text-red-500 text-sm">{errors.yield.message}</p>}
             </div>
           </div>
 
@@ -260,7 +256,7 @@ export function RecipeFormDialog({
                           <SelectValue placeholder="Un." />
                         </SelectTrigger>
                         <SelectContent>
-                          {RECIPE_UNITS.map((u) => (
+                          {INGREDIENT_UNITS.map((u) => (
                             <SelectItem key={u} value={u}>{u}</SelectItem>
                           ))}
                         </SelectContent>
@@ -286,47 +282,10 @@ export function RecipeFormDialog({
 
           <Separator />
 
-          {/* Margem de Lucro */}
-          <div className="space-y-2">
-            <Label>Margem de Lucro</Label>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label className="text-xs text-slate-500">Tipo</Label>
-                <Controller
-                  name="margin_type"
-                  control={control}
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="percent">Porcentagem (%)</SelectItem>
-                        <SelectItem value="fixed">Valor fixo (R$)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs text-slate-500">
-                  {watchedMarginType === 'percent' ? 'Margem (%)' : 'Valor (R$)'}
-                </Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  {...register('margin_value', { valueAsNumber: true })}
-                />
-                {errors.margin_value && <p className="text-red-500 text-xs">{errors.margin_value.message}</p>}
-              </div>
-            </div>
-          </div>
-
-          {/* Resumo de Custo (dinâmico) */}
+          {/* Resumo de Custo */}
           <div className="rounded-lg bg-slate-50 border border-slate-200 p-4 space-y-2">
-            <p className="text-sm font-semibold text-slate-700">Resumo de Custo</p>
-            <div className="grid grid-cols-3 gap-3 text-center">
+            <p className="text-sm font-semibold text-slate-700">Custo da Receita</p>
+            <div className="grid grid-cols-2 gap-3 text-center">
               <div>
                 <p className="text-xs text-slate-500">Custo Total</p>
                 <Badge variant="outline" className="mt-1 text-slate-800 font-mono">
@@ -334,18 +293,15 @@ export function RecipeFormDialog({
                 </Badge>
               </div>
               <div>
-                <p className="text-xs text-slate-500">Custo/Porção</p>
+                <p className="text-xs text-slate-500">Custo por unidade de rendimento</p>
                 <Badge variant="outline" className="mt-1 text-slate-800 font-mono">
                   {fmt(costSummary.costPerPortion)}
                 </Badge>
               </div>
-              <div>
-                <p className="text-xs text-slate-500">Preço Sugerido</p>
-                <Badge className="mt-1 bg-purple-100 text-purple-800 font-mono">
-                  {fmt(costSummary.suggestedPrice)}
-                </Badge>
-              </div>
             </div>
+            <p className="text-xs text-slate-400 text-center pt-1">
+              A margem de lucro é definida no produto, não na receita.
+            </p>
           </div>
 
           <DialogFooter>

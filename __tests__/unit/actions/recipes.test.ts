@@ -16,11 +16,12 @@ import { createRecipe, updateRecipe, deleteRecipe } from '@/app/actions/recipes'
 import { revalidatePath } from 'next/cache'
 
 const validRecipeData = {
-  product_id: 'prod-1',
+  name: 'Massa de Bolo de Chocolate',
   yield: 10,
+  yield_unit: 'un',
   ingredients: [
-    { ingredient_id: 'ing-1', quantity: 2 },
-    { ingredient_id: 'ing-2', quantity: 3 },
+    { ingredient_id: 'ing-1', quantity: 200, unit: 'g' },
+    { ingredient_id: 'ing-2', quantity: 3, unit: 'un' },
   ],
 }
 
@@ -30,7 +31,7 @@ describe('recipes actions', () => {
   })
 
   describe('createRecipe', () => {
-    it('cria receita e ingredientes', async () => {
+    it('cria receita com nome e ingredientes com unidade', async () => {
       const ingredientsInsertMock = vi.fn().mockResolvedValue({ data: null, error: null })
 
       mockFrom.mockImplementation((table: string) => {
@@ -55,8 +56,8 @@ describe('recipes actions', () => {
       await createRecipe(validRecipeData)
 
       expect(ingredientsInsertMock).toHaveBeenCalledWith(expect.arrayContaining([
-        expect.objectContaining({ recipe_id: 'recipe-1', ingredient_id: 'ing-1', quantity: 2 }),
-        expect.objectContaining({ recipe_id: 'recipe-1', ingredient_id: 'ing-2', quantity: 3 }),
+        expect.objectContaining({ recipe_id: 'recipe-1', ingredient_id: 'ing-1', quantity: 200, unit: 'g' }),
+        expect.objectContaining({ recipe_id: 'recipe-1', ingredient_id: 'ing-2', quantity: 3, unit: 'un' }),
       ]))
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/receitas')
     })
@@ -141,7 +142,7 @@ describe('recipes actions', () => {
   })
 
   describe('updateRecipe', () => {
-    it('atualiza receita, deleta e recria ingredientes', async () => {
+    it('atualiza receita, deleta e recria ingredientes com unidade', async () => {
       const ingredientsInsertMock = vi.fn().mockResolvedValue({ data: null, error: null })
 
       mockFrom.mockImplementation((table: string) => {
@@ -175,8 +176,8 @@ describe('recipes actions', () => {
       await updateRecipe('recipe-1', validRecipeData)
 
       expect(ingredientsInsertMock).toHaveBeenCalledWith(expect.arrayContaining([
-        expect.objectContaining({ recipe_id: 'recipe-1', ingredient_id: 'ing-1', quantity: 2 }),
-        expect.objectContaining({ recipe_id: 'recipe-1', ingredient_id: 'ing-2', quantity: 3 }),
+        expect.objectContaining({ recipe_id: 'recipe-1', ingredient_id: 'ing-1', quantity: 200, unit: 'g' }),
+        expect.objectContaining({ recipe_id: 'recipe-1', ingredient_id: 'ing-2', quantity: 3, unit: 'un' }),
       ]))
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/receitas')
     })
@@ -244,7 +245,7 @@ describe('recipes actions', () => {
 
     it('faz rollback (restaura ingredientes) quando insert de novos ingredientes falha', async () => {
       const insertError = { message: 'Insert error' }
-      const oldIngredients = [{ recipe_id: 'recipe-1', ingredient_id: 'ing-old', quantity: 5, tenant_id: 'test-tenant-id' }]
+      const oldIngredients = [{ recipe_id: 'recipe-1', ingredient_id: 'ing-old', quantity: 5, unit: 'g', tenant_id: 'test-tenant-id' }]
       let insertCallCount = 0
       const insertMock = vi.fn().mockImplementation(() => {
         insertCallCount++

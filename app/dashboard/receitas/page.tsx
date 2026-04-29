@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/table'
 import { PlusCircle, Edit, Trash2, Search } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Input } from "@/components/ui/input"
+import { Input } from '@/components/ui/input'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/EmptyState'
@@ -29,8 +29,6 @@ import { RecipeFormDialog, RecipeFormValues } from '@/components/RecipeFormDialo
 import {
   calculateTotalRecipeCost,
   calculateCostPerPortion,
-  calculatePriceWithMargin,
-  calculateMarginPercent,
 } from '@/lib/utils/recipe-cost'
 
 type IngredientInRecipe = {
@@ -46,17 +44,11 @@ type RecipeIngredient = {
   ingredients: IngredientInRecipe[] | null
 }
 
-type ProductInRecipe = {
-  id: string
-  name: string
-  price: number
-  cost: number
-}
-
 type Recipe = {
   id: string
+  name: string
   yield: number
-  products: ProductInRecipe[] | null
+  yield_unit: string
   recipe_ingredients: RecipeIngredient[]
 }
 
@@ -66,7 +58,7 @@ function mapBaseUnit(unit: string): 'kg' | 'L' | 'un' {
   return 'un'
 }
 
-function getCostPerPortion(recipe: Recipe): number {
+function getRecipeCosts(recipe: Recipe): { totalCost: number; costPerUnit: number } {
   const enriched = recipe.recipe_ingredients
     .map(ri => {
       const ing = ri.ingredients?.[0]
@@ -78,10 +70,16 @@ function getCostPerPortion(recipe: Recipe): number {
         base_unit: mapBaseUnit(ing.unit),
       }
     })
-    .filter(Boolean) as Array<{ quantity: number; unit: 'g' | 'ml' | 'un'; unit_cost: number; base_unit: 'kg' | 'L' | 'un' }>
+    .filter(Boolean) as Array<{
+      quantity: number
+      unit: 'g' | 'ml' | 'un'
+      unit_cost: number
+      base_unit: 'kg' | 'L' | 'un'
+    }>
 
-  const total = calculateTotalRecipeCost(enriched)
-  return calculateCostPerPortion(total, recipe.yield)
+  const totalCost = calculateTotalRecipeCost(enriched)
+  const costPerUnit = calculateCostPerPortion(totalCost, recipe.yield)
+  return { totalCost, costPerUnit }
 }
 
 export default function ReceitasPage() {
@@ -112,12 +110,9 @@ export default function ReceitasPage() {
     }
   }
 
-  const filteredRecipes = recipes?.filter(recipe => {
-    const productName = recipe.products?.[0]?.name || '';
-    return productName.toLowerCase().includes(searchTerm.toLowerCase());
-  }) || [];
-
-  const totalRecipes = filteredRecipes.length;
+  const filteredRecipes = (recipes ?? []).filter(recipe =>
+    recipe.name.toLowerCase().includes(searchTerm.toLowerCase())
+  ) as Recipe[]
 
   const fmt = (v: number) =>
     `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -132,7 +127,7 @@ export default function ReceitasPage() {
         <div className="flex items-center gap-3">
           <h1 className="text-2xl md:text-3xl font-semibold text-slate-800">Receitas</h1>
           <Badge className="bg-purple-500 text-white rounded-full px-3 py-1 text-sm">
-            {totalRecipes} Receitas
+            {filteredRecipes.length} Receitas
           </Badge>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -155,7 +150,9 @@ export default function ReceitasPage() {
       <Card className="rounded-xl border border-slate-200 shadow-sm">
         <CardHeader className="bg-slate-100 rounded-t-xl py-3">
           <CardTitle className="font-semibold text-slate-800">Lista de Receitas</CardTitle>
-          <CardDescription className="text-slate-600">Gerencie as receitas e acompanhe o custo de fabricação por porção.</CardDescription>
+          <CardDescription className="text-slate-600">
+            Gerencie as receitas e acompanhe o custo de fabricação. A margem de lucro é definida no produto.
+          </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
@@ -166,99 +163,69 @@ export default function ReceitasPage() {
             </div>
           ) : filteredRecipes.length > 0 ? (
             <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-100 hover:bg-slate-100">
-                  <TableHead className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Produto</TableHead>
-                  <TableHead className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Ingredientes</TableHead>
-                  <TableHead className="text-right py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Custo/Porção</TableHead>
-                  <TableHead className="text-right py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Preço Venda</TableHead>
-                  <TableHead className="text-right py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Margem</TableHead>
-                  <TableHead className="text-right py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Rendimento</TableHead>
-                  <TableHead className="text-center py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredRecipes.map((recipe) => {
-                  const costPerPortion = getCostPerPortion(recipe)
-                  const salePrice = recipe.products?.[0]?.price ?? 0
-                  const margin = calculateMarginPercent(costPerPortion, salePrice)
-                  // Suggested price at 30% margin default
-                  const suggestedPrice = calculatePriceWithMargin(costPerPortion, 30, 'percent')
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-100 hover:bg-slate-100">
+                    <TableHead className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Nome</TableHead>
+                    <TableHead className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Ingredientes</TableHead>
+                    <TableHead className="text-right py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Custo Total</TableHead>
+                    <TableHead className="text-right py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Custo/Unidade</TableHead>
+                    <TableHead className="text-right py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Rendimento</TableHead>
+                    <TableHead className="text-center py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wide">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredRecipes.map((recipe) => {
+                    const { totalCost, costPerUnit } = getRecipeCosts(recipe)
 
-                  return (
-                    <TableRow key={recipe.id} className="hover:bg-slate-50 transition-colors py-4">
-                      <TableCell className="font-medium py-4 px-4">{recipe.products?.[0]?.name}</TableCell>
-                      <TableCell className="py-4 px-4">
-                        <div className="flex flex-wrap gap-1 max-w-[200px]">
-                          {recipe.recipe_ingredients.slice(0, 3).map((ri, i) => (
-                            <Badge key={i} variant="secondary" className="text-[10px] px-1 py-0 h-5">
-                              {ri.ingredients?.[0]?.name || 'Ingrediente'}
-                            </Badge>
-                          ))}
-                          {recipe.recipe_ingredients.length > 3 && (
-                            <span className="text-xs text-slate-500">+{recipe.recipe_ingredients.length - 3}</span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right font-semibold text-slate-900 py-4 px-4">
-                        {fmt(costPerPortion)}
-                      </TableCell>
-                      <TableCell className="text-right py-4 px-4">
-                        {salePrice > 0 ? (
-                          <span className="text-slate-800">{fmt(salePrice)}</span>
-                        ) : (
+                    return (
+                      <TableRow key={recipe.id} className="hover:bg-slate-50 transition-colors py-4">
+                        <TableCell className="font-medium py-4 px-4">{recipe.name}</TableCell>
+                        <TableCell className="py-4 px-4">
+                          <div className="flex flex-wrap gap-1 max-w-[200px]">
+                            {recipe.recipe_ingredients.slice(0, 3).map((ri, i) => (
+                              <Badge key={i} variant="secondary" className="text-[10px] px-1 py-0 h-5">
+                                {ri.ingredients?.[0]?.name || 'Ingrediente'}
+                              </Badge>
+                            ))}
+                            {recipe.recipe_ingredients.length > 3 && (
+                              <span className="text-xs text-slate-500">+{recipe.recipe_ingredients.length - 3}</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right font-semibold text-slate-900 py-4 px-4">
+                          {fmt(totalCost)}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold text-slate-900 py-4 px-4">
+                          {fmt(costPerUnit)}
+                          <span className="text-xs text-slate-400 ml-1">/{recipe.yield_unit}</span>
+                        </TableCell>
+                        <TableCell className="text-right py-4 px-4">
+                          {recipe.yield} {recipe.yield_unit}
+                        </TableCell>
+                        <TableCell className="flex justify-center gap-2 py-4 px-4">
                           <Tooltip>
-                            <TooltipTrigger>
-                              <span className="text-slate-400 text-xs">Sugerido: {fmt(suggestedPrice)}</span>
+                            <TooltipTrigger asChild>
+                              <Button variant="outline" size="icon" onClick={() => handleEditRecipe(recipe)}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
                             </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Preço sugerido com 30% de margem</p>
-                            </TooltipContent>
+                            <TooltipContent><p>Editar receita</p></TooltipContent>
                           </Tooltip>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right py-4 px-4">
-                        {salePrice > 0 ? (
-                          <Badge
-                            className={
-                              margin > 40
-                                ? 'bg-green-100 text-green-800'
-                                : margin > 20
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-red-100 text-red-800'
-                            }
-                          >
-                            {margin.toFixed(1)}%
-                          </Badge>
-                        ) : (
-                          <span className="text-slate-400 text-xs">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right py-4 px-4">{recipe.yield} porções</TableCell>
-                      <TableCell className="flex justify-center gap-2 py-4 px-4">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="outline" size="icon" onClick={() => handleEditRecipe(recipe)}>
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent><p>Editar receita</p></TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="destructive" size="icon" onClick={() => handleDeleteRecipe(recipe.id)}>
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent><p>Excluir receita</p></TooltipContent>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="destructive" size="icon" onClick={() => handleDeleteRecipe(recipe.id)}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Excluir receita</p></TooltipContent>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
             </div>
           ) : (
             <EmptyState

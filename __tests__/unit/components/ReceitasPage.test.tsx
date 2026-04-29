@@ -4,45 +4,43 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import ReceitasPage from '@/app/dashboard/receitas/page'
 import { useRecipes } from '@/hooks/useRecipes'
 
-// Mock do hook useRecipes
 vi.mock('@/hooks/useRecipes', () => ({
   useRecipes: vi.fn(),
 }))
 
-// Mock de server actions para evitar inicialização do Firebase Admin
 vi.mock('@/app/actions/recipes', () => ({
   createRecipe: vi.fn(),
   updateRecipe: vi.fn(),
   deleteRecipe: vi.fn(),
 }))
 
-// Mock de components que podem dar problema no render unitário
 vi.mock('@/components/RecipeFormDialog', () => ({
   RecipeFormDialog: () => <div data-testid="recipe-form-dialog" />,
 }))
 
-describe('ReceitasPage', () => {
-  it('deve exibir os nomes dos ingredientes na tabela', () => {
-    const mockRecipes = [
+const mockRecipes = [
+  {
+    id: '1',
+    name: 'Massa de Bolo de Cenoura',
+    yield: 10,
+    yield_unit: 'un',
+    recipe_ingredients: [
       {
-        id: '1',
-        yield: 10,
-        products: [{ name: 'Bolo de Cenoura', price: 50, cost: 20 }],
-        recipe_ingredients: [
-          {
-            quantity: 500,
-            unit: 'g',
-            ingredients: [{ name: 'Cenoura', unit: 'kg', unit_cost: 5 }]
-          },
-          {
-            quantity: 3,
-            unit: 'un',
-            ingredients: [{ name: 'Ovos', unit: 'un', unit_cost: 0.5 }]
-          }
-        ]
-      }
-    ]
+        quantity: 500,
+        unit: 'g',
+        ingredients: [{ id: 'ing-1', name: 'Cenoura', unit: 'kg', unit_cost: 5 }],
+      },
+      {
+        quantity: 3,
+        unit: 'un',
+        ingredients: [{ id: 'ing-2', name: 'Ovos', unit: 'un', unit_cost: 0.5 }],
+      },
+    ],
+  },
+]
 
+describe('ReceitasPage', () => {
+  it('exibe o nome da receita na tabela', () => {
     ;(useRecipes as ReturnType<typeof vi.fn>).mockReturnValue({
       data: mockRecipes,
       isLoading: false,
@@ -51,8 +49,43 @@ describe('ReceitasPage', () => {
 
     render(<TooltipProvider><ReceitasPage /></TooltipProvider>)
 
-    // Verifica se os nomes dos ingredientes aparecem
+    expect(screen.getByText('Massa de Bolo de Cenoura')).toBeInTheDocument()
+  })
+
+  it('exibe os nomes dos ingredientes na tabela', () => {
+    ;(useRecipes as ReturnType<typeof vi.fn>).mockReturnValue({
+      data: mockRecipes,
+      isLoading: false,
+      error: null,
+    })
+
+    render(<TooltipProvider><ReceitasPage /></TooltipProvider>)
+
     expect(screen.getByText('Cenoura')).toBeInTheDocument()
     expect(screen.getByText('Ovos')).toBeInTheDocument()
+  })
+
+  it('exibe rendimento com unidade', () => {
+    ;(useRecipes as ReturnType<typeof vi.fn>).mockReturnValue({
+      data: mockRecipes,
+      isLoading: false,
+      error: null,
+    })
+
+    render(<TooltipProvider><ReceitasPage /></TooltipProvider>)
+
+    expect(screen.getByText('10 un')).toBeInTheDocument()
+  })
+
+  it('exibe estado de carregamento', () => {
+    ;(useRecipes as ReturnType<typeof vi.fn>).mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      error: null,
+    })
+
+    render(<TooltipProvider><ReceitasPage /></TooltipProvider>)
+
+    expect(screen.queryByText('Massa de Bolo de Cenoura')).not.toBeInTheDocument()
   })
 })

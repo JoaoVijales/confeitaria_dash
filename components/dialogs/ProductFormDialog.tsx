@@ -53,7 +53,7 @@ export function ProductFormDialog({
 
   const recipes: RecipeOption[] = rawRecipes.map(r => ({
     id: r.id as string,
-    name: (Array.isArray(r.products) ? r.products[0]?.name : (r.products as { name?: string } | null)?.name) ?? 'Receita',
+    name: (r.name as string) || 'Receita',
     yield_unit: r.yield_unit as string,
     cost_per_yield_unit: r.cost_per_yield_unit as number,
   }))
