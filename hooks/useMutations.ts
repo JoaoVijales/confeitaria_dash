@@ -144,6 +144,8 @@ export function useUpdateOrderStatus() {
     mutationFn: ({ id, status }: { id: string; status: string }) => updateOrderStatus(id, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] })
+      queryClient.invalidateQueries({ queryKey: ['revenues'] })
+      queryClient.invalidateQueries({ queryKey: ['financials'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
   })
@@ -155,6 +157,8 @@ export function useDeleteOrder() {
     mutationFn: (id: string) => deleteOrder(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] })
+      queryClient.invalidateQueries({ queryKey: ['revenues'] })
+      queryClient.invalidateQueries({ queryKey: ['financials'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
   })

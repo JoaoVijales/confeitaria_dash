@@ -32,7 +32,7 @@ import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { logError } from '@/lib/logger'
 
-type Revenue = RevenueFormValues & { id: string };
+type Revenue = RevenueFormValues & { id: string; order_id?: string | null };
 
 export default function EntradasPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -150,7 +150,14 @@ export default function EntradasPage() {
                 {filteredRevenues.map((revenue) => (
                   <TableRow key={revenue.id} className="hover:bg-slate-50 transition-colors py-4">
                     <TableCell className="py-4 px-4">{new Date(revenue.date).toLocaleDateString()}</TableCell>
-                    <TableCell className="font-medium py-4 px-4">{revenue.description}</TableCell>
+                    <TableCell className="font-medium py-4 px-4">
+                      <div className="flex items-center gap-2">
+                        {revenue.description}
+                        {revenue.order_id && (
+                          <Badge className="bg-blue-100 text-blue-700 text-xs">Pedido</Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-right py-4 px-4">{revenue.quantity}</TableCell>
                     <TableCell className="text-right py-4 px-4">
                       R$ {revenue.unit_price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -159,32 +166,35 @@ export default function EntradasPage() {
                       R$ {revenue.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </TableCell>
                     <TableCell className="flex justify-center gap-2 py-4 px-4">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleEditRevenue(revenue)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Editar entrada</p>
-                        </TooltipContent>
-                      </Tooltip>
+                      {!revenue.order_id && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleEditRevenue(revenue)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Editar entrada</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
                             variant="destructive"
                             size="icon"
                             onClick={() => handleDeleteRevenue(revenue.id)}
+                            disabled={!!revenue.order_id}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Excluir entrada</p>
+                          <p>{revenue.order_id ? 'Excluir via pedido' : 'Excluir entrada'}</p>
                         </TooltipContent>
                       </Tooltip>
                     </TableCell>

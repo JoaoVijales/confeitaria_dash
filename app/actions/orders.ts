@@ -25,11 +25,13 @@ export async function createOrder(data: { customer_id: string; items: { product_
     throw new Error(`Limite de pedidos mensais atingido para o plano ${plan}`)
   }
 
+  const total = data.items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0)
+
   const { data: orderData, error: orderError } = await supabase
     .from('orders')
     .insert({
       customer_id: data.customer_id,
-      total: data.total,
+      total,
       status: data.status,
       tenant_id: tenantId,
     })
@@ -77,13 +79,43 @@ export async function updateOrderStatus(id: string, status: string) {
   const validStatus = orderStatusSchema.parse(status)
   const supabase = createClient()
   const tenantId = await getTenantId()
+
+  const { data: currentOrder } = await supabase
+    .from('orders')
+    .select('status, total, customers(name)')
+    .eq('id', id)
+    .eq('tenant_id', tenantId)
+    .single()
+
   const { error } = await supabase
     .from('orders')
     .update({ status: validStatus })
     .eq('id', id)
     .eq('tenant_id', tenantId)
   handleSupabaseError(error, 'updateOrderStatus', { tenantId, orderId: id, status: validStatus })
+
+  const wasFinalized = currentOrder?.status === 'Finalizado'
+  const isNowFinalized = validStatus === 'Finalizado'
+
+  if (isNowFinalized && !wasFinalized) {
+    const customerName = (currentOrder?.customers as { name: string }[] | null)?.[0]?.name ?? 'Cliente'
+    const { error: revenueError } = await supabase.from('revenue_entries').insert({
+      tenant_id: tenantId,
+      date: new Date().toISOString().split('T')[0],
+      description: `Pedido #${id.substring(0, 6)} — ${customerName}`,
+      quantity: 1,
+      unit_price: currentOrder!.total,
+      total: currentOrder!.total,
+      order_id: id,
+    })
+    handleSupabaseError(revenueError, 'updateOrderStatus:createRevenue', { tenantId, orderId: id })
+  } else if (!isNowFinalized && wasFinalized) {
+    await supabase.from('revenue_entries').delete().eq('order_id', id).eq('tenant_id', tenantId)
+  }
+
   revalidatePath('/dashboard/pedidos')
+  revalidatePath('/dashboard/entradas')
+  revalidatePath('/dashboard/financeiro')
 }
 
 export async function deleteOrder(id: string) {
@@ -118,6 +150,8 @@ export async function deleteOrder(id: string) {
   }
 
   revalidatePath('/dashboard/pedidos')
+  revalidatePath('/dashboard/entradas')
+  revalidatePath('/dashboard/financeiro')
 }
 
 export async function getOrders() {
