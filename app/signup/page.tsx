@@ -67,7 +67,7 @@ export default function SignupPage() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="mb-8 flex items-center gap-3 font-semibold text-2xl text-slate-800">
         <Cake className="h-8 w-8 text-pink-500" />
-        <span>Confeitaria</span>
+        <span>Confeitando</span>
       </div>
       <Card className="mx-auto max-w-sm w-full rounded-xl border border-slate-200 shadow-sm">
         <CardHeader className="text-center">

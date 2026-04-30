@@ -4,8 +4,8 @@ import Providers from "./providers";
 import { Toaster } from 'sonner';
 
 export const metadata: Metadata = {
-  title: "Dashboard Confeitaria",
-  description: "Painel administrativo para confeitaria.",
+  title: "Confeitando",
+  description: "Dashboard completo para confeiteiros artesanais. Controle pedidos, ingredientes, receitas e financeiro em um só lugar.",
 };
 
 export default function RootLayout({

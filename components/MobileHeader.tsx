@@ -30,7 +30,7 @@ export function MobileHeader() {
       <header className="flex h-16 items-center justify-between border-b bg-white px-4 shadow-sm">
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-slate-800">
           <Cake className="h-6 w-6 text-pink-500" />
-          <span>Confeitaria</span>
+          <span>Confeitando</span>
         </Link>
         <Button variant="ghost" size="icon" onClick={() => setIsOpen(!isOpen)} aria-label="Abrir menu">
           {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
