@@ -30,41 +30,46 @@ export async function getDashboardStats() {
   const supabase = createClient()
   const tenantId = await getTenantId()
 
-  const { curMonthStart, curMonthEnd, prevMonthStart, prevMonthEnd, todayStart, todayEnd } = buildMonthDateRange(new Date())
+  const {
+    curMonthStartDate, curMonthEndDate,
+    prevMonthStartDate, prevMonthEndDate,
+    todayDate,
+  } = buildMonthDateRange(new Date())
 
-  const { data: curOrders, error: curOrdersErr } = await supabase
-    .from('orders')
+  // Receitas do mês atual (apenas pedidos finalizados via revenue_entries)
+  const { data: curRevenues, error: curRevenuesErr } = await supabase
+    .from('revenue_entries')
     .select('total')
     .eq('tenant_id', tenantId)
-    .gte('created_at', curMonthStart)
-    .lte('created_at', curMonthEnd)
-  handleSupabaseError(curOrdersErr, 'getDashboardStats:curOrders', { tenantId })
+    .gte('date', curMonthStartDate)
+    .lte('date', curMonthEndDate)
+  handleSupabaseError(curRevenuesErr, 'getDashboardStats:curRevenues', { tenantId })
 
-  // Pedidos do mês anterior (para trend)
-  const { data: prevOrders, error: prevOrdersErr } = await supabase
-    .from('orders')
+  // Receitas do mês anterior (para trend)
+  const { data: prevRevenues, error: prevRevenuesErr } = await supabase
+    .from('revenue_entries')
     .select('total')
     .eq('tenant_id', tenantId)
-    .gte('created_at', prevMonthStart)
-    .lte('created_at', prevMonthEnd)
-  handleSupabaseError(prevOrdersErr, 'getDashboardStats:prevOrders', { tenantId })
+    .gte('date', prevMonthStartDate)
+    .lte('date', prevMonthEndDate)
+  handleSupabaseError(prevRevenuesErr, 'getDashboardStats:prevRevenues', { tenantId })
 
   // Despesas do mês atual
   const { data: curExpenses, error: curExpensesErr } = await supabase
-    .from('expenses')
-    .select('amount, category')
+    .from('expense_entries')
+    .select('total, category')
     .eq('tenant_id', tenantId)
-    .gte('date', curMonthStart)
-    .lte('date', curMonthEnd)
+    .gte('date', curMonthStartDate)
+    .lte('date', curMonthEndDate)
   handleSupabaseError(curExpensesErr, 'getDashboardStats:curExpenses', { tenantId })
 
   // Despesas do mês anterior (para trend)
   const { data: prevExpenses, error: prevExpensesErr } = await supabase
-    .from('expenses')
-    .select('amount')
+    .from('expense_entries')
+    .select('total')
     .eq('tenant_id', tenantId)
-    .gte('date', prevMonthStart)
-    .lte('date', prevMonthEnd)
+    .gte('date', prevMonthStartDate)
+    .lte('date', prevMonthEndDate)
   handleSupabaseError(prevExpensesErr, 'getDashboardStats:prevExpenses', { tenantId })
 
   // Produtos com receitas para cálculo de margem
@@ -74,21 +79,20 @@ export async function getDashboardStats() {
     .eq('tenant_id', tenantId)
   handleSupabaseError(productsErr, 'getDashboardStats:products', { tenantId })
 
-  // Vendas de hoje
+  // Vendas de hoje (revenue_entries com date = hoje)
   const { data: dailySales, error: dailySalesErr } = await supabase
-    .from('orders')
+    .from('revenue_entries')
     .select('total')
     .eq('tenant_id', tenantId)
-    .gte('created_at', todayStart)
-    .lt('created_at', todayEnd)
+    .eq('date', todayDate)
   handleSupabaseError(dailySalesErr, 'getDashboardStats:dailySales', { tenantId })
 
-  // Pedidos abertos
+  // Pedidos abertos (em andamento, não finalizados nem cancelados)
   const { data: openOrders, error: openOrdersErr } = await supabase
     .from('orders')
     .select('id')
     .eq('tenant_id', tenantId)
-    .in('status', ['Pendente', 'Processando'])
+    .in('status', ['Pendente', 'Em Preparo', 'Pronto para Retirada'])
   handleSupabaseError(openOrdersErr, 'getDashboardStats:openOrders', { tenantId })
 
   // Itens de pedido para produto mais vendido
@@ -100,11 +104,11 @@ export async function getDashboardStats() {
   handleSupabaseError(orderItemsErr, 'getDashboardStats:orderItems', { tenantId })
 
   // ── Cálculos ──────────────────────────────────────────────────────────────
-  const monthlyRevenue = (curOrders ?? []).reduce((acc, o) => acc + o.total, 0)
-  const prevMonthRevenue = (prevOrders ?? []).reduce((acc, o) => acc + o.total, 0)
+  const monthlyRevenue = (curRevenues ?? []).reduce((acc, r) => acc + r.total, 0)
+  const prevMonthRevenue = (prevRevenues ?? []).reduce((acc, r) => acc + r.total, 0)
 
-  const monthlyExpenses = (curExpenses ?? []).reduce((acc, e) => acc + e.amount, 0)
-  const prevMonthExpenses = (prevExpenses ?? []).reduce((acc, e) => acc + e.amount, 0)
+  const monthlyExpenses = (curExpenses ?? []).reduce((acc, e) => acc + e.total, 0)
+  const prevMonthExpenses = (prevExpenses ?? []).reduce((acc, e) => acc + e.total, 0)
 
   const monthlyProfit = monthlyRevenue - monthlyExpenses
   const prevMonthProfit = prevMonthRevenue - prevMonthExpenses
@@ -127,13 +131,13 @@ export async function getDashboardStats() {
     .slice(0, 5)
 
   const expensesByCategoryData = (curExpenses ?? []).reduce((acc, e) => {
-    acc[e.category] = (acc[e.category] ?? 0) + e.amount
+    acc[e.category] = (acc[e.category] ?? 0) + e.total
     return acc
   }, {} as Record<string, number>)
   const expensesByCategoryChartData = Object.entries(expensesByCategoryData)
     .map(([name, value]) => ({ name, value }))
 
-  const dailySalesTotal = (dailySales ?? []).reduce((acc, o) => acc + o.total, 0)
+  const dailySalesTotal = (dailySales ?? []).reduce((acc, r) => acc + r.total, 0)
 
   const productSales = (orderItems ?? []).reduce((acc, item) => {
     const name = Array.isArray(item.products) && item.products[0]?.name
@@ -196,17 +200,18 @@ export async function getSalesChartData() {
 
   const since = new Date()
   since.setDate(since.getDate() - 7)
+  const sinceDate = since.toISOString().split('T')[0]
 
   const { data, error } = await supabase
-    .from('orders')
-    .select('created_at, total')
+    .from('revenue_entries')
+    .select('date, total')
     .eq('tenant_id', tenantId)
-    .gte('created_at', since.toISOString())
+    .gte('date', sinceDate)
   handleSupabaseError(error, 'getSalesChartData', { tenantId })
 
-  const salesByDay = (data ?? []).reduce((acc, order) => {
-    const date = new Date(order.created_at).toLocaleDateString('pt-BR', { weekday: 'short' })
-    acc[date] = (acc[date] ?? 0) + order.total
+  const salesByDay = (data ?? []).reduce((acc, entry) => {
+    const label = new Date(entry.date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short' })
+    acc[label] = (acc[label] ?? 0) + entry.total
     return acc
   }, {} as Record<string, number>)
 

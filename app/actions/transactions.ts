@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getTenantId } from '@/lib/supabase/tenant'
 import { handleSupabaseError } from '@/lib/logger'
 
+// startDate / endDate devem ser strings YYYY-MM-DD para comparar com colunas type date
 export async function getTransactions(startDate: string, endDate: string) {
   const supabase = createClient()
   const tenantId = await getTenantId()
@@ -26,12 +27,10 @@ export async function getTransactions(startDate: string, endDate: string) {
 
   handleSupabaseError(expensesError, 'getTransactions:expenses', { tenantId, startDate, endDate })
 
-  const allTransactions = [
+  return [
     ...(revenues ?? []).map(r => ({ ...r, type: 'Receita' as const, category: null })),
     ...(expenses ?? []).map(e => ({ ...e, type: 'Despesa' as const, total: -e.total })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-
-  return allTransactions
 }
 
 export async function getMonthSummary(month: number, year: number) {
@@ -58,14 +57,14 @@ export async function getFinancialSummary() {
 
   const { data: allRevenues, error: revenuesError } = await supabase
     .from('revenue_entries')
-    .select('total, created_at')
+    .select('total, date')
     .eq('tenant_id', tenantId)
 
   handleSupabaseError(revenuesError, 'getFinancialSummary:revenues', { tenantId })
 
   const { data: allExpenses, error: expensesError } = await supabase
     .from('expense_entries')
-    .select('total, category, created_at')
+    .select('total, category, date')
     .eq('tenant_id', tenantId)
 
   handleSupabaseError(expensesError, 'getFinancialSummary:expenses', { tenantId })
@@ -82,17 +81,18 @@ export async function getFinancialSummary() {
     const year = d.getFullYear()
     const monthName = d.toLocaleString('pt-BR', { month: 'short' })
 
+    // Filtra pela data da transação (campo date, YYYY-MM-DD), não pela data de criação
     const monthlyRevenues = (allRevenues ?? [])
       .filter(r => {
-        const date = new Date(r.created_at)
-        return date.getMonth() + 1 === month && date.getFullYear() === year
+        const [y, m] = r.date.split('-').map(Number)
+        return m === month && y === year
       })
       .reduce((sum, r) => sum + r.total, 0)
 
     const monthlyExpenses = (allExpenses ?? [])
       .filter(e => {
-        const date = new Date(e.created_at)
-        return date.getMonth() + 1 === month && date.getFullYear() === year
+        const [y, m] = e.date.split('-').map(Number)
+        return m === month && y === year
       })
       .reduce((sum, e) => sum + e.total, 0)
 
