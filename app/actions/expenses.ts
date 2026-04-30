@@ -10,19 +10,18 @@ export async function createExpense(formData: FormData) {
   const supabase = createClient()
   const tenantId = await getTenantId()
   const data = Object.fromEntries(formData.entries())
+  const quantity = Number(data.quantity)
+  const unit_price = Number(data.unit_price)
   const parsed = expenseSchema.parse({
     ...data,
-    quantity: Number(data.quantity),
-    unit_price: Number(data.unit_price),
-    total: Number(data.total),
+    quantity,
+    unit_price,
+    total: quantity * unit_price,
   })
 
   const { error } = await supabase
     .from('expense_entries')
-    .insert({
-      ...parsed,
-      tenant_id: tenantId,
-    })
+    .insert({ ...parsed, tenant_id: tenantId })
 
   handleSupabaseError(error, 'createExpense', { tenantId, data: parsed })
 
@@ -34,11 +33,13 @@ export async function updateExpense(id: string, formData: FormData) {
   const supabase = createClient()
   const tenantId = await getTenantId()
   const data = Object.fromEntries(formData.entries())
+  const quantity = Number(data.quantity)
+  const unit_price = Number(data.unit_price)
   const parsed = expenseSchema.parse({
     ...data,
-    quantity: Number(data.quantity),
-    unit_price: Number(data.unit_price),
-    total: Number(data.total),
+    quantity,
+    unit_price,
+    total: quantity * unit_price,
   })
 
   const { error } = await supabase

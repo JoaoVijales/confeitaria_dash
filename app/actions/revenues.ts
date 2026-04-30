@@ -10,28 +10,33 @@ export async function createRevenue(formData: FormData) {
   const supabase = createClient()
   const tenantId = await getTenantId()
   const data = Object.fromEntries(formData.entries())
+  const quantity = Number(data.quantity)
+  const unit_price = Number(data.unit_price)
   const parsed = revenueSchema.parse({
     ...data,
-    quantity: Number(data.quantity),
-    unit_price: Number(data.unit_price),
-    total: Number(data.total),
+    quantity,
+    unit_price,
+    total: quantity * unit_price,
   })
 
   const { error } = await supabase.from('revenue_entries').insert({ ...parsed, tenant_id: tenantId })
   handleSupabaseError(error, 'createRevenue', { tenantId, data: parsed })
 
   revalidatePath('/dashboard/entradas')
+  revalidatePath('/dashboard/financeiro')
 }
 
 export async function updateRevenue(id: string, formData: FormData) {
   const supabase = createClient()
   const tenantId = await getTenantId()
   const data = Object.fromEntries(formData.entries())
+  const quantity = Number(data.quantity)
+  const unit_price = Number(data.unit_price)
   const parsed = revenueSchema.parse({
     ...data,
-    quantity: Number(data.quantity),
-    unit_price: Number(data.unit_price),
-    total: Number(data.total),
+    quantity,
+    unit_price,
+    total: quantity * unit_price,
   })
 
   const { error } = await supabase
@@ -42,6 +47,7 @@ export async function updateRevenue(id: string, formData: FormData) {
   handleSupabaseError(error, 'updateRevenue', { tenantId, revenueId: id, data: parsed })
 
   revalidatePath('/dashboard/entradas')
+  revalidatePath('/dashboard/financeiro')
 }
 
 export async function deleteRevenue(id: string) {
@@ -55,6 +61,7 @@ export async function deleteRevenue(id: string) {
   handleSupabaseError(error, 'deleteRevenue', { tenantId, revenueId: id })
 
   revalidatePath('/dashboard/entradas')
+  revalidatePath('/dashboard/financeiro')
 }
 
 export async function getRevenues() {
