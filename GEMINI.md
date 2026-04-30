@@ -62,7 +62,7 @@ O projeto é estritamente multi-tenant. Cada registro no banco de dados deve pos
 
 ## 4. Variáveis de Ambiente Necessárias
 Certifique-se de configurar o arquivo `.env.local` com as seguintes chaves (baseado no `.env.example`):
-- Supabase: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
+- Supabase: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SECRET_KEY`.
 - Firebase: `NEXT_PUBLIC_FIREBASE_*` (Client) e `FIREBASE_ADMIN_*` (Server).
 - Stripe: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
 
