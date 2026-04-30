@@ -43,7 +43,6 @@ export default function EntradasPage() {
 
   const { data: revenuesData, isLoading, error } = useRevenues(currentPage, itemsPerPage)
   const revenues = revenuesData?.entries || []
-  const totalAmount = revenuesData?.totalAmount || 0
   const totalPages = revenuesData?.totalPages || 1
 
   const deleteMutation = useDeleteRevenue()
@@ -60,9 +59,8 @@ export default function EntradasPage() {
   }
 
   const handleDeleteRevenue = async (id: string) => {
-    // Optimistic update
-    const previousRevenues = revenuesData?.entries;
-    queryClient.setQueryData(['revenues', currentPage, itemsPerPage], (old: { entries: Revenue[], totalAmount: number, totalPages: number } | undefined) => ({
+    const previousData = revenuesData;
+    queryClient.setQueryData(['revenues', currentPage, itemsPerPage], (old: typeof revenuesData) => ({
       ...old,
       entries: old ? old.entries.filter((r: Revenue) => r.id !== id) : [],
     }));
@@ -73,8 +71,7 @@ export default function EntradasPage() {
     } catch (error) {
       toast.error('Erro ao excluir entrada.')
       logError('Erro ao excluir entrada', error, { service: 'other', operation: 'deleteRevenue' })
-      // Rollback on error
-      queryClient.setQueryData(['revenues', currentPage, itemsPerPage], previousRevenues);
+      queryClient.setQueryData(['revenues', currentPage, itemsPerPage], previousData);
     }
   }
 
@@ -116,7 +113,7 @@ export default function EntradasPage() {
       </div>
 
       <div className="text-sm text-slate-600 mb-4">
-        {filteredRevenues.length} entradas • R$ {totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} total
+        {filteredRevenues.length} entradas • R$ {filteredRevenues.reduce((acc, r) => acc + r.total, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} total
       </div>
 
       <Card className="rounded-xl border border-slate-200 shadow-sm">
@@ -214,7 +211,7 @@ export default function EntradasPage() {
         </CardContent>
         {filteredRevenues.length > 0 && (
           <CardFooter className="flex justify-between items-center py-4 px-6 border-t border-slate-200">
-            <div className="text-sm text-slate-600">Total: R$ {totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+            <div className="text-sm text-slate-600">Total: R$ {filteredRevenues.reduce((acc, r) => acc + r.total, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"

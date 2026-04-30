@@ -43,30 +43,20 @@ export default function FinanceiroPage() {
   const categories = ['Ingredientes', 'Embalagens', 'Aluguel', 'Energia', 'Marketing', 'Outros', 'Todos'];
   const types = ['Receita', 'Despesa', 'Todos'];
 
+  // Limites de período calculados fora do filter para evitar mutação de Date dentro do loop
+  const now = new Date();
+  const periodStart: Date | null =
+    filterPeriod === 'Hoje' ? new Date(now.getFullYear(), now.getMonth(), now.getDate()) :
+    filterPeriod === 'Semana' ? new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7) :
+    filterPeriod === 'Mes' ? new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()) :
+    null;
+
   const filteredTransactions = financials?.recentTransactions.filter(transaction => {
     const transactionDate = new Date(transaction.date);
-    const today = new Date();
-    let matchesPeriod = true;
-    let matchesCategory = true;
-    let matchesType = true;
 
-    if (filterPeriod === 'Hoje') {
-      matchesPeriod = transactionDate.toDateString() === today.toDateString();
-    } else if (filterPeriod === 'Semana') {
-      const lastWeek = new Date(today.setDate(today.getDate() - 7));
-      matchesPeriod = transactionDate >= lastWeek;
-    } else if (filterPeriod === 'Mes') {
-      const lastMonth = new Date(today.setMonth(today.getMonth() - 1));
-      matchesPeriod = transactionDate >= lastMonth;
-    }
-
-    if (filterCategory !== 'Todos') {
-      matchesCategory = transaction.category === filterCategory;
-    }
-
-    if (filterType !== 'Todos') {
-      matchesType = transaction.type === filterType;
-    }
+    const matchesPeriod = !periodStart || transactionDate >= periodStart;
+    const matchesCategory = filterCategory === 'Todos' || transaction.category === filterCategory;
+    const matchesType = filterType === 'Todos' || transaction.type === filterType;
 
     return matchesPeriod && matchesCategory && matchesType;
   }) || [];

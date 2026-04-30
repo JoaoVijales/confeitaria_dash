@@ -34,7 +34,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { logError } from '@/lib/logger'
 
 
-type Expense = ExpenseFormValues & { id: string };
+type Expense = ExpenseFormValues & { id: string; ingredient_purchase_id?: number | null };
 
 const categoryColors: { [key: string]: string } = {
   Ingredientes: "bg-blue-100 text-blue-800",
@@ -56,9 +56,6 @@ export default function SaidasPage() {
 
   const { data: expensesData, isLoading, error } = useExpenses(currentPage, itemsPerPage)
   const expenses = expensesData?.entries || []
-  const totalAmount = expensesData?.expensesByCategory
-    ? (Object.values(expensesData.expensesByCategory) as number[]).reduce((acc, val) => acc + val, 0)
-    : 0
   const totalPages = expensesData?.totalPages || 1
 
   const deleteMutation = useDeleteExpense()
@@ -75,9 +72,8 @@ export default function SaidasPage() {
   }
 
   const handleDeleteExpense = async (id: string) => {
-    // Optimistic update
-    const previousExpenses = expensesData?.entries;
-    queryClient.setQueryData(['expenses', currentPage, itemsPerPage], (old: { entries: Expense[], expensesByCategory: Record<string, number>, totalPages: number } | undefined) => ({
+    const previousData = expensesData;
+    queryClient.setQueryData(['expenses', currentPage, itemsPerPage], (old: typeof expensesData) => ({
       ...old,
       entries: old ? old.entries.filter((e: Expense) => e.id !== id) : [],
     }));
@@ -88,8 +84,7 @@ export default function SaidasPage() {
     } catch (error) {
       toast.error('Erro ao excluir saída.')
       logError('Erro ao excluir saída', error, { service: 'other', operation: 'deleteExpense' })
-      // Rollback on error
-      queryClient.setQueryData(['expenses', currentPage, itemsPerPage], previousExpenses);
+      queryClient.setQueryData(['expenses', currentPage, itemsPerPage], previousData);
     }
   }
 
@@ -144,7 +139,7 @@ export default function SaidasPage() {
       </div>
 
       <div className="text-sm text-slate-600 mb-4">
-        {filteredExpenses.length} saídas • R$ {totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} total
+        {filteredExpenses.length} saídas • R$ {filteredExpenses.reduce((acc, e) => acc + e.total, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} total
       </div>
 
       <Card className="rounded-xl border border-slate-200 shadow-sm">
@@ -182,37 +177,47 @@ export default function SaidasPage() {
                         {expense.category}
                       </Badge>
                     </TableCell>
-                    <TableCell className="font-medium py-4 px-4">{expense.description}</TableCell>
+                    <TableCell className="font-medium py-4 px-4">
+                      <div className="flex items-center gap-2">
+                        {expense.description}
+                        {expense.ingredient_purchase_id && (
+                          <Badge className="bg-orange-100 text-orange-700 text-xs">Compra</Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-right font-semibold text-red-600 py-4 px-4">
                       R$ {expense.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </TableCell>
                     <TableCell className="flex justify-center gap-2 py-4 px-4">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleEditExpense(expense)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Editar saída</p>
-                        </TooltipContent>
-                      </Tooltip>
+                      {!expense.ingredient_purchase_id && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleEditExpense(expense)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Editar saída</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
                             variant="destructive"
                             size="icon"
                             onClick={() => handleDeleteExpense(expense.id)}
+                            disabled={!!expense.ingredient_purchase_id}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Excluir saída</p>
+                          <p>{expense.ingredient_purchase_id ? 'Excluir via ingredientes' : 'Excluir saída'}</p>
                         </TooltipContent>
                       </Tooltip>
                     </TableCell>
@@ -232,7 +237,7 @@ export default function SaidasPage() {
         </CardContent>
         {filteredExpenses.length > 0 && (
           <CardFooter className="flex justify-between items-center py-4 px-6 border-t border-slate-200">
-            <div className="text-sm text-slate-600">Total: R$ {totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+            <div className="text-sm text-slate-600">Total: R$ {filteredExpenses.reduce((acc, e) => acc + e.total, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
