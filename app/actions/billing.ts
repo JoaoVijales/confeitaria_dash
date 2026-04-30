@@ -13,6 +13,7 @@ function getProductId(planKey: string): string {
   const map: Record<string, string | undefined> = {
     basic: process.env.ABACATEPAY_PRODUCT_ID_BASIC,
     pro:   process.env.ABACATEPAY_PRODUCT_ID_PRO,
+    max:   process.env.ABACATEPAY_PRODUCT_ID_MAX,
   }
   return map[planKey] ?? ''
 }
@@ -44,14 +45,14 @@ export async function createCheckoutSession(planKey: string) {
   redirect(checkout.url)
 }
 
-export async function getTenantPlan(): Promise<{ plan: Plan; name: string }> {
+export async function getTenantPlan(): Promise<{ plan: Plan; name: string; status: string }> {
   const session = await getFirebaseSession()
   if (!session) throw new Error('Usuário não autenticado')
 
   const supabase = createClient()
   const { data, error } = await supabase
     .from('tenants')
-    .select('plan, name')
+    .select('plan, name, status')
     .eq('owner_uid', session.uid)
     .single()
 
@@ -61,10 +62,10 @@ export async function getTenantPlan(): Promise<{ plan: Plan; name: string }> {
       operation: 'getTenantPlan',
       userId: session.uid,
     })
-    return { plan: 'free', name: '' }
+    return { plan: 'free', name: '', status: 'active' }
   }
 
-  return { plan: data.plan as Plan, name: data.name as string }
+  return { plan: data.plan as Plan, name: data.name as string, status: data.status as string }
 }
 
 export async function cancelSubscription() {

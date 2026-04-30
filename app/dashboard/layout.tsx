@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import { checkOnboarding } from '@/app/actions/auth'
+import { getTenantPlan } from '@/app/actions/billing'
 import { Sidebar } from '@/components/Sidebar'
 import { MobileHeader } from '@/components/MobileHeader'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -13,6 +15,15 @@ export default async function DashboardLayout({
   const hasOnboarded = await checkOnboarding()
   if (!hasOnboarded) {
     redirect('/onboarding')
+  }
+
+  const headersList = await headers()
+  const pathname = headersList.get('x-pathname') ?? ''
+  if (pathname !== '/dashboard/billing') {
+    const { plan, status } = await getTenantPlan()
+    if (plan === 'free' || status !== 'active') {
+      redirect('/dashboard/billing?blocked=true')
+    }
   }
 
   return (

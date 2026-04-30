@@ -16,33 +16,48 @@ vi.mock('next/navigation', () => ({
   useSearchParams: vi.fn(() => ({ get: vi.fn(() => null) })),
 }))
 
-const freePlanData = {
-  plan: 'free' as const,
-  tenantName: 'Confeitaria da Maria',
-  limits: { maxProducts: 30, maxOrdersPerMonth: 50, name: 'Gratuito' },
-}
-
 const basicPlanData = {
   plan: 'basic' as const,
   tenantName: 'Confeitaria da Maria',
-  limits: { maxProducts: 200, maxOrdersPerMonth: Infinity, name: 'Básico' },
+  status: 'active',
+  limits: { maxProducts: 10, maxOrdersPerMonth: Infinity, name: 'Básico' },
+}
+
+const blockedPlanData = {
+  plan: 'free' as const,
+  tenantName: 'Confeitaria da Maria',
+  status: 'cancelled',
+  limits: { maxProducts: 0, maxOrdersPerMonth: 0, name: 'Sem plano ativo' },
 }
 
 describe('BillingPage', () => {
-  it('exibe os 3 planos disponíveis', () => {
+  it('exibe os 3 planos disponíveis com os novos preços', () => {
     ;(usePlan as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: freePlanData,
+      data: blockedPlanData,
       isLoading: false,
     })
 
     render(<BillingPage />)
 
-    expect(screen.getByText('R$ 0')).toBeInTheDocument()
-    expect(screen.getByText('R$ 49')).toBeInTheDocument()
-    expect(screen.getByText('R$ 99')).toBeInTheDocument()
+    expect(screen.getByText('R$ 9,90')).toBeInTheDocument()
+    expect(screen.getByText('R$ 49,90')).toBeInTheDocument()
+    expect(screen.getByText('R$ 99,90')).toBeInTheDocument()
   })
 
-  it('marca o plano atual com badge "Plano atual"', () => {
+  it('exibe os nomes corretos dos planos (Básico, Pro, Max)', () => {
+    ;(usePlan as ReturnType<typeof vi.fn>).mockReturnValue({
+      data: blockedPlanData,
+      isLoading: false,
+    })
+
+    render(<BillingPage />)
+
+    expect(screen.getByText('Básico')).toBeInTheDocument()
+    expect(screen.getByText('Pro')).toBeInTheDocument()
+    expect(screen.getByText('Max')).toBeInTheDocument()
+  })
+
+  it('marca o plano atual com badge "Plano atual" quando ativo', () => {
     ;(usePlan as ReturnType<typeof vi.fn>).mockReturnValue({
       data: basicPlanData,
       isLoading: false,
@@ -51,6 +66,17 @@ describe('BillingPage', () => {
     render(<BillingPage />)
 
     expect(screen.getAllByText('Plano atual').length).toBeGreaterThan(0)
+  })
+
+  it('não mostra badge "Plano atual" para tenant bloqueado', () => {
+    ;(usePlan as ReturnType<typeof vi.fn>).mockReturnValue({
+      data: blockedPlanData,
+      isLoading: false,
+    })
+
+    render(<BillingPage />)
+
+    expect(screen.queryByText('Plano atual')).not.toBeInTheDocument()
   })
 
   it('exibe skeleton durante carregamento', () => {

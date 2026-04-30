@@ -1,7 +1,8 @@
 export const PLANS = {
-  free: { maxProducts: 30, maxOrdersPerMonth: 50, name: 'Gratuito' },
-  basic: { maxProducts: 200, maxOrdersPerMonth: Infinity, name: 'Básico' },
-  pro: { maxProducts: Infinity, maxOrdersPerMonth: Infinity, name: 'Pro' },
+  free:  { maxProducts: 0,        maxOrdersPerMonth: 0,        name: 'Sem plano ativo' },
+  basic: { maxProducts: 10,       maxOrdersPerMonth: Infinity, name: 'Básico' },
+  pro:   { maxProducts: 50,       maxOrdersPerMonth: Infinity, name: 'Pro' },
+  max:   { maxProducts: Infinity, maxOrdersPerMonth: Infinity, name: 'Max' },
 } as const
 
 export type Plan = keyof typeof PLANS

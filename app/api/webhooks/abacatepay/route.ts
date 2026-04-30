@@ -6,6 +6,7 @@ import { logError, logWarn, logInfo } from '@/lib/logger'
 function getPlanFromProduct(productId: string): string {
   if (productId && productId === process.env.ABACATEPAY_PRODUCT_ID_BASIC) return 'basic'
   if (productId && productId === process.env.ABACATEPAY_PRODUCT_ID_PRO) return 'pro'
+  if (productId && productId === process.env.ABACATEPAY_PRODUCT_ID_MAX) return 'max'
   return 'free'
 }
 
@@ -172,7 +173,7 @@ export async function POST(request: NextRequest) {
       const subscriptionId = event.data.subscription.id
       const { data: updated, error } = await supabase
         .from('tenants')
-        .update({ plan: 'free', status: 'active', abacate_subscription_id: null })
+        .update({ status: 'cancelled', abacate_subscription_id: null })
         .eq('abacate_subscription_id', subscriptionId)
         .select('id')
 
@@ -192,7 +193,7 @@ export async function POST(request: NextRequest) {
           subscriptionId,
         })
       } else {
-        logInfo('Webhook: assinatura cancelada com sucesso', {
+        logInfo('Webhook: assinatura cancelada — acesso bloqueado', {
           service: 'abacatepay',
           operation: 'webhook.subscription.cancelled',
           subscriptionId,

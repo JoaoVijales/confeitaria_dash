@@ -38,32 +38,32 @@ const features = [
 
 const plans = [
   {
-    name: 'Gratuito',
-    price: 'R$ 0',
-    period: 'para sempre',
-    description: 'Ideal para começar',
-    limits: ['Até 30 produtos', 'Até 50 pedidos/mês', 'Todos os módulos', 'Suporte por email'],
-    cta: 'Começar grátis',
+    name: 'Básico',
+    price: 'R$ 9,90',
+    period: '/mês',
+    description: 'Para começar com tudo',
+    limits: ['Até 10 produtos', 'Pedidos ilimitados', 'Todos os módulos', 'Suporte por email'],
+    cta: 'Assinar Básico',
     href: '/signup',
     highlight: false,
   },
   {
-    name: 'Básico',
-    price: 'R$ 49',
+    name: 'Pro',
+    price: 'R$ 49,90',
     period: '/mês',
     description: 'Para confeitarias em crescimento',
-    limits: ['Até 200 produtos', 'Pedidos ilimitados', 'Todos os módulos', 'Suporte prioritário'],
-    cta: 'Assinar Básico',
+    limits: ['Até 50 produtos', 'Pedidos ilimitados', 'Todos os módulos', 'Suporte prioritário'],
+    cta: 'Assinar Pro',
     href: '/signup',
     highlight: true,
   },
   {
-    name: 'Pro',
-    price: 'R$ 99',
+    name: 'Max',
+    price: 'R$ 99,90',
     period: '/mês',
     description: 'Para operações completas',
-    limits: ['Produtos ilimitados', 'Pedidos ilimitados', 'Analytics avançado', 'Suporte dedicado'],
-    cta: 'Assinar Pro',
+    limits: ['Produtos ilimitados', 'Pedidos ilimitados', 'Todos os módulos', 'Suporte dedicado'],
+    cta: 'Assinar Max',
     href: '/signup',
     highlight: false,
   },
@@ -85,7 +85,7 @@ export default function LandingPage() {
                 <Link href="/login">Entrar</Link>
               </Button>
               <Button asChild className="bg-pink-500 hover:bg-pink-600">
-                <Link href="/signup">Começar grátis</Link>
+                <Link href="/signup">Criar conta</Link>
               </Button>
             </div>
           </div>
@@ -106,15 +106,12 @@ export default function LandingPage() {
             </p>
             <div className="mt-10 flex items-center justify-center gap-4 flex-wrap">
               <Button size="lg" asChild className="bg-pink-500 hover:bg-pink-600 px-8 py-6 text-base">
-                <Link href="/signup">Começar grátis agora</Link>
+                <Link href="/signup">Criar conta agora</Link>
               </Button>
               <Button size="lg" variant="outline" asChild className="px-8 py-6 text-base">
                 <Link href="/login">Já tenho conta</Link>
               </Button>
             </div>
-            <p className="mt-4 text-sm text-slate-500">
-              Sem cartão de crédito • Plano gratuito para sempre
-            </p>
           </div>
         </div>
       </section>
@@ -158,7 +155,7 @@ export default function LandingPage() {
               Planos simples e transparentes
             </h2>
             <p className="mt-4 text-slate-600 text-lg">
-              Comece grátis e faça upgrade quando precisar crescer.
+              Planos simples para cada fase da sua confeitaria.
             </p>
           </div>
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
@@ -222,7 +219,7 @@ export default function LandingPage() {
             Junte-se a confeiteiros que já usam o nosso dashboard.
           </p>
           <Button size="lg" asChild className="mt-8 bg-white text-pink-600 hover:bg-pink-50 px-8 py-6 text-base font-semibold">
-            <Link href="/signup">Criar conta grátis</Link>
+            <Link href="/signup">Criar conta</Link>
           </Button>
         </div>
       </section>

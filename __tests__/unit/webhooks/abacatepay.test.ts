@@ -298,7 +298,7 @@ describe('POST /api/webhooks/abacatepay', () => {
   })
 
   describe('subscription.cancelled', () => {
-    it('reverte para plano free', async () => {
+    it('bloqueia acesso (status=cancelled) sem alterar o plano', async () => {
       const { updateMock, eqMock } = makeUpdateMock({ data: [{ id: 'tenant-ok' }], error: null })
       mockFrom.mockReturnValue({ update: updateMock })
 
@@ -307,13 +307,12 @@ describe('POST /api/webhooks/abacatepay', () => {
 
       expect(res.status).toBe(200)
       expect(updateMock).toHaveBeenCalledWith({
-        plan: 'free',
-        status: 'active',
+        status: 'cancelled',
         abacate_subscription_id: null,
       })
       expect(eqMock).toHaveBeenCalledWith('abacate_subscription_id', 'sub_123')
       expect(mockLogInfo).toHaveBeenCalledWith(
-        expect.stringContaining('cancelada com sucesso'),
+        expect.stringContaining('bloqueado'),
         expect.objectContaining({ subscriptionId: 'sub_123' }),
       )
     })

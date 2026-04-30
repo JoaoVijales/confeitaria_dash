@@ -67,6 +67,7 @@ beforeEach(() => {
   process.env.ABACATEPAY_WEBHOOK_SECRET = WEBHOOK_SECRET
   process.env.ABACATEPAY_PRODUCT_ID_BASIC = 'prod_basic'
   process.env.ABACATEPAY_PRODUCT_ID_PRO = 'prod_pro'
+  process.env.ABACATEPAY_PRODUCT_ID_MAX = 'prod_max'
 })
 
 describe('POST /api/webhooks/abacatepay', () => {
@@ -128,6 +129,18 @@ describe('POST /api/webhooks/abacatepay', () => {
       )
     })
 
+    it('mapeia product_id max para plano max', async () => {
+      mockSingle.mockResolvedValueOnce({ data: { id: 'tenant_1' } })
+      mockSelectAfterUpdate.mockResolvedValueOnce({ data: [{ id: 'tenant_1' }], error: null })
+
+      const req = makeRequest(makeCompletedPayload({ productId: 'prod_max' }))
+      await POST(req)
+
+      expect(mockUpdateTenants).toHaveBeenCalledWith(
+        expect.objectContaining({ plan: 'max' }),
+      )
+    })
+
     it('retorna 500 quando DB falha ao atualizar', async () => {
       mockSingle.mockResolvedValueOnce({ data: { id: 'tenant_1' } })
       mockSelectAfterUpdate.mockResolvedValueOnce({ data: null, error: { message: 'DB error' } })
@@ -183,7 +196,7 @@ describe('POST /api/webhooks/abacatepay', () => {
   })
 
   describe('subscription.cancelled', () => {
-    it('rebaixa para plano free e retorna 200', async () => {
+    it('bloqueia acesso (status=cancelled) sem alterar o plano e retorna 200', async () => {
       mockSelectAfterUpdate.mockResolvedValueOnce({ data: [{ id: 'tenant_1' }], error: null })
 
       const req = makeRequest({
@@ -194,8 +207,7 @@ describe('POST /api/webhooks/abacatepay', () => {
 
       expect(res.status).toBe(200)
       expect(mockUpdateTenants).toHaveBeenCalledWith({
-        plan: 'free',
-        status: 'active',
+        status: 'cancelled',
         abacate_subscription_id: null,
       })
     })

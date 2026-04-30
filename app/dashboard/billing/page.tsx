@@ -12,25 +12,25 @@ import { createCheckoutSession, cancelSubscription } from '@/app/actions/billing
 
 const plans = [
   {
-    key: 'free' as const,
-    name: 'Gratuito',
-    price: 'R$ 0',
-    period: 'para sempre',
-    limits: ['Até 30 produtos', 'Até 50 pedidos/mês', 'Todos os módulos'],
-  },
-  {
     key: 'basic' as const,
     name: 'Básico',
-    price: 'R$ 49',
+    price: 'R$ 9,90',
     period: '/mês',
-    limits: ['Até 200 produtos', 'Pedidos ilimitados', 'Suporte prioritário'],
+    limits: ['Até 10 produtos', 'Pedidos ilimitados', 'Todos os módulos'],
   },
   {
     key: 'pro' as const,
     name: 'Pro',
-    price: 'R$ 99',
+    price: 'R$ 49,90',
     period: '/mês',
-    limits: ['Produtos ilimitados', 'Pedidos ilimitados', 'Analytics avançado', 'Suporte dedicado'],
+    limits: ['Até 50 produtos', 'Pedidos ilimitados', 'Todos os módulos', 'Suporte prioritário'],
+  },
+  {
+    key: 'max' as const,
+    name: 'Max',
+    price: 'R$ 99,90',
+    period: '/mês',
+    limits: ['Produtos ilimitados', 'Pedidos ilimitados', 'Todos os módulos', 'Suporte dedicado'],
   },
 ]
 
@@ -40,6 +40,7 @@ const POLL_TIMEOUT_MS = 2 * 60 * 1000
 function BillingPageContent() {
   const params = useSearchParams()
   const isSuccess = params.get('success') === 'true'
+  const isBlocked = params.get('blocked') === 'true'
   const pollDeadlineRef = useRef(isSuccess ? Date.now() + POLL_TIMEOUT_MS : 0)
 
   useEffect(() => {
@@ -52,7 +53,9 @@ function BillingPageContent() {
   const { data: planData, isLoading } = usePlan({
     refetchInterval: (query) => {
       if (!isSuccess) return false
-      if (query.state.data && query.state.data.plan !== 'free') return false
+      const data = query.state.data
+      // Para quando o plano for pago E o status for ativo
+      if (data && data.plan !== 'free' && data.status === 'active') return false
       if (Date.now() > pollDeadlineRef.current) return false
       return 3000
     },
@@ -75,7 +78,7 @@ function BillingPageContent() {
     setCancelling(true)
     try {
       await cancelSubscription()
-      toast.success('Assinatura cancelada. Você voltará ao plano Gratuito.')
+      toast.success('Assinatura cancelada. Seu acesso será encerrado em breve.')
     } catch {
       toast.error('Você não possui uma assinatura ativa.')
     } finally {
@@ -84,6 +87,7 @@ function BillingPageContent() {
   }
 
   const currentPlan = planData?.plan ?? 'free'
+  const hasActivePlan = currentPlan !== 'free' && planData?.status === 'active'
 
   return (
     <div className="p-4 md:p-6 max-w-4xl mx-auto">
@@ -92,51 +96,57 @@ function BillingPageContent() {
         <p className="text-slate-600 mt-1">Gerencie sua assinatura e plano atual.</p>
       </div>
 
+      {isBlocked && (
+        <div className="mb-6 rounded-lg bg-amber-50 border border-amber-200 p-4 text-amber-800 text-sm font-medium">
+          O plano gratuito não está mais disponível. Escolha um plano abaixo para continuar usando o dashboard.
+        </div>
+      )}
+
       {isSuccess && (
         <div className="mb-6 rounded-lg bg-green-50 border border-green-200 p-4 text-green-800 text-sm font-medium">
-          {currentPlan !== 'free'
+          {hasActivePlan
             ? 'Assinatura ativada com sucesso! Obrigado por assinar.'
             : 'Pagamento recebido! Ativando sua assinatura…'}
         </div>
       )}
 
       {/* Current plan summary */}
-      <Card className="mb-8 border-pink-200 bg-pink-50">
-        <CardHeader>
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <CardTitle className="text-slate-800">Plano atual</CardTitle>
-              <CardDescription>
-                {isLoading ? 'Carregando...' : planData?.tenantName}
-              </CardDescription>
+      {hasActivePlan && (
+        <Card className="mb-8 border-pink-200 bg-pink-50">
+          <CardHeader>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <CardTitle className="text-slate-800">Plano atual</CardTitle>
+                <CardDescription>
+                  {isLoading ? 'Carregando...' : planData?.tenantName}
+                </CardDescription>
+              </div>
+              <Badge className="bg-pink-500 text-white text-sm px-3 py-1">
+                {planData?.limits.name}
+              </Badge>
             </div>
-            <Badge className="bg-pink-500 text-white text-sm px-3 py-1">
-              {planData?.limits.name ?? 'Gratuito'}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap items-center gap-4 text-sm text-slate-700">
-            <div className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4 text-pink-500" />
-              <span>
-                Limite de produtos:{' '}
-                <strong>
-                  {planData?.limits.maxProducts === Infinity ? 'Ilimitado' : planData?.limits.maxProducts}
-                </strong>
-              </span>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap items-center gap-4 text-sm text-slate-700">
+              <div className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4 text-pink-500" />
+                <span>
+                  Limite de produtos:{' '}
+                  <strong>
+                    {planData?.limits.maxProducts === Infinity ? 'Ilimitado' : planData?.limits.maxProducts}
+                  </strong>
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Zap className="h-4 w-4 text-pink-500" />
+                <span>
+                  Pedidos/mês:{' '}
+                  <strong>
+                    {planData?.limits.maxOrdersPerMonth === Infinity ? 'Ilimitado' : planData?.limits.maxOrdersPerMonth}
+                  </strong>
+                </span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Zap className="h-4 w-4 text-pink-500" />
-              <span>
-                Pedidos/mês:{' '}
-                <strong>
-                  {planData?.limits.maxOrdersPerMonth === Infinity ? 'Ilimitado' : planData?.limits.maxOrdersPerMonth}
-                </strong>
-              </span>
-            </div>
-          </div>
-          {currentPlan !== 'free' && (
             <Button
               variant="outline"
               size="sm"
@@ -147,14 +157,14 @@ function BillingPageContent() {
               {cancelling && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {cancelling ? 'Cancelando...' : 'Cancelar assinatura'}
             </Button>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Plan options */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
         {plans.map((plan) => {
-          const isCurrent = plan.key === currentPlan
+          const isCurrent = plan.key === currentPlan && hasActivePlan
           return (
             <Card
               key={plan.key}
@@ -183,7 +193,11 @@ function BillingPageContent() {
                     </li>
                   ))}
                 </ul>
-                {!isCurrent && plan.key !== 'free' && (
+                {isCurrent ? (
+                  <Button disabled className="w-full" variant="outline">
+                    Plano atual
+                  </Button>
+                ) : (
                   <Button
                     onClick={() => handleUpgrade(plan.key)}
                     className="w-full bg-pink-500 hover:bg-pink-600"
@@ -192,12 +206,7 @@ function BillingPageContent() {
                     {upgradingPlan === plan.key && (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
-                    {upgradingPlan === plan.key ? 'Redirecionando...' : 'Fazer upgrade'}
-                  </Button>
-                )}
-                {isCurrent && (
-                  <Button disabled className="w-full" variant="outline">
-                    Plano atual
+                    {upgradingPlan === plan.key ? 'Redirecionando...' : 'Assinar'}
                   </Button>
                 )}
               </CardContent>

@@ -5,6 +5,7 @@ import { getPlanLimits, type Plan } from '@/lib/utils/plan-limits'
 export type PlanQueryData = {
   plan: Plan
   tenantName: string
+  status: string
   limits: ReturnType<typeof getPlanLimits>
 }
 
@@ -12,10 +13,11 @@ export function usePlan(options?: Omit<UseQueryOptions<PlanQueryData>, 'queryKey
   return useQuery({
     queryKey: ['plan'],
     queryFn: async () => {
-      const { plan, name } = await getTenantPlan()
+      const { plan, name, status } = await getTenantPlan()
       return {
         plan,
         tenantName: name,
+        status,
         limits: getPlanLimits(plan),
       }
     },
