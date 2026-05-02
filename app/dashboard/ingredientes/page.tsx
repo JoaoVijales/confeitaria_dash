@@ -29,6 +29,8 @@ import { useIngredients } from '@/hooks/useIngredients'
 import { createIngredient, updateIngredient, deleteIngredient } from '@/app/actions/ingredients'
 import { IngredientFormDialog } from '@/components/IngredientFormDialog'
 import { toast } from 'sonner'
+import { track } from '@/lib/analytics'
+import { SectionTracker } from '@/components/SectionTracker'
 
 type Ingredient = {
   id: number;
@@ -64,19 +66,22 @@ export default function IngredientesPage() {
       await deleteIngredient(id)
       queryClient.invalidateQueries({ queryKey: ['ingredients'] })
       toast.success('Ingrediente excluído com sucesso!')
+      track('ingrediente_deletado')
     } catch {
       toast.error('Erro ao excluir ingrediente.')
     }
   }
 
   const handleSaveIngredient = async (data: Omit<Ingredient, 'id' | 'unit_cost'>) => {
-    if (editingIngredient) {
+    const isEditing = !!editingIngredient
+    if (isEditing) {
       await updateIngredient(editingIngredient.id, data)
     } else {
       await createIngredient(data)
     }
     queryClient.invalidateQueries({ queryKey: ['ingredients'] })
-    toast.success(editingIngredient ? 'Ingrediente atualizado!' : 'Ingrediente criado!')
+    toast.success(isEditing ? 'Ingrediente atualizado!' : 'Ingrediente criado!')
+    if (!isEditing) track('ingrediente_criado')
   }
 
   const filteredIngredients = ingredients?.filter(ingredient => {
@@ -95,6 +100,7 @@ export default function IngredientesPage() {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
+      <SectionTracker secao="ingredientes" />
       <StockAlertBanner />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
         <div className="flex items-center gap-3">

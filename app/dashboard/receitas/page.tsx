@@ -30,6 +30,8 @@ import {
   calculateTotalRecipeCost,
   calculateCostPerPortion,
 } from '@/lib/utils/recipe-cost'
+import { track } from '@/lib/analytics'
+import { SectionTracker } from '@/components/SectionTracker'
 
 type IngredientInRecipe = {
   id: string
@@ -100,6 +102,7 @@ export default function ReceitasPage() {
 
   const handleDeleteRecipe = async (id: string) => {
     await deleteRecipe(id)
+    track('receita_deletada')
   }
 
   const handleSaveRecipe = async (data: RecipeFormValues) => {
@@ -107,6 +110,7 @@ export default function ReceitasPage() {
       await updateRecipe(editingRecipe.id, data)
     } else {
       await createRecipe(data)
+      track('receita_criada')
     }
   }
 
@@ -123,6 +127,7 @@ export default function ReceitasPage() {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
+      <SectionTracker secao="receitas" />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl md:text-3xl font-semibold text-slate-800">Receitas</h1>

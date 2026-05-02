@@ -20,7 +20,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useOrders } from "@/hooks/useOrders";
-import { StockAlertBanner } from "@/components/StockAlertBanner";
+import { StockAlertBanner } from "@/components/StockAlertBanner"
+import { SectionTracker } from '@/components/SectionTracker';
 import { ORDER_STATUS_COLORS } from "@/lib/constants/order-status";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 
@@ -46,6 +47,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+      <SectionTracker secao="visao_geral" />
       <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-800">
         Visão Geral
       </h1>

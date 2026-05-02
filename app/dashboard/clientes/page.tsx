@@ -16,6 +16,7 @@ import { CustomerFormDialog } from '@/components/dialogs/CustomerFormDialog'
 import { ConfirmDialog } from '@/components/dialogs/ConfirmDialog'
 import { CustomerFormValues } from '@/lib/validations/customer.schema'
 import { toast } from 'sonner'
+import { SectionTracker } from '@/components/SectionTracker'
 
 type Customer = {
   id: string;
@@ -99,6 +100,7 @@ export default function CustomersPage() {
 
   return (
     <>
+      <SectionTracker secao="clientes" />
       <div className="flex flex-col gap-6 p-4 md:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
           <div className="flex items-center gap-3">

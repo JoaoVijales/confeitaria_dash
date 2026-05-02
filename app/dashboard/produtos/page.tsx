@@ -21,6 +21,7 @@ import { toast } from 'sonner'
 import Link from 'next/link'
 import { StockAlertBanner } from '@/components/StockAlertBanner'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { SectionTracker } from '@/components/SectionTracker'
 
 type Product = {
   id: string;
@@ -107,6 +108,7 @@ export default function ProductsPage() {
 
   return (
     <>
+      <SectionTracker secao="produtos" />
       <div className="flex flex-col gap-6 p-4 md:p-6">
         <StockAlertBanner />
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">

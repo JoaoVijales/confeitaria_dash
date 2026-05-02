@@ -6,6 +6,7 @@ import { createProduct, updateProduct, deleteProduct } from '@/app/actions/produ
 import { createOrder, updateOrderStatus, deleteOrder } from '@/app/actions/orders'
 import { OrderFormValues } from '@/lib/validations/order.schema'
 import { ProductFormValues } from '@/lib/validations/product.schema'
+import { track } from '@/lib/analytics'
 
 // Revenue Mutations
 export function useCreateRevenue() {
@@ -15,6 +16,7 @@ export function useCreateRevenue() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['revenues'] })
       queryClient.invalidateQueries({ queryKey: ['financials'] })
+      track('entrada_criada')
     },
   })
 }
@@ -37,6 +39,7 @@ export function useDeleteRevenue() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['revenues'] })
       queryClient.invalidateQueries({ queryKey: ['financials'] })
+      track('entrada_deletada')
     },
   })
 }
@@ -49,6 +52,7 @@ export function useCreateExpense() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses'] })
       queryClient.invalidateQueries({ queryKey: ['financials'] })
+      track('despesa_criada')
     },
   })
 }
@@ -71,6 +75,7 @@ export function useDeleteExpense() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses'] })
       queryClient.invalidateQueries({ queryKey: ['financials'] })
+      track('despesa_deletada')
     },
   })
 }
@@ -80,7 +85,10 @@ export function useCreateCustomer() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (data: FormData) => createCustomer(data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['customers'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] })
+      track('cliente_criado')
+    },
   })
 }
 
@@ -96,7 +104,10 @@ export function useDeleteCustomer() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: string) => deleteCustomer(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['customers'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] })
+      track('cliente_deletado')
+    },
   })
 }
 
@@ -105,7 +116,10 @@ export function useCreateProduct() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (data: ProductFormValues) => createProduct(data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['products'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      track('produto_criado')
+    },
   })
 }
 
@@ -121,7 +135,10 @@ export function useDeleteProduct() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: string) => deleteProduct(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['products'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      track('produto_deletado')
+    },
   })
 }
 
@@ -134,6 +151,7 @@ export function useCreateOrder() {
       queryClient.invalidateQueries({ queryKey: ['orders'] })
       queryClient.invalidateQueries({ queryKey: ['customers'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      track('pedido_criado')
     },
   })
 }
@@ -147,6 +165,7 @@ export function useUpdateOrderStatus() {
       queryClient.invalidateQueries({ queryKey: ['revenues'] })
       queryClient.invalidateQueries({ queryKey: ['financials'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      track('status_pedido_alterado')
     },
   })
 }
@@ -160,6 +179,7 @@ export function useDeleteOrder() {
       queryClient.invalidateQueries({ queryKey: ['revenues'] })
       queryClient.invalidateQueries({ queryKey: ['financials'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      track('pedido_deletado')
     },
   })
 }

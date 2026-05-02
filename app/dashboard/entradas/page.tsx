@@ -31,6 +31,7 @@ import { RevenueFormValues } from '@/lib/validations/revenue.schema'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { logError } from '@/lib/logger'
+import { SectionTracker } from '@/components/SectionTracker'
 
 type Revenue = RevenueFormValues & { id: string; order_id?: string | null };
 
@@ -88,6 +89,7 @@ export default function EntradasPage() {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
+      <SectionTracker secao="entradas" />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl md:text-3xl font-semibold text-slate-800">Entradas</h1>

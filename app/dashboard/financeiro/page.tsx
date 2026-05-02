@@ -17,7 +17,8 @@ import { useFinancials } from "@/hooks/useFinancials";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { useState } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { SectionTracker } from '@/components/SectionTracker';
 
 
 const COLORS = ['#3B82F6', '#F87171', '#34D399', '#FB923C', '#A78BFA'];
@@ -85,6 +86,7 @@ export default function FinanceiroPage() {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
+      <SectionTracker secao="financeiro" />
       <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-800">
         Financeiro
       </h1>
