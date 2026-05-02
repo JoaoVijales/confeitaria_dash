@@ -7,8 +7,20 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
 import { usePlan } from '@/hooks/usePlan'
 import { createCheckoutSession, cancelSubscription } from '@/app/actions/billing'
+import { track } from '@/lib/analytics'
+import { SectionTracker } from '@/components/SectionTracker'
 
 const plans = [
   {
@@ -49,6 +61,8 @@ function BillingPageContent() {
 
   const [upgradingPlan, setUpgradingPlan] = useState<string | null>(null)
   const [cancelling, setCancelling] = useState(false)
+  const [showCancelDialog, setShowCancelDialog] = useState(false)
+  const [cancelReason, setCancelReason] = useState('')
 
   const { data: planData, isLoading } = usePlan({
     refetchInterval: (query) => {
@@ -65,6 +79,7 @@ function BillingPageContent() {
     if (upgradingPlan) return
     setUpgradingPlan(planKey)
     try {
+      track('checkout_iniciado', { plano: planKey })
       await createCheckoutSession(planKey)
     } catch {
       toast.error('Erro ao iniciar checkout. Tente novamente.')
@@ -76,9 +91,12 @@ function BillingPageContent() {
   async function handleCancel() {
     if (cancelling) return
     setCancelling(true)
+    setShowCancelDialog(false)
     try {
-      await cancelSubscription()
+      await cancelSubscription(cancelReason || undefined)
       toast.success('Assinatura cancelada. Seu acesso será encerrado em breve.')
+      track('assinatura_cancelada')
+      setCancelReason('')
     } catch {
       toast.error('Você não possui uma assinatura ativa.')
     } finally {
@@ -91,6 +109,7 @@ function BillingPageContent() {
 
   return (
     <div className="p-4 md:p-6 max-w-4xl mx-auto">
+      <SectionTracker secao="billing" />
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900">Plano & Billing</h1>
         <p className="text-slate-600 mt-1">Gerencie sua assinatura e plano atual.</p>
@@ -151,7 +170,7 @@ function BillingPageContent() {
               variant="outline"
               size="sm"
               className="mt-4"
-              onClick={handleCancel}
+              onClick={() => setShowCancelDialog(true)}
               disabled={cancelling}
             >
               {cancelling && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -214,6 +233,43 @@ function BillingPageContent() {
           )
         })}
       </div>
+
+      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Cancelar assinatura?</DialogTitle>
+            <DialogDescription>
+              Seu acesso será encerrado ao final do período vigente. Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="cancel-reason" className="text-slate-700">
+              Motivo do cancelamento <span className="text-slate-400 font-normal">(opcional)</span>
+            </Label>
+            <Textarea
+              id="cancel-reason"
+              placeholder="Nos conte o que poderia ser melhorado..."
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              rows={3}
+              className="resize-none"
+            />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowCancelDialog(false)}>
+              Voltar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleCancel}
+              disabled={cancelling}
+            >
+              {cancelling && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Confirmar cancelamento
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

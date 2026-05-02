@@ -1,13 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth'
 import { toast } from 'sonner'
 import { Cake } from 'lucide-react'
 import { auth, googleProvider } from '@/lib/firebase/client'
 import { createSession } from '@/app/actions/auth'
+import { track } from '@/lib/analytics'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -23,7 +23,6 @@ export default function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
 
   async function handleEmailSignup() {
     if (!email || !password) return
@@ -36,7 +35,8 @@ export default function SignupPage() {
       const credential = await createUserWithEmailAndPassword(auth, email, password)
       const idToken = await credential.user.getIdToken()
       await createSession(idToken)
-      router.push('/onboarding')
+      track('signup', { method: 'email' })
+      window.location.href = '/onboarding'
     } catch (err: unknown) {
       const code = (err as { code?: string })?.code
       if (code === 'auth/email-already-in-use') {
@@ -44,7 +44,6 @@ export default function SignupPage() {
       } else {
         toast.error('Erro ao criar conta. Tente novamente.')
       }
-    } finally {
       setLoading(false)
     }
   }
@@ -55,10 +54,10 @@ export default function SignupPage() {
       const credential = await signInWithPopup(auth, googleProvider)
       const idToken = await credential.user.getIdToken()
       await createSession(idToken)
-      router.push('/onboarding')
+      track('signup', { method: 'google' })
+      window.location.href = '/onboarding'
     } catch {
       toast.error('Erro ao cadastrar com Google')
-    } finally {
       setLoading(false)
     }
   }
