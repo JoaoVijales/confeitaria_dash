@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { TrackedLink } from '@/components/landing/TrackedLink'
 import {
   Cake,
   ShoppingCart,
@@ -170,10 +171,10 @@ export default function LandingPage() {
             </nav>
             <div className="flex items-center gap-3">
               <Button variant="ghost" asChild className="text-slate-600">
-                <Link href="/login">Entrar</Link>
+                <TrackedLink href="/login" trackEvent="cta_click" trackParams={{ location: 'navbar', action: 'login' }}>Entrar</TrackedLink>
               </Button>
               <Button asChild className="bg-pink-500 hover:bg-pink-600">
-                <Link href="/signup">Criar conta</Link>
+                <TrackedLink href="/signup" trackEvent="cta_click" trackParams={{ location: 'navbar', action: 'signup' }}>Criar conta</TrackedLink>
               </Button>
             </div>
           </div>
@@ -198,13 +199,13 @@ export default function LandingPage() {
             </p>
             <div className="mt-10 flex items-center justify-center gap-4 flex-wrap">
               <Button size="lg" asChild className="bg-pink-500 hover:bg-pink-600 px-8 py-6 text-base font-semibold gap-2">
-                <Link href="/signup">
+                <TrackedLink href="/signup" trackEvent="cta_click" trackParams={{ location: 'hero', action: 'signup' }}>
                   Criar conta
                   <ArrowRight className="h-5 w-5" />
-                </Link>
+                </TrackedLink>
               </Button>
               <Button size="lg" variant="outline" asChild className="px-8 py-6 text-base">
-                <Link href="/login">Já tenho conta</Link>
+                <TrackedLink href="/login" trackEvent="cta_click" trackParams={{ location: 'hero', action: 'login' }}>Já tenho conta</TrackedLink>
               </Button>
             </div>
             <div className="mt-8 flex items-center justify-center gap-6 flex-wrap">
@@ -300,10 +301,10 @@ export default function LandingPage() {
           </div>
           <div className="text-center mt-12">
             <Button size="lg" asChild className="bg-pink-500 hover:bg-pink-600 px-8 py-6 text-base font-semibold gap-2">
-              <Link href="/signup">
+              <TrackedLink href="/signup" trackEvent="cta_click" trackParams={{ location: 'como_funciona', action: 'signup' }}>
                 Criar conta agora
                 <ArrowRight className="h-5 w-5" />
-              </Link>
+              </TrackedLink>
             </Button>
           </div>
         </div>
@@ -362,7 +363,13 @@ export default function LandingPage() {
                         : 'bg-slate-800 hover:bg-slate-700'
                     }`}
                   >
-                    <Link href={plan.href}>{plan.cta}</Link>
+                    <TrackedLink
+                      href={plan.href}
+                      trackEvent="plan_click"
+                      trackParams={{ plano: plan.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''), location: 'landing' }}
+                    >
+                      {plan.cta}
+                    </TrackedLink>
                   </Button>
                 </CardContent>
               </Card>
@@ -407,10 +414,10 @@ export default function LandingPage() {
             asChild
             className="mt-8 bg-white text-pink-600 hover:bg-pink-50 px-10 py-6 text-base font-semibold gap-2"
           >
-            <Link href="/signup">
+            <TrackedLink href="/signup" trackEvent="cta_click" trackParams={{ location: 'final_cta', action: 'signup' }}>
               Criar conta
               <ArrowRight className="h-5 w-5" />
-            </Link>
+            </TrackedLink>
           </Button>
           <p className="mt-4 text-pink-200 text-sm">Sem contrato • Cancele quando quiser</p>
         </div>
