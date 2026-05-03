@@ -1,21 +1,25 @@
-// Converts recipe quantity (g/ml/un) to ingredient's base unit (kg/L/un)
+type IngredientUnit = 'g' | 'kg' | 'ml' | 'L' | 'un'
+
+// Converts recipe quantity to ingredient's stored unit.
+// Units should always match (recipe unit = ingredient unit), but g→kg and ml→L
+// conversions are kept for backward compatibility with existing data.
 export function convertToBaseUnit(
   quantity: number,
-  fromUnit: 'g' | 'ml' | 'un',
-  toUnit: 'kg' | 'L' | 'un'
+  fromUnit: IngredientUnit,
+  toUnit: IngredientUnit
 ): number {
+  if (fromUnit === toUnit) return quantity
   if (fromUnit === 'g' && toUnit === 'kg') return quantity / 1000
   if (fromUnit === 'ml' && toUnit === 'L') return quantity / 1000
-  if (fromUnit === 'un' && toUnit === 'un') return quantity
   return NaN
 }
 
 // Cost of one ingredient in a recipe
 export function calculateIngredientCost(
   quantity: number,
-  recipeUnit: 'g' | 'ml' | 'un',
+  recipeUnit: IngredientUnit,
   unitCost: number,
-  baseUnit: 'kg' | 'L' | 'un'
+  baseUnit: IngredientUnit
 ): number {
   const convertedQuantity = convertToBaseUnit(quantity, recipeUnit, baseUnit)
   return convertedQuantity * unitCost
@@ -25,9 +29,9 @@ export function calculateIngredientCost(
 export function calculateTotalRecipeCost(
   ingredients: Array<{
     quantity: number
-    unit: 'g' | 'ml' | 'un'
+    unit: IngredientUnit
     unit_cost: number
-    base_unit: 'kg' | 'L' | 'un'
+    base_unit: IngredientUnit
   }>
 ): number {
   return ingredients.reduce((total, ingredient) => {

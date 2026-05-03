@@ -25,6 +25,14 @@ describe('convertToBaseUnit', () => {
     expect(convertToBaseUnit(3, 'un', 'un')).toBe(3)
   })
 
+  it('converte gramas para gramas sem alteracao', () => {
+    expect(convertToBaseUnit(500, 'g', 'g')).toBe(500)
+  })
+
+  it('converte mililitros para mililitros sem alteracao', () => {
+    expect(convertToBaseUnit(250, 'ml', 'ml')).toBe(250)
+  })
+
   it('retorna NaN ou lanca erro para unidades incompativeis (g para L)', () => {
     const result = convertToBaseUnit(250, 'g', 'L')
     expect(isNaN(result) || result === undefined).toBe(true)
@@ -50,6 +58,16 @@ describe('calculateIngredientCost', () => {
   it('calcula custo de ovos: 2 unidades com unit_cost de R$0.75/un', () => {
     // 2 * 0.75 = 1.50
     expect(calculateIngredientCost(2, 'un', 0.75, 'un')).toBeCloseTo(1.5, 5)
+  })
+
+  it('calcula custo de ingrediente em g com unit_cost por g', () => {
+    // 300g * R$0.01/g = R$3.00
+    expect(calculateIngredientCost(300, 'g', 0.01, 'g')).toBeCloseTo(3.0, 5)
+  })
+
+  it('calcula custo de ingrediente em ml com unit_cost por ml', () => {
+    // 200ml * R$0.008/ml = R$1.60
+    expect(calculateIngredientCost(200, 'ml', 0.008, 'ml')).toBeCloseTo(1.6, 5)
   })
 })
 

@@ -23,7 +23,7 @@ import {
   calculateCostPerPortion,
 } from '@/lib/utils/recipe-cost'
 
-const INGREDIENT_UNITS = ['g', 'ml', 'un'] as const
+const INGREDIENT_UNITS = ['g', 'ml', 'un', 'kg', 'L'] as const
 const YIELD_UNITS = ['un', 'g', 'kg', 'ml', 'L'] as const
 
 type IngredientUnit = typeof INGREDIENT_UNITS[number]
@@ -70,9 +70,11 @@ type RecipeFormDialogProps = {
   onSave: (data: RecipeFormValues) => void
 }
 
-function mapBaseUnit(unit: string): 'kg' | 'L' | 'un' {
+function mapBaseUnit(unit: string): 'kg' | 'g' | 'L' | 'ml' | 'un' {
   if (unit === 'kg') return 'kg'
+  if (unit === 'g') return 'g'
   if (['L', 'l', 'litro', 'litros'].includes(unit)) return 'L'
+  if (unit === 'ml') return 'ml'
   return 'un'
 }
 
@@ -89,6 +91,7 @@ export function RecipeFormDialog({
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<RecipeFormValues>({
     resolver: zodResolver(recipeSchema),
@@ -129,7 +132,7 @@ export function RecipeFormDialog({
         quantity: number
         unit: IngredientUnit
         unit_cost: number
-        base_unit: 'kg' | 'L' | 'un'
+        base_unit: IngredientUnit
       }>
 
     const totalCost = calculateTotalRecipeCost(enriched)
@@ -221,19 +224,28 @@ export function RecipeFormDialog({
             <Label>Ingredientes da Receita</Label>
             <div className="space-y-2">
               {fields.map((field, index) => (
-                <div key={field.id} className="grid grid-cols-[1fr_100px_80px_36px] gap-2 items-center">
+                <div key={field.id} className="grid grid-cols-[1fr_100px_60px_36px] gap-2 items-center">
                   <Controller
                     name={`ingredients.${index}.ingredient_id`}
                     control={control}
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value)
+                          const ing = ingredients?.find(i => String(i.id) === value)
+                          if (ing) {
+                            setValue(`ingredients.${index}.unit`, ing.unit as IngredientUnit)
+                          }
+                        }}
+                        value={field.value}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Ingrediente" />
                         </SelectTrigger>
                         <SelectContent>
                           {ingredients?.map((ing) => (
                             <SelectItem key={ing.id} value={String(ing.id)}>
-                              {ing.name} ({ing.unit})
+                              {ing.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -251,16 +263,11 @@ export function RecipeFormDialog({
                     name={`ingredients.${index}.unit`}
                     control={control}
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Un." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {INGREDIENT_UNITS.map((u) => (
-                            <SelectItem key={u} value={u}>{u}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Input
+                        value={field.value || '—'}
+                        readOnly
+                        className="text-center text-slate-500 bg-slate-50 cursor-default"
+                      />
                     )}
                   />
                   <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)}>
