@@ -13,6 +13,7 @@ vi.mock('@/lib/supabase/server', () => ({
 vi.mock('@/lib/supabase/tenant', () => ({
   getTenantId: vi.fn().mockResolvedValue('test-tenant-id'),
   getTenantPlan: vi.fn().mockResolvedValue('pro'),
+  isTenantAdmin: vi.fn().mockResolvedValue(false),
 }))
 
 vi.mock('@/app/actions/customers', () => ({

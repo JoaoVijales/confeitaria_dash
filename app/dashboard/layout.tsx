@@ -20,8 +20,8 @@ export default async function DashboardLayout({
   const headersList = await headers()
   const pathname = headersList.get('x-pathname') ?? ''
   if (pathname !== '/dashboard/billing') {
-    const { plan, status } = await getTenantPlan()
-    if (plan === 'free' || status !== 'active') {
+    const { plan, status, role } = await getTenantPlan()
+    if (role !== 'admin' && (plan === 'free' || status !== 'active')) {
       redirect('/dashboard/billing?blocked=true')
     }
   }

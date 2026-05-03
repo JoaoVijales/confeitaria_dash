@@ -46,3 +46,13 @@ export async function getTenantPlan(tenantId: string): Promise<Plan> {
     .single()
   return ((data?.plan as Plan) ?? 'free')
 }
+
+export async function isTenantAdmin(tenantId: string): Promise<boolean> {
+  const supabase = createClient()
+  const { data } = await supabase
+    .from('tenants')
+    .select('role')
+    .eq('id', tenantId)
+    .single()
+  return data?.role === 'admin'
+}

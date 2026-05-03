@@ -18,7 +18,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { usePlan } from '@/hooks/usePlan'
-import { createCheckoutSession, cancelSubscription } from '@/app/actions/billing'
+import { createCheckoutSession, cancelSubscription, syncPlanCookie } from '@/app/actions/billing'
 import { track } from '@/lib/analytics'
 import { SectionTracker } from '@/components/SectionTracker'
 
@@ -75,6 +75,18 @@ function BillingPageContent() {
     },
   })
 
+  // Sincroniza o cookie __plan na primeira carga da billing page e quando o plano ativa.
+  // Garante que o middleware tenha o estado correto para navegações futuras.
+  useEffect(() => {
+    syncPlanCookie().catch(() => {})
+  }, [])
+
+  const hasActivePlan = planData?.plan !== 'free' && planData?.status === 'active'
+
+  useEffect(() => {
+    if (hasActivePlan) syncPlanCookie().catch(() => {})
+  }, [hasActivePlan])
+
   async function handleUpgrade(planKey: string) {
     if (upgradingPlan) return
     setUpgradingPlan(planKey)
@@ -105,7 +117,6 @@ function BillingPageContent() {
   }
 
   const currentPlan = planData?.plan ?? 'free'
-  const hasActivePlan = currentPlan !== 'free' && planData?.status === 'active'
 
   return (
     <div className="p-4 md:p-6 max-w-4xl mx-auto">
@@ -276,7 +287,15 @@ function BillingPageContent() {
 
 export default function BillingPage() {
   return (
-    <Suspense>
+    <Suspense fallback={
+      <div className="p-4 md:p-6 max-w-4xl mx-auto animate-pulse space-y-6">
+        <div className="h-8 w-48 bg-slate-200 rounded" />
+        <div className="h-4 w-64 bg-slate-200 rounded" />
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 mt-8">
+          {[0, 1, 2].map(i => <div key={i} className="h-64 bg-slate-200 rounded-xl" />)}
+        </div>
+      </div>
+    }>
       <BillingPageContent />
     </Suspense>
   )

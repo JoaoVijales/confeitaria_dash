@@ -54,9 +54,13 @@ type Recipe = {
   recipe_ingredients: RecipeIngredient[]
 }
 
-function mapBaseUnit(unit: string): 'kg' | 'L' | 'un' {
+type IngredientUnit = 'g' | 'kg' | 'ml' | 'L' | 'un'
+
+function mapBaseUnit(unit: string): IngredientUnit {
   if (unit === 'kg') return 'kg'
+  if (unit === 'g') return 'g'
   if (['L', 'l', 'litro', 'litros'].includes(unit)) return 'L'
+  if (unit === 'ml') return 'ml'
   return 'un'
 }
 
@@ -67,16 +71,16 @@ function getRecipeCosts(recipe: Recipe): { totalCost: number; costPerUnit: numbe
       if (!ing) return null
       return {
         quantity: ri.quantity,
-        unit: (ri.unit as 'g' | 'ml' | 'un') ?? 'g',
+        unit: mapBaseUnit(ri.unit ?? 'un'),
         unit_cost: ing.unit_cost,
         base_unit: mapBaseUnit(ing.unit),
       }
     })
     .filter(Boolean) as Array<{
       quantity: number
-      unit: 'g' | 'ml' | 'un'
+      unit: IngredientUnit
       unit_cost: number
-      base_unit: 'kg' | 'L' | 'un'
+      base_unit: IngredientUnit
     }>
 
   const totalCost = calculateTotalRecipeCost(enriched)

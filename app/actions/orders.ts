@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { getTenantId, getTenantPlan } from '@/lib/supabase/tenant'
+import { getTenantId, getTenantPlan, isTenantAdmin } from '@/lib/supabase/tenant'
 import { handleSupabaseError } from '@/lib/logger'
 import { orderStatusSchema } from '@/lib/validations/order.schema'
 import { isAtOrderLimit, getPlanLimits } from '@/lib/utils/plan-limits'
@@ -20,8 +20,9 @@ export async function createOrder(data: { customer_id: string; items: { product_
     .eq('tenant_id', tenantId)
     .gte('created_at', curMonthStart)
 
+  const isAdmin = await isTenantAdmin(tenantId)
   const plan = await getTenantPlan(tenantId)
-  if (isAtOrderLimit(plan, orderCount ?? 0)) {
+  if (!isAdmin && isAtOrderLimit(plan, orderCount ?? 0)) {
     throw new Error(`Limite de pedidos mensais atingido para o plano ${plan}`)
   }
 
@@ -49,7 +50,7 @@ export async function createOrder(data: { customer_id: string; items: { product_
     .eq('tenant_id', tenantId)
     .gte('created_at', curMonthStart)
 
-  if ((newOrderCount ?? 0) > getPlanLimits(plan).maxOrdersPerMonth) {
+  if (!isAdmin && (newOrderCount ?? 0) > getPlanLimits(plan).maxOrdersPerMonth) {
     await supabase.from('orders').delete().eq('id', orderId).eq('tenant_id', tenantId)
     throw new Error(`Limite de pedidos mensais atingido para o plano ${plan}`)
   }

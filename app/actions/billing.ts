@@ -1,5 +1,6 @@
 'use server'
 
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getFirebaseSession } from '@/lib/firebase/session'
 import { createClient } from '@/lib/supabase/server'
@@ -59,14 +60,14 @@ export async function createCheckoutSession(planKey: string) {
   redirect(checkout.url)
 }
 
-export async function getTenantPlan(): Promise<{ plan: Plan; name: string; status: string }> {
+export async function getTenantPlan(): Promise<{ plan: Plan; name: string; status: string; role: string }> {
   const session = await getFirebaseSession()
   if (!session) throw new Error('Usuário não autenticado')
 
   const supabase = createClient()
   const { data, error } = await supabase
     .from('tenants')
-    .select('plan, name, status')
+    .select('plan, name, status, role')
     .eq('owner_uid', session.uid)
     .single()
 
@@ -76,10 +77,38 @@ export async function getTenantPlan(): Promise<{ plan: Plan; name: string; statu
       operation: 'getTenantPlan',
       userId: session.uid,
     })
-    return { plan: 'free', name: '', status: 'active' }
+    return { plan: 'free', name: '', status: 'active', role: 'user' }
   }
 
-  return { plan: data.plan as Plan, name: data.name as string, status: data.status as string }
+  return {
+    plan: data.plan as Plan,
+    name: data.name as string,
+    status: data.status as string,
+    role: (data.role as string) ?? 'user',
+  }
+}
+
+/**
+ * Atualiza o cookie __plan com o plano e status atuais do tenant.
+ * Chamado pelo client-side (billing page) para garantir que o middleware
+ * possa bloquear rotas protegidas sem consultar o DB em cada request.
+ * O cookie não contém role — o bypass de admin é sempre via DB (server-side).
+ */
+export async function syncPlanCookie(): Promise<void> {
+  const { plan, status, role } = await getTenantPlan()
+  // Admin always gets an effective paid status in the cookie so middleware
+  // doesn't redirect them. The real admin check stays server-side (layout + actions).
+  const effectivePlan = role === 'admin' ? 'max' : plan
+  const effectiveStatus = role === 'admin' ? 'active' : status
+
+  const cookieStore = await cookies()
+  cookieStore.set('__plan', `${effectivePlan}:${effectiveStatus}`, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60, // 1 hora
+    path: '/',
+  })
 }
 
 export async function cancelSubscription(reason?: string) {

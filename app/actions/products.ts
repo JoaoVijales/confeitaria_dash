@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getTenantId } from '@/lib/supabase/tenant'
 import { handleSupabaseError, logError } from '@/lib/logger'
 import { ProductFormValues } from '@/lib/validations/product.schema'
-import { getTenantPlan } from '@/lib/supabase/tenant'
+import { getTenantPlan, isTenantAdmin } from '@/lib/supabase/tenant'
 import { isAtProductLimit, getPlanLimits } from '@/lib/utils/plan-limits'
 
 export async function getProducts() {
@@ -123,13 +123,15 @@ export async function createProduct(data: ProductFormValues) {
   const supabase = createClient()
   const tenantId = await getTenantId()
 
+  const isAdmin = await isTenantAdmin(tenantId)
+
   const { count: productCount } = await supabase
     .from('products')
     .select('id', { count: 'exact', head: true })
     .eq('tenant_id', tenantId)
 
   const plan = await getTenantPlan(tenantId)
-  if (isAtProductLimit(plan, productCount ?? 0)) {
+  if (!isAdmin && isAtProductLimit(plan, productCount ?? 0)) {
     throw new Error(`Limite de produtos atingido para o plano ${plan}`)
   }
 
@@ -162,7 +164,7 @@ export async function createProduct(data: ProductFormValues) {
     .select('id', { count: 'exact', head: true })
     .eq('tenant_id', tenantId)
 
-  if ((newCount ?? 0) > getPlanLimits(plan).maxProducts) {
+  if (!isAdmin && (newCount ?? 0) > getPlanLimits(plan).maxProducts) {
     if (product) await supabase.from('products').delete().eq('id', product.id).eq('tenant_id', tenantId)
     throw new Error(`Limite de produtos atingido para o plano ${plan}`)
   }

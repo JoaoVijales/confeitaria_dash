@@ -41,6 +41,21 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
+  // Guarda de plano via cookie (complemento ao layout server-side).
+  // O cookie __plan contém "plan:status". Sem role — admin bypass é sempre via DB.
+  // Este check é um hint de performance; o layout é a fonte de verdade.
+  if (authenticated && isDashboardRoute && pathname !== '/dashboard/billing') {
+    const planCookie = request.cookies.get('__plan')?.value
+    if (planCookie) {
+      const colonIdx = planCookie.indexOf(':')
+      const plan = planCookie.slice(0, colonIdx)
+      const status = planCookie.slice(colonIdx + 1)
+      if (plan === 'free' || status !== 'active') {
+        return NextResponse.redirect(new URL('/dashboard/billing?blocked=true', request.url))
+      }
+    }
+  }
+
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set('x-pathname', pathname)
   return NextResponse.next({ request: { headers: requestHeaders } })
