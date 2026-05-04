@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { TrackedLink } from '@/components/landing/TrackedLink'
 import {
@@ -21,6 +22,10 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { WhatsAppIcon, WHATSAPP_URL } from '@/components/SupportButton'
+
+export const metadata: Metadata = {
+  alternates: { canonical: '/' },
+}
 
 const painPoints = [
   {
@@ -98,7 +103,7 @@ const plans = [
     period: '/mês',
     description: 'Para começar com tudo organizado',
     limits: ['Até 10 produtos', 'Pedidos ilimitados', 'Todos os módulos', 'Suporte por email'],
-    cta: 'Assinar Básico',
+    cta: 'Assinar agora',
     href: '/signup',
     highlight: false,
   },
@@ -108,7 +113,7 @@ const plans = [
     period: '/mês',
     description: 'Para confeitarias em crescimento',
     limits: ['Até 50 produtos', 'Pedidos ilimitados', 'Todos os módulos', 'Suporte prioritário'],
-    cta: 'Assinar Pro',
+    cta: 'Assinar agora',
     href: '/signup',
     highlight: true,
   },
@@ -118,7 +123,7 @@ const plans = [
     period: '/mês',
     description: 'Para operações sem limites',
     limits: ['Produtos ilimitados', 'Pedidos ilimitados', 'Todos os módulos', 'Suporte dedicado'],
-    cta: 'Assinar Max',
+    cta: 'Assinar agora',
     href: '/signup',
     highlight: false,
   },
@@ -153,9 +158,20 @@ const trustBadges = [
   { icon: Zap, label: 'Sem instalação' },
 ]
 
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((faq) => ({
+    '@type': 'Question',
+    name: faq.question,
+    acceptedAnswer: { '@type': 'Answer', text: faq.answer },
+  })),
+}
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       {/* Navbar */}
       <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/95 backdrop-blur">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -201,7 +217,7 @@ export default function LandingPage() {
             <div className="mt-10 flex items-center justify-center gap-4 flex-wrap">
               <Button size="lg" asChild className="bg-pink-500 hover:bg-pink-600 px-8 py-6 text-base font-semibold gap-2">
                 <TrackedLink href="/signup" trackEvent="cta_click" trackParams={{ location: 'hero', action: 'signup' }}>
-                  Criar conta
+                  Começar agora
                   <ArrowRight className="h-5 w-5" />
                 </TrackedLink>
               </Button>
@@ -275,6 +291,22 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Mid-page CTA */}
+      <section className="py-10 bg-white border-y border-pink-100">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+          <div>
+            <p className="font-semibold text-slate-800 text-lg">Pronta para sair do caderno de vez?</p>
+            <p className="text-slate-500 text-sm mt-1">Configure sua confeitaria em menos de 2 minutos.</p>
+          </div>
+          <Button asChild className="bg-pink-500 hover:bg-pink-600 shrink-0 gap-2">
+            <TrackedLink href="/signup" trackEvent="cta_click" trackParams={{ location: 'mid_features', action: 'signup' }}>
+              Começar agora
+              <ArrowRight className="h-4 w-4" />
+            </TrackedLink>
+          </Button>
+        </div>
+      </section>
+
       {/* How it works */}
       <section id="como-funciona" className="py-20 bg-white">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
@@ -303,7 +335,7 @@ export default function LandingPage() {
           <div className="text-center mt-12">
             <Button size="lg" asChild className="bg-pink-500 hover:bg-pink-600 px-8 py-6 text-base font-semibold gap-2">
               <TrackedLink href="/signup" trackEvent="cta_click" trackParams={{ location: 'como_funciona', action: 'signup' }}>
-                Criar conta agora
+                Começar agora
                 <ArrowRight className="h-5 w-5" />
               </TrackedLink>
             </Button>
@@ -405,10 +437,10 @@ export default function LandingPage() {
       <section className="py-24 bg-pink-500">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-white sm:text-4xl leading-tight">
-            Chega de planilha.<br />Organize sua confeitaria agora.
+            Chega de pedido perdido.<br />Assine e organize tudo agora.
           </h2>
           <p className="mt-4 text-pink-100 text-lg">
-            Junte-se a confeiteiros que já controlam seu negócio com o Confeitando.
+            Controle pedidos, custos e estoque em um único lugar. Configure em menos de 2 minutos.
           </p>
           <Button
             size="lg"
@@ -416,7 +448,7 @@ export default function LandingPage() {
             className="mt-8 bg-white text-pink-600 hover:bg-pink-50 px-10 py-6 text-base font-semibold gap-2"
           >
             <TrackedLink href="/signup" trackEvent="cta_click" trackParams={{ location: 'final_cta', action: 'signup' }}>
-              Criar conta
+              Assinar agora
               <ArrowRight className="h-5 w-5" />
             </TrackedLink>
           </Button>
@@ -458,9 +490,11 @@ export default function LandingPage() {
               <a href="#planos" className="hover:text-slate-800 transition-colors">Planos</a>
               <a href="#faq" className="hover:text-slate-800 transition-colors">FAQ</a>
               <Link href="/login" className="hover:text-slate-800 transition-colors">Entrar</Link>
+              <Link href="/privacidade" className="hover:text-slate-800 transition-colors">Privacidade</Link>
+              <Link href="/termos" className="hover:text-slate-800 transition-colors">Termos</Link>
             </nav>
             <p className="text-sm text-slate-400">
-              © 2025 Confeitando. Todos os direitos reservados.
+              © 2026 Confeitando. Todos os direitos reservados.
             </p>
           </div>
         </div>
