@@ -3,6 +3,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 import Providers from "./providers";
 import { Toaster } from 'sonner';
+import { SupportButton } from '@/components/SupportButton';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://confeitando.vijales.com'
 
@@ -128,6 +129,7 @@ export default function RootLayout({
         <Providers>
           {children}
           <Toaster richColors />
+          <SupportButton />
         </Providers>
         {process.env.NEXT_PUBLIC_MEASUREMENT_ID && (
           <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_MEASUREMENT_ID} />
