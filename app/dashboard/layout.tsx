@@ -27,6 +27,9 @@ export default async function DashboardLayout({
         redirect('/dashboard/billing?blocked=true')
       }
     } catch (error) {
+      if (error instanceof Error && (error as { digest?: string }).digest?.startsWith('NEXT_REDIRECT')) {
+        throw error
+      }
       logError('Erro ao verificar plano no layout do dashboard', error, {
         service: 'supabase',
         operation: 'getTenantPlan',
