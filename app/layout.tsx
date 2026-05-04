@@ -23,6 +23,14 @@ export const metadata: Metadata = {
     'estoque ingredientes confeitaria',
     'financeiro confeitaria',
     'app para confeiteiro',
+    'sistema para confeiteiro',
+    'gerenciar pedidos confeitaria',
+    'controle de estoque confeitaria',
+    'precificação de bolos',
+    'calcular custo receita bolo',
+    'software gestão doces artesanais',
+    'fluxo de caixa confeitaria',
+    'agenda pedidos confeitaria',
   ],
   authors: [{ name: 'Confeitando' }],
   creator: 'Confeitando',
@@ -31,9 +39,6 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
     googleBot: { index: true, follow: true },
-  },
-  alternates: {
-    canonical: BASE_URL,
   },
   openGraph: {
     type: 'website',
@@ -59,6 +64,24 @@ export const metadata: Metadata = {
       'Pedidos, receitas, estoque e financeiro em um só lugar. Feito para confeiteiros artesanais.',
     images: ['/opengraph-image'],
   },
+}
+
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Confeitando',
+  url: BASE_URL,
+  inLanguage: 'pt-BR',
+  description: 'Software de gestão completa para confeitarias artesanais.',
+}
+
+const orgSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Confeitando',
+  url: BASE_URL,
+  logo: `${BASE_URL}/icon-512.png`,
+  sameAs: [],
 }
 
 const schemaOrg = {
@@ -119,10 +142,9 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaOrg) }}
-        />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaOrg) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }} />
       </head>
       <body className="font-sans antialiased bg-background text-foreground">
         <Providers>
