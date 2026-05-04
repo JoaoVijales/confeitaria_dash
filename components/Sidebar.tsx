@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Home, Package, ShoppingCart, Users, LogOut, Cake, TrendingUp, ArrowUpCircle, ArrowDownCircle, CreditCard, Wheat, ChefHat } from 'lucide-react'
 import { signOut } from '@/app/actions/auth'
 import { usePlan } from '@/hooks/usePlan'
+import { WhatsAppIcon, WHATSAPP_URL } from '@/components/SupportButton'
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -68,7 +69,16 @@ export function Sidebar() {
           </div>
         )}
 
-        <div className="p-4 border-t border-slate-200">
+        <div className="p-4 border-t border-slate-200 space-y-1">
+          <a
+            href={WHATSAPP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-4 px-4 py-3 text-green-600 hover:bg-green-50 rounded-lg text-base font-medium transition-colors"
+          >
+            <WhatsAppIcon className="h-5 w-5" />
+            Suporte
+          </a>
           <form action={signOut}>
             <Button type="submit" variant="ghost" size="lg" className="w-full justify-start">
               <LogOut className="mr-3 h-5 w-5" />

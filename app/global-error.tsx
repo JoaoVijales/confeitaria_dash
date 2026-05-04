@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { WhatsAppIcon, WHATSAPP_URL } from '@/components/SupportButton'
 
 // Captura erros no root layout (app/layout.tsx). Deve incluir <html> e <body>.
 export default function RootError({
@@ -50,6 +51,19 @@ export default function RootError({
             >
               Tentar novamente
             </button>
+          </div>
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <p style={{ fontSize: 14, color: '#64748b' }}>Se o erro persistir, fale com nosso suporte.</p>
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, borderRadius: 9999, background: '#22c55e', padding: '10px 20px', color: '#fff', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}
+            >
+              <WhatsAppIcon className="h-4 w-4" />
+              Falar com suporte
+            </a>
+            <p style={{ fontSize: 12, color: '#94a3b8' }}>Respondemos em até 15 minutos</p>
           </div>
         </div>
       </body>

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { WhatsAppIcon, WHATSAPP_URL } from '@/components/SupportButton'
 
 const painPoints = [
   {
@@ -420,6 +421,27 @@ export default function LandingPage() {
             </TrackedLink>
           </Button>
           <p className="mt-4 text-pink-200 text-sm">Sem contrato • Cancele quando quiser</p>
+        </div>
+      </section>
+
+      {/* Support */}
+      <section className="py-16 bg-green-50">
+        <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-2xl font-bold text-slate-900">
+            Dúvidas, ajuda ou feedback?
+          </h2>
+          <p className="mt-3 text-slate-600">
+            Estamos no WhatsApp e respondemos em até 15 minutos.
+          </p>
+          <a
+            href={WHATSAPP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-6 inline-flex items-center gap-2.5 rounded-full bg-green-500 px-6 py-3 text-white font-semibold hover:bg-green-600 transition-colors shadow-sm"
+          >
+            <WhatsAppIcon className="h-5 w-5" />
+            Falar com suporte
+          </a>
         </div>
       </section>
 

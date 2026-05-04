@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { WhatsAppIcon, WHATSAPP_URL } from '@/components/SupportButton'
 
 export default function GlobalError({
   error,
@@ -47,6 +48,19 @@ export default function GlobalError({
         >
           Tentar novamente
         </button>
+      </div>
+      <div className="mt-4 pt-4 border-t border-slate-100 flex flex-col items-center gap-2">
+        <p className="text-sm text-slate-500">Se o erro persistir, fale com nosso suporte.</p>
+        <a
+          href={WHATSAPP_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-full bg-green-500 px-5 py-2.5 text-white text-sm font-semibold hover:bg-green-600 transition-colors"
+        >
+          <WhatsAppIcon className="h-4 w-4" />
+          Falar com suporte
+        </a>
+        <p className="text-xs text-slate-400">Respondemos em até 15 minutos</p>
       </div>
     </div>
   )

@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Cake, Menu, X, Home, Package, ShoppingCart, Users, TrendingUp, ArrowUpCircle, ArrowDownCircle, CreditCard, Wheat, ChefHat, LogOut } from 'lucide-react'
 import { signOut } from '@/app/actions/auth'
+import { WhatsAppIcon, WHATSAPP_URL } from '@/components/SupportButton'
 
 export function MobileHeader() {
   const [isOpen, setIsOpen] = useState(false)
@@ -59,7 +60,17 @@ export function MobileHeader() {
                 {item.label}
               </Link>
             ))}
-            <div className="mt-4 pt-4 border-t border-slate-100">
+            <div className="mt-4 pt-4 border-t border-slate-100 space-y-1">
+                <a
+                  href={WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-4 rounded-lg px-4 py-3 text-green-600 hover:bg-green-50 text-lg font-medium transition-colors"
+                >
+                  <WhatsAppIcon className="h-5 w-5" />
+                  Suporte
+                </a>
                 <form action={signOut}>
                     <Button type="submit" variant="ghost" className="w-full justify-start text-lg px-4 py-3 h-auto text-slate-600">
                         <LogOut className="mr-4 h-5 w-5" />
