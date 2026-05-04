@@ -29,9 +29,7 @@ export default function DashboardError({
     <div className="flex flex-col items-center justify-center min-h-screen gap-4 p-8 text-center">
       <p className="text-lg font-semibold text-slate-800">Algo deu errado.</p>
       <p className="text-sm text-slate-500">
-        {process.env.NODE_ENV === 'development'
-          ? error.message
-          : 'Recarregue a página ou tente novamente em alguns instantes.'}
+        Recarregue a página ou tente novamente em alguns instantes.
       </p>
       {error.digest && (
         <p className="text-xs text-slate-400 font-mono">Código: {error.digest}</p>
