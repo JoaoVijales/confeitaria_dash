@@ -6,6 +6,7 @@ import { Sidebar } from '@/components/Sidebar'
 import { MobileHeader } from '@/components/MobileHeader'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { logError } from '@/lib/logger'
 
 export default async function DashboardLayout({
   children,
@@ -20,9 +21,17 @@ export default async function DashboardLayout({
   const headersList = await headers()
   const pathname = headersList.get('x-pathname') ?? ''
   if (pathname !== '/dashboard/billing') {
-    const { plan, status, role } = await getTenantPlan()
-    if (role !== 'admin' && (plan === 'free' || status !== 'active')) {
-      redirect('/dashboard/billing?blocked=true')
+    try {
+      const { plan, status, role } = await getTenantPlan()
+      if (role !== 'admin' && (plan === 'free' || status !== 'active')) {
+        redirect('/dashboard/billing?blocked=true')
+      }
+    } catch (error) {
+      logError('Erro ao verificar plano no layout do dashboard', error, {
+        service: 'supabase',
+        operation: 'getTenantPlan',
+      })
+      // Falha segura: permite acesso e deixa as páginas individuais lidarem com a restrição
     }
   }
 
