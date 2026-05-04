@@ -43,7 +43,7 @@ type IngredientInRecipe = {
 type RecipeIngredient = {
   quantity: number
   unit?: string
-  ingredients: IngredientInRecipe[] | null
+  ingredients: IngredientInRecipe | null
 }
 
 type Recipe = {
@@ -67,7 +67,7 @@ function mapBaseUnit(unit: string): IngredientUnit {
 function getRecipeCosts(recipe: Recipe): { totalCost: number; costPerUnit: number } {
   const enriched = recipe.recipe_ingredients
     .map(ri => {
-      const ing = ri.ingredients?.[0]
+      const ing = ri.ingredients
       if (!ing) return null
       return {
         quantity: ri.quantity,
@@ -194,7 +194,7 @@ export default function ReceitasPage() {
                           <div className="flex flex-wrap gap-1 max-w-[200px]">
                             {recipe.recipe_ingredients.slice(0, 3).map((ri, i) => (
                               <Badge key={i} variant="secondary" className="text-[10px] px-1 py-0 h-5">
-                                {ri.ingredients?.[0]?.name || 'Ingrediente'}
+                                {ri.ingredients?.name || 'Ingrediente'}
                               </Badge>
                             ))}
                             {recipe.recipe_ingredients.length > 3 && (

@@ -30,13 +30,11 @@ export async function getRecipes() {
     const ris = (recipe.recipe_ingredients ?? []) as {
       quantity: number
       unit: string
-      ingredients: { unit_cost: number; unit: string }[]
+      ingredients: { unit_cost: number; unit: string } | null
     }[]
 
-    // Custo total: soma de (unit_cost * quantity) por ingrediente
-    // A conversão de unidade (g→kg) é feita no frontend via calculateTotalRecipeCost
     const totalCost = ris.reduce((sum, ri) => {
-      return sum + (ri.ingredients?.[0]?.unit_cost ?? 0) * ri.quantity
+      return sum + (ri.ingredients?.unit_cost ?? 0) * ri.quantity
     }, 0)
     const cost_per_yield_unit = recipe.yield > 0 ? totalCost / recipe.yield : 0
 
