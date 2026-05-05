@@ -91,8 +91,8 @@ async function computeProductCost(
       .in('id', recipeIds)
       .eq('tenant_id', tenantId)
     for (const r of data ?? []) {
-      const ris = r.recipe_ingredients as { quantity: number; ingredients: { unit_cost: number }[] }[]
-      const total = ris.reduce((s, ri) => s + (ri.ingredients?.[0]?.unit_cost ?? 0) * ri.quantity, 0)
+      const ris = r.recipe_ingredients as { quantity: number; ingredients: { unit_cost: number } | null }[]
+      const total = ris.reduce((s, ri) => s + (ri.ingredients?.unit_cost ?? 0) * ri.quantity, 0)
       recipeMap.set(r.id, r.yield > 0 ? total / r.yield : 0)
     }
   }
