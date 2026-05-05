@@ -99,7 +99,7 @@ export async function updateOrderStatus(id: string, status: string) {
   const isNowFinalized = validStatus === 'Finalizado'
 
   if (isNowFinalized && !wasFinalized) {
-    const customerName = (currentOrder?.customers as { name: string } | null)?.name ?? 'Cliente'
+    const customerName = (currentOrder?.customers as unknown as { name: string } | null)?.name ?? 'Cliente'
     const { error: revenueError } = await supabase.from('revenue_entries').insert({
       tenant_id: tenantId,
       date: new Date().toISOString().split('T')[0],
