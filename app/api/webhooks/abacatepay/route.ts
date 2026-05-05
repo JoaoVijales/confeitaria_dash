@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { timingSafeEqual } from 'crypto'
+import { withAxiom, AxiomRequest } from 'next-axiom'
 import { createClient } from '@/lib/supabase/server'
 import { logError, logWarn, logInfo } from '@/lib/logger'
 
@@ -53,7 +54,7 @@ async function resolveTenantId(
   return metadataTenantId ?? null
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withAxiom(async (request: AxiomRequest) => {
   if (!verifyWebhookSecret(request)) {
     return NextResponse.json({ error: 'Invalid webhook secret' }, { status: 400 })
   }
@@ -204,4 +205,4 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ received: true })
-}
+})
