@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { AxiomWebVitals } from 'next-axiom';
 import "./globals.css";
 import Providers from "./providers";
 import { Toaster } from 'sonner';
@@ -147,6 +148,7 @@ export default function RootLayout({
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }} />
       </head>
+      <AxiomWebVitals />
       <body className="font-sans antialiased bg-background text-foreground">
         <Providers>
           {children}
