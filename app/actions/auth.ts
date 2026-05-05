@@ -3,14 +3,14 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { adminAuth } from '@/lib/firebase/admin'
+import { getAdminAuth } from '@/lib/firebase/admin'
 import { getFirebaseSession } from '@/lib/firebase/session'
 import { createClient } from '@/lib/supabase/server'
 
 const SESSION_COOKIE_DURATION_MS = 5 * 24 * 60 * 60 * 1000 // 5 days
 
 export async function createSession(idToken: string) {
-  const sessionCookie = await adminAuth.createSessionCookie(idToken, {
+  const sessionCookie = await getAdminAuth().createSessionCookie(idToken, {
     expiresIn: SESSION_COOKIE_DURATION_MS,
   })
 

@@ -37,7 +37,7 @@ export default function TermosPage() {
           <section>
             <h2 className="text-xl font-semibold text-slate-800 mb-3">2. O serviço</h2>
             <p>
-              O Confeitando é um software de gestão para confeiteiros artesanais, oferecido como serviço (SaaS) via navegador web. Disponibilizamos módulos de pedidos, receitas, estoque, clientes e financeiro. O serviço é fornecido "como está" e pode ser atualizado, expandido ou descontinuado a qualquer momento, com aviso prévio razoável.
+              O Confeitando é um software de gestão para confeiteiros artesanais, oferecido como serviço (SaaS) via navegador web. Disponibilizamos módulos de pedidos, receitas, estoque, clientes e financeiro. O serviço é fornecido &ldquo;como está&rdquo; e pode ser atualizado, expandido ou descontinuado a qualquer momento, com aviso prévio razoável.
             </p>
           </section>
 
@@ -100,7 +100,7 @@ export default function TermosPage() {
               Nos esforçamos para manter o Confeitando disponível, mas não garantimos disponibilidade ininterrupta. O serviço pode ficar temporariamente indisponível por manutenção, falhas técnicas ou causas fora do nosso controle.
             </p>
             <p className="mt-3">
-              O serviço é fornecido "como está", sem garantias expressas ou implícitas de adequação a um fim específico. Não nos responsabilizamos por decisões de negócio tomadas com base nos dados do sistema.
+              O serviço é fornecido &ldquo;como está&rdquo;, sem garantias expressas ou implícitas de adequação a um fim específico. Não nos responsabilizamos por decisões de negócio tomadas com base nos dados do sistema.
             </p>
           </section>
 

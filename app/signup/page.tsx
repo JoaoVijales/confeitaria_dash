@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth'
 import { toast } from 'sonner'
 import { Cake } from 'lucide-react'
-import { auth, googleProvider } from '@/lib/firebase/client'
+import { getClientAuth, getGoogleProvider } from '@/lib/firebase/client'
 import { createSession } from '@/app/actions/auth'
 import { track } from '@/lib/analytics'
 import { Button } from '@/components/ui/button'
@@ -32,7 +32,7 @@ export default function SignupPage() {
     }
     setLoading(true)
     try {
-      const credential = await createUserWithEmailAndPassword(auth, email, password)
+      const credential = await createUserWithEmailAndPassword(getClientAuth(), email, password)
       const idToken = await credential.user.getIdToken()
       await createSession(idToken)
       track('signup', { method: 'email' })
@@ -51,7 +51,7 @@ export default function SignupPage() {
   async function handleGoogleSignup() {
     setLoading(true)
     try {
-      const credential = await signInWithPopup(auth, googleProvider)
+      const credential = await signInWithPopup(getClientAuth(), getGoogleProvider())
       const idToken = await credential.user.getIdToken()
       await createSession(idToken)
       track('signup', { method: 'google' })

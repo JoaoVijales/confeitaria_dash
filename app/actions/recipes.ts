@@ -27,7 +27,7 @@ export async function getRecipes() {
   handleSupabaseError(error, 'getRecipes', { tenantId })
 
   return (data ?? []).map(recipe => {
-    const ris = (recipe.recipe_ingredients ?? []) as {
+    const ris = (recipe.recipe_ingredients ?? []) as unknown as {
       quantity: number
       unit: string
       ingredients: { unit_cost: number; unit: string } | null

@@ -120,7 +120,7 @@ export default function ReceitasPage() {
 
   const filteredRecipes = (recipes ?? []).filter(recipe =>
     recipe.name.toLowerCase().includes(searchTerm.toLowerCase())
-  ) as Recipe[]
+  ) as unknown as Recipe[]
 
   const fmt = (v: number) =>
     `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`

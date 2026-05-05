@@ -52,7 +52,7 @@ type IngredientInRecipe = {
 type RecipeIngredient = {
   quantity: number
   unit?: string
-  ingredients: IngredientInRecipe[] | null
+  ingredients: IngredientInRecipe | null
 }
 
 type Recipe = {
@@ -149,7 +149,7 @@ export function RecipeFormDialog({
         yield: recipe.yield,
         yield_unit: (recipe.yield_unit as typeof YIELD_UNITS[number]) ?? 'un',
         ingredients: recipe.recipe_ingredients.map((ri: RecipeIngredient) => ({
-          ingredient_id: ri.ingredients?.[0]?.id ?? '',
+          ingredient_id: ri.ingredients?.id ?? '',
           quantity: ri.quantity,
           unit: (ri.unit as IngredientUnit) ?? 'g',
         })),
