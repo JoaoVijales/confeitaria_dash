@@ -25,6 +25,7 @@ const { mockGetTenantId, mockFrom } = vi.hoisted(() => ({
 vi.mock('@/lib/supabase/tenant', () => ({
   getTenantId: mockGetTenantId,
   getTenantPlan: vi.fn().mockResolvedValue('pro'),
+  isTenantAdmin: vi.fn().mockResolvedValue(false),
 }))
 
 // mockSupabase como objeto estático — createClient como função pura (não vi.fn())
@@ -401,10 +402,23 @@ describe('[Segurança] orders — isolamento multi-tenant', () => {
   })
 
   it('updateOrderStatus: filtra UPDATE por tenant_id', async () => {
+    // First: select current order (status already Finalizado → no revenue insert)
+    const singleMock = vi.fn().mockResolvedValue({
+      data: { status: 'Finalizado', total: 100, customers: null },
+      error: null,
+    })
+    const eqTenantSelectMock = vi.fn().mockReturnValue({ single: singleMock })
+    const eqIdSelectMock = vi.fn().mockReturnValue({ eq: eqTenantSelectMock })
+    const selectMock = vi.fn().mockReturnValue({ eq: eqIdSelectMock })
+
+    // Second: update status
     const eqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
     const eqIdMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
     const updateMock = vi.fn().mockReturnValue({ eq: eqIdMock })
-    mockFrom.mockReturnValue({ update: updateMock })
+
+    mockFrom
+      .mockReturnValueOnce({ select: selectMock })
+      .mockReturnValue({ update: updateMock })
 
     await updateOrderStatus('order-1', 'Finalizado')
 
@@ -675,14 +689,24 @@ describe('[Segurança] ingredient-purchases — isolamento multi-tenant', () => 
   })
 
   it('createIngredientPurchase: inclui tenant_id no INSERT', async () => {
-    const insertMock = vi.fn().mockResolvedValue({ data: null, error: null })
+    const insertMock = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: { id: 'purchase-1' }, error: null }),
+      }),
+    })
+    const singleIngredientMock = vi.fn().mockResolvedValue({ data: { name: 'Ingrediente' }, error: null })
+    const eq2IngredientMock = vi.fn().mockReturnValue({ single: singleIngredientMock })
+    const eq1IngredientMock = vi.fn().mockReturnValue({ eq: eq2IngredientMock })
+    const selectIngredientMock = vi.fn().mockReturnValue({ eq: eq1IngredientMock })
+    const insertExpenseMock = vi.fn().mockResolvedValue({ data: null, error: null })
     const updateEqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
     const updateEqIdMock = vi.fn().mockReturnValue({ eq: updateEqTenantMock })
     const updateMock = vi.fn().mockReturnValue({ eq: updateEqIdMock })
 
     mockFrom.mockImplementation((table: string) => {
       if (table === 'ingredient_purchases') return { insert: insertMock }
-      if (table === 'ingredients') return { update: updateMock }
+      if (table === 'expense_entries') return { insert: insertExpenseMock }
+      if (table === 'ingredients') return { select: selectIngredientMock, update: updateMock }
       return {}
     })
 

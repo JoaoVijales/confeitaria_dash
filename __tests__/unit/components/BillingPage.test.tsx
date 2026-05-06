@@ -10,6 +10,7 @@ vi.mock('@/hooks/usePlan', () => ({
 vi.mock('@/app/actions/billing', () => ({
   createCheckoutSession: vi.fn(),
   cancelSubscription: vi.fn(),
+  syncPlanCookie: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock('next/navigation', () => ({

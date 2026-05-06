@@ -169,10 +169,23 @@ describe('orders actions', () => {
 
   describe('updateOrderStatus', () => {
     it('atualiza status do pedido com valor válido', async () => {
+      // First call: select current order (status already Finalizado → no revenue insert triggered)
+      const singleMock = vi.fn().mockResolvedValue({
+        data: { status: 'Finalizado', total: 100, customers: null },
+        error: null,
+      })
+      const eqTenantSelectMock = vi.fn().mockReturnValue({ single: singleMock })
+      const eqIdSelectMock = vi.fn().mockReturnValue({ eq: eqTenantSelectMock })
+      const selectMock = vi.fn().mockReturnValue({ eq: eqIdSelectMock })
+
+      // Second call: update status
       const eqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
       const eqIdMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
       const updateMock = vi.fn().mockReturnValue({ eq: eqIdMock })
-      mockFrom.mockReturnValue({ update: updateMock })
+
+      mockFrom
+        .mockReturnValueOnce({ select: selectMock })
+        .mockReturnValue({ update: updateMock })
 
       await updateOrderStatus('order-1', 'Finalizado')
 
@@ -193,11 +206,22 @@ describe('orders actions', () => {
     })
 
     it('lanca erro quando Supabase falha', async () => {
+      const singleMock = vi.fn().mockResolvedValue({
+        data: { status: 'Pendente', total: 0, customers: null },
+        error: null,
+      })
+      const eqTenantSelectMock = vi.fn().mockReturnValue({ single: singleMock })
+      const eqIdSelectMock = vi.fn().mockReturnValue({ eq: eqTenantSelectMock })
+      const selectMock = vi.fn().mockReturnValue({ eq: eqIdSelectMock })
+
       const dbError = { message: 'DB error' }
       const eqTenantMock = vi.fn().mockResolvedValue({ data: null, error: dbError })
       const eqIdMock = vi.fn().mockReturnValue({ eq: eqTenantMock })
       const updateMock = vi.fn().mockReturnValue({ eq: eqIdMock })
-      mockFrom.mockReturnValue({ update: updateMock })
+
+      mockFrom
+        .mockReturnValueOnce({ select: selectMock })
+        .mockReturnValue({ update: updateMock })
 
       await expect(updateOrderStatus('order-1', 'Pendente')).rejects.toEqual(dbError)
     })
