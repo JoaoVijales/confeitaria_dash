@@ -36,14 +36,28 @@ describe('ingredient-purchases actions', () => {
 
   describe('createIngredientPurchase', () => {
     it('insere compra e atualiza unit_cost do ingrediente', async () => {
-      const insertMock = vi.fn().mockResolvedValue({ data: null, error: null })
+      // 1. ingredient_purchases.insert().select('id').single()
+      const insertMock = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({ data: { id: 'purchase-1' }, error: null }),
+        }),
+      })
+      // 2. ingredients.select('name').eq().eq().single()
+      const singleIngredientMock = vi.fn().mockResolvedValue({ data: { name: 'Farinha' }, error: null })
+      const eq2IngredientMock = vi.fn().mockReturnValue({ single: singleIngredientMock })
+      const eq1IngredientMock = vi.fn().mockReturnValue({ eq: eq2IngredientMock })
+      const selectIngredientMock = vi.fn().mockReturnValue({ eq: eq1IngredientMock })
+      // 3. expense_entries.insert()
+      const insertExpenseMock = vi.fn().mockResolvedValue({ data: null, error: null })
+      // 4. ingredients.update().eq().eq()
       const updateEqTenantMock = vi.fn().mockResolvedValue({ data: null, error: null })
       const updateEqIdMock = vi.fn().mockReturnValue({ eq: updateEqTenantMock })
       const updateMock = vi.fn().mockReturnValue({ eq: updateEqIdMock })
 
       mockFrom.mockImplementation((table: string) => {
         if (table === 'ingredient_purchases') return { insert: insertMock }
-        if (table === 'ingredients') return { update: updateMock }
+        if (table === 'expense_entries') return { insert: insertExpenseMock }
+        if (table === 'ingredients') return { select: selectIngredientMock, update: updateMock }
         return {}
       })
 
@@ -59,7 +73,11 @@ describe('ingredient-purchases actions', () => {
     it('lanca erro quando insert falha', async () => {
       const dbError = { message: 'DB error' }
       mockFrom.mockImplementation(() => ({
-        insert: vi.fn().mockResolvedValue({ data: null, error: dbError }),
+        insert: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: null, error: dbError }),
+          }),
+        }),
       }))
 
       await expect(createIngredientPurchase(validPurchaseData)).rejects.toEqual(dbError)
@@ -67,15 +85,25 @@ describe('ingredient-purchases actions', () => {
     })
 
     it('lanca erro quando update de unit_cost falha', async () => {
+      const insertMock = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({ data: { id: 'purchase-1' }, error: null }),
+        }),
+      })
+      const singleIngredientMock = vi.fn().mockResolvedValue({ data: { name: 'Farinha' }, error: null })
+      const eq2IngredientMock = vi.fn().mockReturnValue({ single: singleIngredientMock })
+      const eq1IngredientMock = vi.fn().mockReturnValue({ eq: eq2IngredientMock })
+      const selectIngredientMock = vi.fn().mockReturnValue({ eq: eq1IngredientMock })
+      const insertExpenseMock = vi.fn().mockResolvedValue({ data: null, error: null })
       const dbError = { message: 'Update error' }
-      const insertMock = vi.fn().mockResolvedValue({ data: null, error: null })
       const updateEqTenantMock = vi.fn().mockResolvedValue({ data: null, error: dbError })
       const updateEqIdMock = vi.fn().mockReturnValue({ eq: updateEqTenantMock })
       const updateMock = vi.fn().mockReturnValue({ eq: updateEqIdMock })
 
       mockFrom.mockImplementation((table: string) => {
         if (table === 'ingredient_purchases') return { insert: insertMock }
-        if (table === 'ingredients') return { update: updateMock }
+        if (table === 'expense_entries') return { insert: insertExpenseMock }
+        if (table === 'ingredients') return { select: selectIngredientMock, update: updateMock }
         return {}
       })
 

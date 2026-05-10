@@ -173,8 +173,8 @@ describe('transactions actions', () => {
 
   describe('getFinancialSummary', () => {
     function mockFinancialData(
-      revenues: { total: number; created_at: string }[],
-      expenses: { total: number; category: string; created_at: string }[]
+      revenues: { total: number; date: string }[],
+      expenses: { total: number; category: string; date: string }[]
     ) {
       mockFrom.mockImplementation((table: string) => ({
         select: vi.fn().mockReturnValue({
@@ -188,8 +188,8 @@ describe('transactions actions', () => {
 
     it('calcula totalRevenue, totalExpenses, netProfit e profitMargin corretamente', async () => {
       mockFinancialData(
-        [{ total: 1000, created_at: '2024-01-10' }, { total: 500, created_at: '2024-01-20' }],
-        [{ total: 300, category: 'Ingredientes', created_at: '2024-01-05' }]
+        [{ total: 1000, date: '2024-01-10' }, { total: 500, date: '2024-01-20' }],
+        [{ total: 300, category: 'Ingredientes', date: '2024-01-05' }]
       )
 
       const result = await getFinancialSummary()
@@ -201,7 +201,7 @@ describe('transactions actions', () => {
     })
 
     it('retorna profitMargin 0 quando totalRevenue e zero', async () => {
-      mockFinancialData([], [{ total: 100, category: 'Outros', created_at: '2024-01-01' }])
+      mockFinancialData([], [{ total: 100, category: 'Outros', date: '2024-01-01' }])
 
       const result = await getFinancialSummary()
 
@@ -226,9 +226,9 @@ describe('transactions actions', () => {
       mockFinancialData(
         [],
         [
-          { total: 200, category: 'Ingredientes', created_at: '2024-01-01' },
-          { total: 150, category: 'Ingredientes', created_at: '2024-01-02' },
-          { total: 100, category: 'Embalagens', created_at: '2024-01-03' },
+          { total: 200, category: 'Ingredientes', date: '2024-01-01' },
+          { total: 150, category: 'Ingredientes', date: '2024-01-02' },
+          { total: 100, category: 'Embalagens', date: '2024-01-03' },
         ]
       )
 

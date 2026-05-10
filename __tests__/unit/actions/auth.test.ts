@@ -18,7 +18,7 @@ const {
 }))
 
 vi.mock('@/lib/firebase/admin', () => ({
-  adminAuth: { createSessionCookie: mockCreateSessionCookie },
+  getAdminAuth: vi.fn().mockReturnValue({ createSessionCookie: mockCreateSessionCookie }),
 }))
 
 vi.mock('@/lib/firebase/session', () => ({

@@ -28,12 +28,12 @@ const mockRecipes = [
       {
         quantity: 500,
         unit: 'g',
-        ingredients: [{ id: 'ing-1', name: 'Cenoura', unit: 'kg', unit_cost: 5 }],
+        ingredients: { id: 'ing-1', name: 'Cenoura', unit: 'kg', unit_cost: 5 },
       },
       {
         quantity: 3,
         unit: 'un',
-        ingredients: [{ id: 'ing-2', name: 'Ovos', unit: 'un', unit_cost: 0.5 }],
+        ingredients: { id: 'ing-2', name: 'Ovos', unit: 'un', unit_cost: 0.5 },
       },
     ],
   },
