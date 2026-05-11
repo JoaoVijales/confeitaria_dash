@@ -199,8 +199,16 @@ export default function LandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="bg-gradient-to-br from-slate-50 to-pink-50 py-20 sm:py-28">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 text-center">
+      <section className="relative overflow-hidden py-20 sm:py-28">
+        {/* Background image */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('/hero-bg.jpg')" }}
+        />
+        {/* Light frosted overlay so text stays legible */}
+        <div className="absolute inset-0 bg-white/70 backdrop-blur-[2px]" />
+
+        <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 text-center">
           <div className="mx-auto max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full bg-pink-100 px-4 py-1.5 text-sm font-medium text-pink-700 mb-6">
               <Cake className="h-4 w-4" />
@@ -210,7 +218,7 @@ export default function LandingPage() {
               Sua confeitaria organizada,{' '}
               <span className="text-pink-500">do ingrediente ao caixa</span>
             </h1>
-            <p className="mt-6 text-lg leading-8 text-slate-600 max-w-2xl mx-auto">
+            <p className="mt-6 text-lg leading-8 text-slate-700 max-w-2xl mx-auto">
               Chega de pedido no caderno e custo no achismo. O Confeitando centraliza
               pedidos, receitas, estoque e financeiro para você produzir com confiança e lucrar de verdade.
             </p>
@@ -221,13 +229,13 @@ export default function LandingPage() {
                   <ArrowRight className="h-5 w-5" />
                 </TrackedLink>
               </Button>
-              <Button size="lg" variant="outline" asChild className="px-8 py-6 text-base">
+              <Button size="lg" variant="outline" asChild className="px-8 py-6 text-base bg-white/80 hover:bg-white">
                 <TrackedLink href="/login" trackEvent="cta_click" trackParams={{ location: 'hero', action: 'login' }}>Já tenho conta</TrackedLink>
               </Button>
             </div>
             <div className="mt-8 flex items-center justify-center gap-6 flex-wrap">
               {trustBadges.map((badge) => (
-                <div key={badge.label} className="flex items-center gap-1.5 text-sm text-slate-500">
+                <div key={badge.label} className="flex items-center gap-1.5 text-sm text-slate-600">
                   <badge.icon className="h-4 w-4 text-pink-400" />
                   {badge.label}
                 </div>
