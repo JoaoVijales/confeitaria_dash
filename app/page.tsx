@@ -249,7 +249,7 @@ export default function LandingPage() {
                 <span className="h-3 w-3 rounded-full bg-yellow-400" />
                 <span className="h-3 w-3 rounded-full bg-green-400" />
                 <div className="ml-4 flex-1 rounded-md bg-white border border-slate-200 px-3 py-1 text-xs text-slate-400 text-left max-w-xs">
-                  app.confeitando.com.br
+                  confeitando.vijales.com
                 </div>
               </div>
               <img
