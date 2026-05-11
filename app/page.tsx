@@ -218,7 +218,7 @@ export default function LandingPage() {
               Sua confeitaria organizada,{' '}
               <span className="text-pink-500">do ingrediente ao caixa</span>
             </h1>
-            <p className="mt-6 text-lg leading-8 text-slate-700 max-w-2xl mx-auto">
+            <p className="mt-6 text-lg leading-8 text-slate-600 max-w-2xl mx-auto">
               Chega de pedido no caderno e custo no achismo. O Confeitando centraliza
               pedidos, receitas, estoque e financeiro para você produzir com confiança e lucrar de verdade.
             </p>
@@ -229,17 +229,40 @@ export default function LandingPage() {
                   <ArrowRight className="h-5 w-5" />
                 </TrackedLink>
               </Button>
-              <Button size="lg" variant="outline" asChild className="px-8 py-6 text-base bg-white/80 hover:bg-white">
+              <Button size="lg" variant="outline" asChild className="px-8 py-6 text-base">
                 <TrackedLink href="/login" trackEvent="cta_click" trackParams={{ location: 'hero', action: 'login' }}>Já tenho conta</TrackedLink>
               </Button>
             </div>
             <div className="mt-8 flex items-center justify-center gap-6 flex-wrap">
               {trustBadges.map((badge) => (
-                <div key={badge.label} className="flex items-center gap-1.5 text-sm text-slate-600">
+                <div key={badge.label} className="flex items-center gap-1.5 text-sm text-slate-500">
                   <badge.icon className="h-4 w-4 text-pink-400" />
                   {badge.label}
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Dashboard preview */}
+          <div className="mt-16 relative mx-auto max-w-5xl">
+            {/* Glow decorativo atrás do mockup */}
+            <div className="absolute -inset-4 rounded-3xl bg-pink-200/40 blur-2xl" />
+            <div className="relative rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden">
+              {/* Barra de título estilo browser */}
+              <div className="flex items-center gap-1.5 px-4 py-3 border-b border-slate-100 bg-slate-50">
+                <span className="h-3 w-3 rounded-full bg-red-400" />
+                <span className="h-3 w-3 rounded-full bg-yellow-400" />
+                <span className="h-3 w-3 rounded-full bg-green-400" />
+                <div className="ml-4 flex-1 rounded-md bg-white border border-slate-200 px-3 py-1 text-xs text-slate-400 text-left max-w-xs">
+                  app.confeitando.com.br
+                </div>
+              </div>
+              <img
+                src="/hero-bg.jpg"
+                alt="Dashboard do Confeitando — visão geral financeira"
+                className="w-full h-auto block"
+                loading="eager"
+              />
             </div>
           </div>
         </div>
