@@ -149,7 +149,7 @@ export function RecipeFormDialog({
         yield: recipe.yield,
         yield_unit: (recipe.yield_unit as typeof YIELD_UNITS[number]) ?? 'un',
         ingredients: recipe.recipe_ingredients.map((ri: RecipeIngredient) => ({
-          ingredient_id: ri.ingredients?.id ?? '',
+          ingredient_id: String(ri.ingredients?.id ?? ''),
           quantity: ri.quantity,
           unit: (ri.unit as IngredientUnit) ?? 'g',
         })),
