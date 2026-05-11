@@ -162,7 +162,7 @@ export function RecipeFormDialog({
         ingredients: [],
       })
     }
-  }, [recipe, reset])
+  }, [recipe, reset, ingredients])
 
   const onSubmit: SubmitHandler<RecipeFormValues> = (data) => {
     onSave(data)
