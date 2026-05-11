@@ -203,7 +203,7 @@ export default function LandingPage() {
         {/* Background image */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('/hero-bg.jpg')" }}
+          style={{ backgroundImage: "url('/hero-bg.png')" }}
         />
         {/* Light frosted overlay so text stays legible */}
         <div className="absolute inset-0 bg-white/70 backdrop-blur-[2px]" />
@@ -366,11 +366,10 @@ export default function LandingPage() {
             {plans.map((plan) => (
               <Card
                 key={plan.name}
-                className={`relative ${
-                  plan.highlight
+                className={`relative ${plan.highlight
                     ? 'border-pink-500 border-2 shadow-xl scale-105'
                     : 'border-slate-200 shadow-sm'
-                }`}
+                  }`}
               >
                 {plan.highlight && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2">
@@ -398,11 +397,10 @@ export default function LandingPage() {
                   </ul>
                   <Button
                     asChild
-                    className={`w-full mt-4 ${
-                      plan.highlight
+                    className={`w-full mt-4 ${plan.highlight
                         ? 'bg-pink-500 hover:bg-pink-600'
                         : 'bg-slate-800 hover:bg-slate-700'
-                    }`}
+                      }`}
                   >
                     <TrackedLink
                       href={plan.href}
