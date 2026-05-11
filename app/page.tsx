@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import { TrackedLink } from '@/components/landing/TrackedLink'
 import {
@@ -333,8 +334,62 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Demo screenshots */}
+      <section className="py-20 bg-white">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">
+              Veja como fica na prática
+            </h2>
+            <p className="mt-4 text-slate-500 text-lg max-w-2xl mx-auto">
+              Interface limpa e intuitiva — tudo que você precisa a um clique de distância.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-10 sm:grid-cols-2">
+            <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-md">
+              <Image
+                src="/produtos_conf.png"
+                alt="Tela de produtos do Confeitando"
+                width={800}
+                height={500}
+                className="w-full object-cover"
+              />
+              <div className="p-6 bg-white">
+                <div className="inline-flex items-center gap-2 rounded-full bg-pink-100 px-3 py-1 text-xs font-medium text-pink-700 mb-3">
+                  <Package className="h-3.5 w-3.5" />
+                  Produtos
+                </div>
+                <h3 className="font-semibold text-slate-800 text-lg mb-2">Catálogo completo de produtos</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">
+                  Cadastre seus produtos com preço de venda e custo calculado automaticamente a partir das receitas. Veja a margem de lucro de cada item sem precisar fazer conta.
+                </p>
+              </div>
+            </div>
+            <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-md">
+              <Image
+                src="/receitas_conf.png"
+                alt="Tela de receitas do Confeitando"
+                width={800}
+                height={500}
+                className="w-full object-cover"
+              />
+              <div className="p-6 bg-white">
+                <div className="inline-flex items-center gap-2 rounded-full bg-pink-100 px-3 py-1 text-xs font-medium text-pink-700 mb-3">
+                  <FlaskConical className="h-3.5 w-3.5" />
+                  Receitas
+                </div>
+                <h3 className="font-semibold text-slate-800 text-lg mb-2">Custo real de cada receita</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">
+                  Monte suas receitas com os ingredientes cadastrados e o sistema calcula o custo automaticamente. Mude o preço de um ingrediente e todos os produtos atualizam na hora.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* How it works */}
-      <section id="como-funciona" className="py-20 bg-white">
+      <section id="como-funciona" className="py-20 bg-slate-50">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">
