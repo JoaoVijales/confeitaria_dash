@@ -1,6 +1,6 @@
 'use client'
 
-import { useForm, useFieldArray, Controller } from 'react-hook-form'
+import { useForm, useFieldArray, useWatch, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { productSchema, ProductFormValues } from '@/lib/validations/product.schema'
 import { calculateProductCost } from '@/lib/utils/product-cost'
@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Trash2, Plus, ChefHat, Wheat, Calculator } from 'lucide-react'
-import { useMemo, useEffect, useState } from 'react'
+import { useMemo, useEffect, useState, useRef } from 'react'
 
 export type IngredientOption = {
   id: number
@@ -77,7 +77,7 @@ export function ProductForm({
 
   const price = watch('price')
   const manualCost = watch('cost') ?? 0
-  const components = watch('components')
+  const components = useWatch({ control, name: 'components' }) ?? []
   const extraCost = watch('extra_cost') ?? 0
 
   const hasComponents = fields.length > 0
@@ -101,8 +101,10 @@ export function ProductForm({
   }, [hasComponents, components, recipes, ingredients, extraCost, manualCost])
 
   const [marginInput, setMarginInput] = useState('0.00')
+  const isEditingMargin = useRef(false)
 
   useEffect(() => {
+    if (isEditingMargin.current) return
     const m = price > 0 ? ((price - computedCost) / price) * 100 : 0
     setMarginInput(m.toFixed(2))
   }, [price, computedCost])
@@ -113,6 +115,12 @@ export function ProductForm({
     if (!isNaN(m) && m >= 0 && m < 100 && computedCost > 0) {
       setValue('price', parseFloat((computedCost / (1 - m / 100)).toFixed(2)))
     }
+  }
+
+  function handleMarginBlur() {
+    isEditingMargin.current = false
+    const m = price > 0 ? ((price - computedCost) / price) * 100 : 0
+    setMarginInput(m.toFixed(2))
   }
 
   return (
@@ -413,6 +421,8 @@ export function ProductForm({
             step="0.01"
             value={marginInput}
             onChange={e => handleMarginChange(e.target.value)}
+            onFocus={() => { isEditingMargin.current = true }}
+            onBlur={handleMarginBlur}
           />
         </div>
       </div>
