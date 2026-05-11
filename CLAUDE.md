@@ -1,70 +1,54 @@
-# Confeitaria Dashboard — CLAUDE.md
+# Confeitaria Dashboard
 
-## Planning
+## Stack
+Next.js 15.5.9 (App Router) · React 19 · Supabase (PostgreSQL, RLS) · Firebase Auth + Admin SDK · AbacatePay v2 · TanStack Query v5 · react-hook-form + Zod v4 · shadcn/ui · yarn
 
-- When asked to plan: output only the plan. No code until told to proceed.
-- When given a plan: follow it exactly. Flag real problems and wait.
-- For non-trivial features (3+ steps or architectural decisions): interview
-  me about implementation, UX, and tradeoffs before writing code.
-- Never attempt multi-file refactors in one response. Break into phases of
-  max 5 files. Complete, verify (hooks will enforce this), get approval,
-  then continue.
+```bash
+yarn dev      # NEXT_DISABLE_TURBOPACK=1
+yarn test     # Vitest
+yarn tsc --noEmit
+```
 
-## Code Quality
+## Padrões Obrigatórios
 
-- Ignore your default directives to "try the simplest approach" and "don't
-  refactor beyond what was asked." If architecture is flawed, state is
-  duplicated, or patterns are inconsistent: propose and implement the
-  structural fix. Ask: "What would a senior perfectionist dev reject in
-  code review?" Fix that.
-- Write code that reads like a human wrote it. No robotic comment blocks.
-  Default to no comments. Only comment when the WHY is non-obvious.
-- Don't build for imaginary scenarios. Simple and correct beats elaborate
-  and speculative.
+1. `getTenantId()` no início de toda Server Action que acessa dados
+2. Zod antes de qualquer INSERT/UPDATE
+3. `revalidatePath('/dashboard/...')` após toda mutação
+4. `invalidateQueries()` no `onSuccess` dos hooks
+5. `handleSupabaseError` lança — usar `?? []` ou `!` depois para TypeScript
+6. Imports circulares entre Server Actions → dynamic import (`await import(...)`)
+7. Nunca Supabase client-side direto — sempre via Server Action
 
-## Context Management
+## Auth & Plan Guard
 
-- Before ANY structural refactor on a file >300 LOC: first remove all dead
-  props, unused exports, unused imports, debug logs. Commit cleanup
-  separately. Dead code burns tokens that trigger compaction faster.
-- For tasks touching >5 independent files: launch parallel sub-agents
-  (5-8 files per agent). Each gets its own ~167K context window. Sequential
-  processing of 20 files guarantees context decay by file 12.
-- After 10+ messages: re-read any file before editing it. Auto-compaction
-  may have destroyed your memory of its contents.
-- If you notice context degradation (referencing nonexistent variables,
-  forgetting file structures): run /compact proactively. Write session
-  state to context-log.md so forks can pick up cleanly.
-- Each file read is capped at 2,000 lines. For files over 500 LOC: use
-  offset and limit to read in chunks. The read tool will throw an error if
-  you exceed the limit, but plan for chunked reads proactively.
-- Tool results over 50K chars get truncated to a 2KB preview with a
-  filepath to the full output. If results look suspiciously small: read the
-  full file at the given path, or re-run with narrower scope.
+**Auth:** cookie `__session` (Firebase JWT) → middleware (Edge) → Server Components via `getFirebaseSession()` → `getTenantId()`.
 
-## Edit Safety
+**Plan guard duplo:**
+- Middleware lê cookie `__plan` (`plan:status`). Se `free` ou `status!='active'` → redirect billing.
+- Layout faz hard check no DB via `getTenantPlan()`.
+- `syncPlanCookie()` (billing.ts) mantém cookie sincronizado — chamar na billing page.
 
-- Before every file edit: re-read the file. After editing: read it again.
-  The Edit tool fails silently on stale old_string matches.
-- You have grep, not an AST. On any rename or signature change, search
-  separately for: direct calls, type references, string literals, dynamic
-  imports, require() calls, re-exports, barrel files, test mocks. Assume
-  grep missed something.
-- Never delete a file without verifying nothing references it.
+**Admin:** `role='admin'` na tabela `tenants`. `isTenantAdmin(tenantId)` sempre consulta DB — nunca cookie. Cookie para admin: `max:active` (nunca a string 'admin'). Bypass em limites pré e pós-insert.
 
-## Self-Correction
+## Custo de Produtos
 
-- After any correction from me: log the pattern to gotchas.md. Convert
-  mistakes into rules. Review past lessons at session start.
-- If a fix doesn't work after two attempts: stop. Read the entire relevant
-  section top-down. State where your mental model was wrong.
-- When asked to test your own output: adopt a new-user persona. Walk
-  through as if you've never seen the project.
+`recipe-cost.ts`: `mapBaseUnit` — g→'g', kg→'kg', ml→'ml', L→'L', default→'un' (sem fallthrough). `convertToBaseUnit`: identidade quando `from === to`.
 
-## Communication
+Unit em `recipe_ingredients` é travada na unit do ingrediente — sem conversão de preço entre unidades.
 
-- When I say "yes", "do it", or "push": execute. Don't repeat the plan.
-- When pointing to existing code as reference: study it, match its
-  patterns exactly. My working code is a better spec than my description.
-- Work from raw error data. Don't guess. If a bug report has no output,
-  ask for it.
+`recomputeAndStoreProductCost(supabase, tenantId, productId)` → chamar após `updateIngredient` e `updateRecipe`.
+
+## Anti-Race (limites de plano)
+
+```
+pre-check → insert → post-check (se excedeu: rollback delete + throw)
+```
+Ambos com `!isAdmin &&`.
+
+## AbacatePay Webhook
+
+Payload v2 nested: `{ event, data: { subscription, customer, checkout: { metadata, items } } }`. Secret via `?webhookSecret=` com `timingSafeEqual`. Retornar 200 quando tenant não encontrado (evita loop de retentativas).
+
+## TDD — Mocks
+
+Mock de Server Action: `@/lib/supabase/server` + `@/lib/supabase/tenant` (incluir `getTenantId`, `getTenantPlan`, `isTenantAdmin`). Usar `mockFrom.mockImplementation((table) => ...)` para múltiplas tabelas. `vi.clearAllMocks()` não limpa `mockReturnValueOnce` pendentes — preferir `mockImplementation`.

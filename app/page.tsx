@@ -199,8 +199,16 @@ export default function LandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="bg-gradient-to-br from-slate-50 to-pink-50 py-20 sm:py-28 overflow-hidden">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 text-center">
+      <section className="relative overflow-hidden py-20 sm:py-28">
+        {/* Background image */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('/hero-bg.png')" }}
+        />
+        {/* Light frosted overlay so text stays legible */}
+        <div className="absolute inset-0 bg-white/70 backdrop-blur-[2px]" />
+
+        <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 text-center">
           <div className="mx-auto max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full bg-pink-100 px-4 py-1.5 text-sm font-medium text-pink-700 mb-6">
               <Cake className="h-4 w-4" />
@@ -381,11 +389,10 @@ export default function LandingPage() {
             {plans.map((plan) => (
               <Card
                 key={plan.name}
-                className={`relative ${
-                  plan.highlight
+                className={`relative ${plan.highlight
                     ? 'border-pink-500 border-2 shadow-xl scale-105'
                     : 'border-slate-200 shadow-sm'
-                }`}
+                  }`}
               >
                 {plan.highlight && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2">
@@ -413,11 +420,10 @@ export default function LandingPage() {
                   </ul>
                   <Button
                     asChild
-                    className={`w-full mt-4 ${
-                      plan.highlight
+                    className={`w-full mt-4 ${plan.highlight
                         ? 'bg-pink-500 hover:bg-pink-600'
                         : 'bg-slate-800 hover:bg-slate-700'
-                    }`}
+                      }`}
                   >
                     <TrackedLink
                       href={plan.href}
