@@ -27,7 +27,7 @@ export function Sidebar() {
   ]
 
   return (
-    <div className="hidden md:block bg-white border-r border-slate-200 shadow-sm">
+    <div className="hidden md:block bg-white border-r border-slate-200 shadow-sm sticky top-0 h-screen">
       <div className="flex h-full max-h-screen flex-col">
         <div className="flex h-20 items-center px-6 border-b border-slate-200">
           <Link href="/" className="flex items-center gap-3 font-semibold text-lg text-slate-800">
