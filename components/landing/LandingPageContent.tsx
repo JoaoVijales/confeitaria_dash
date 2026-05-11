@@ -50,9 +50,9 @@ function FadeUp({
     <motion.div
       ref={ref}
       className={className}
-      initial={{ opacity: 0, y: 32 }}
+      initial={{ opacity: 0, y: 28 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.9, delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
     </motion.div>
@@ -72,7 +72,7 @@ function FadeIn({
 }) {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
-  const dirMap = { up: [0, 40], left: [-48, 0], right: [48, 0], none: [0, 0] }
+  const dirMap = { up: [0, 36], left: [-44, 0], right: [44, 0], none: [0, 0] }
   const [x, y] = dirMap[direction]
   return (
     <motion.div
@@ -80,7 +80,7 @@ function FadeIn({
       className={className}
       initial={{ opacity: 0, x, y }}
       animate={inView ? { opacity: 1, x: 0, y: 0 } : {}}
-      transition={{ duration: 0.65, delay, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.95, delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
     </motion.div>
@@ -106,7 +106,7 @@ function StaggerContainer({
       animate={inView ? 'visible' : 'hidden'}
       variants={{
         hidden: {},
-        visible: { transition: { staggerChildren: 0.1, delayChildren: delay } },
+        visible: { transition: { staggerChildren: 0.14, delayChildren: delay } },
       }}
     >
       {children}
@@ -115,8 +115,8 @@ function StaggerContainer({
 }
 
 const staggerItem = {
-  hidden: { opacity: 0, y: 28 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.85, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
 }
 
 // ─── Magnetic hover button ──────────────────────────────────────────────────
@@ -142,7 +142,7 @@ function MagneticButton({ children, className }: { children: React.ReactNode; cl
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       animate={{ x: pos.x, y: pos.y }}
-      transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+      transition={{ type: 'spring', stiffness: 180, damping: 22 }}
       className={className}
     >
       {children}
@@ -179,7 +179,7 @@ function TiltCard({ children, className }: { children: React.ReactNode; classNam
           ? '0 20px 60px -15px rgba(236,72,153,0.2), 0 8px 24px -8px rgba(0,0,0,0.12)'
           : '0 1px 3px rgba(0,0,0,0.06)',
       }}
-      transition={{ type: 'spring', stiffness: 280, damping: 28 }}
+      transition={{ type: 'spring', stiffness: 160, damping: 26 }}
       style={{ transformStyle: 'preserve-3d', perspective: 800 }}
       className={className}
     >
@@ -262,9 +262,14 @@ const flowItems = [
 export function LandingPageContent() {
   const heroRef = useRef(null)
   const { scrollYProgress: heroScroll } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
-  const heroImgY = useTransform(heroScroll, [0, 1], ['0%', '18%'])
-  const heroOpacity = useTransform(heroScroll, [0, 0.6], [1, 0])
-  const heroBgY = useTransform(heroScroll, [0, 1], ['0%', '40%'])
+
+  // Parallax layers — each moves at a different speed as hero scrolls out
+  const heroBgY    = useTransform(heroScroll, [0, 1], ['0%', '55%'])   // slowest: background
+  const blobFarY   = useTransform(heroScroll, [0, 1], ['0%', '35%'])   // far blobs
+  const blobNearY  = useTransform(heroScroll, [0, 1], ['0%', '20%'])   // near blob
+  const heroTextY  = useTransform(heroScroll, [0, 1], ['0%', '12%'])   // text moves a little
+  const heroImgY   = useTransform(heroScroll, [0, 1], ['0%', '22%'])   // image moves more than text
+  const heroOpacity = useTransform(heroScroll, [0, 0.55], [1, 0])
 
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
@@ -273,7 +278,7 @@ export function LandingPageContent() {
         className="sticky top-0 z-50 border-b border-slate-100 bg-white/95 backdrop-blur"
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       >
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
@@ -298,7 +303,7 @@ export function LandingPageContent() {
                   className="hover:text-slate-900 transition-colors relative group"
                   initial={{ opacity: 0, y: -12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 + i * 0.06 }}
+                  transition={{ delay: 0.15 + i * 0.1, duration: 0.7 }}
                 >
                   {['Funcionalidades', 'Como funciona', 'Planos', 'FAQ'][i]}
                   <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-pink-400 group-hover:w-full transition-all duration-300" />
@@ -309,7 +314,7 @@ export function LandingPageContent() {
               className="flex items-center gap-3"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.4, duration: 0.7 }}
             >
               <Button variant="ghost" asChild className="text-slate-600">
                 <TrackedLink href="/login" trackEvent="cta_click" trackParams={{ location: 'navbar', action: 'login' }}>Entrar</TrackedLink>
@@ -332,28 +337,44 @@ export function LandingPageContent() {
           style={{ y: heroBgY }}
         />
 
-        {/* Animated blobs */}
-        <motion.div
-          className="absolute top-16 right-[8%] w-72 h-72 rounded-full bg-pink-200/30 blur-3xl"
-          animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          className="absolute bottom-24 left-[4%] w-56 h-56 rounded-full bg-purple-200/25 blur-3xl"
-          animate={{ scale: [1.1, 1, 1.1], opacity: [0.25, 0.45, 0.25] }}
-          transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
-        />
+        {/* Parallax blob layer — far (slow) */}
+        <motion.div style={{ y: blobFarY }} className="absolute inset-0 pointer-events-none">
+          <motion.div
+            className="absolute top-16 right-[8%] w-80 h-80 rounded-full bg-pink-200/30 blur-3xl"
+            animate={{ scale: [1, 1.12, 1], opacity: [0.28, 0.48, 0.28] }}
+            transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <motion.div
+            className="absolute top-40 left-[12%] w-48 h-48 rounded-full bg-rose-200/20 blur-3xl"
+            animate={{ scale: [1.05, 1, 1.05], opacity: [0.2, 0.35, 0.2] }}
+            transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+          />
+        </motion.div>
+
+        {/* Parallax blob layer — near (faster) */}
+        <motion.div style={{ y: blobNearY }} className="absolute inset-0 pointer-events-none">
+          <motion.div
+            className="absolute bottom-24 left-[4%] w-56 h-56 rounded-full bg-purple-200/25 blur-3xl"
+            animate={{ scale: [1.1, 1, 1.1], opacity: [0.25, 0.42, 0.25] }}
+            transition={{ duration: 13, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
+          />
+          <motion.div
+            className="absolute bottom-32 right-[18%] w-36 h-36 rounded-full bg-pink-300/20 blur-2xl"
+            animate={{ scale: [1, 1.18, 1], opacity: [0.15, 0.3, 0.15] }}
+            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
+          />
+        </motion.div>
 
         <motion.div
           className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 text-center w-full"
-          style={{ opacity: heroOpacity }}
+          style={{ opacity: heroOpacity, y: heroTextY }}
         >
           <div className="mx-auto max-w-3xl">
             <motion.div
               className="inline-flex items-center gap-2 rounded-full bg-pink-100 px-4 py-1.5 text-sm font-medium text-pink-700 mb-6"
-              initial={{ opacity: 0, y: -20, scale: 0.9 }}
+              initial={{ opacity: 0, y: -16, scale: 0.92 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
             >
               <motion.span
                 animate={{ rotate: [0, -12, 12, -12, 0] }}
@@ -366,16 +387,16 @@ export function LandingPageContent() {
 
             <motion.h1
               className="text-4xl font-bold tracking-tight text-slate-900 sm:text-6xl leading-tight"
-              initial={{ opacity: 0, y: 40 }}
+              initial={{ opacity: 0, y: 36 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.75, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 1.0, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             >
               Sua confeitaria organizada,{' '}
               <motion.span
                 className="text-pink-500 inline-block"
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, x: -16 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
+                transition={{ duration: 0.85, delay: 0.55 }}
               >
                 do ingrediente ao caixa
               </motion.span>
@@ -383,9 +404,9 @@ export function LandingPageContent() {
 
             <motion.p
               className="mt-6 text-lg leading-8 text-slate-600 max-w-2xl mx-auto"
-              initial={{ opacity: 0, y: 24 }}
+              initial={{ opacity: 0, y: 22 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.35 }}
+              transition={{ duration: 0.9, delay: 0.45 }}
             >
               Chega de pedido no caderno e custo no achismo. O Confeitando centraliza
               pedidos, receitas, estoque e financeiro para você produzir com confiança e lucrar de verdade.
@@ -393,9 +414,9 @@ export function LandingPageContent() {
 
             <motion.div
               className="mt-10 flex items-center justify-center gap-4 flex-wrap"
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
+              transition={{ duration: 0.9, delay: 0.65 }}
             >
               <MagneticButton>
                 <Button size="lg" asChild className="bg-pink-500 hover:bg-pink-600 px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-pink-200 hover:shadow-pink-300 transition-shadow">
@@ -419,7 +440,7 @@ export function LandingPageContent() {
               className="mt-8 flex items-center justify-center gap-6 flex-wrap"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.7 }}
+              transition={{ duration: 0.9, delay: 0.85 }}
             >
               {trustBadges.map((badge, i) => (
                 <motion.div
@@ -427,7 +448,7 @@ export function LandingPageContent() {
                   className="flex items-center gap-1.5 text-sm text-slate-500"
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.75 + i * 0.08 }}
+                  transition={{ delay: 0.9 + i * 0.1, duration: 0.7 }}
                 >
                   <badge.icon className="h-4 w-4 text-pink-400" />
                   {badge.label}
@@ -439,15 +460,15 @@ export function LandingPageContent() {
           {/* Dashboard preview with parallax */}
           <motion.div
             className="mt-16 relative mx-auto max-w-5xl"
-            initial={{ opacity: 0, y: 60, scale: 0.96 }}
+            initial={{ opacity: 0, y: 52, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.9, delay: 0.55, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 1.1, delay: 0.75, ease: [0.22, 1, 0.36, 1] }}
             style={{ y: heroImgY }}
           >
             <motion.div
               className="absolute -inset-4 rounded-3xl bg-pink-200/40 blur-2xl"
               animate={{ scale: [1, 1.04, 1], opacity: [0.4, 0.65, 0.4] }}
-              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
             />
             <div className="relative rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden">
               <div className="flex items-center gap-1.5 px-4 py-3 border-b border-slate-100 bg-slate-50">
@@ -479,7 +500,7 @@ export function LandingPageContent() {
                   className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"
                   initial={{ x: '-100%' }}
                   animate={{ x: '200%' }}
-                  transition={{ duration: 1.2, delay: 1.2, ease: 'easeInOut' }}
+                  transition={{ duration: 1.6, delay: 1.4, ease: 'easeInOut' }}
                 />
               </div>
             </div>
@@ -517,8 +538,9 @@ export function LandingPageContent() {
       </section>
 
       {/* Features */}
-      <section id="funcionalidades" className="py-20 bg-slate-50">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+      <section id="funcionalidades" className="py-20 relative overflow-hidden">
+        <ScrollBgLayer className="bg-slate-50" speed={0.12} />
+        <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <FadeUp className="text-center mb-14">
             <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">
               Tudo que você precisa, em um lugar só
@@ -591,13 +613,7 @@ export function LandingPageContent() {
           {/* Receitas */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-24">
             <FadeIn direction="left">
-              <motion.div
-                className="rounded-2xl overflow-hidden border border-slate-200 shadow-xl"
-                whileHover={{ scale: 1.02, boxShadow: '0 30px 80px -20px rgba(236,72,153,0.18)' }}
-                transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-              >
-                <Image src="/receitas_conf.png" alt="Tela de receitas do Confeitando" width={800} height={500} className="w-full h-auto" />
-              </motion.div>
+              <ParallaxImage src="/receitas_conf.png" alt="Tela de receitas do Confeitando" speed={0.12} />
             </FadeIn>
             <FadeIn direction="right" delay={0.1}>
               <div className="inline-flex items-center gap-2 rounded-full bg-purple-100 px-3 py-1 text-xs font-medium text-purple-700 mb-4">
@@ -660,13 +676,7 @@ export function LandingPageContent() {
               </StaggerContainer>
             </FadeIn>
             <FadeIn direction="right" className="order-1 lg:order-2">
-              <motion.div
-                className="rounded-2xl overflow-hidden border border-slate-200 shadow-xl"
-                whileHover={{ scale: 1.02, boxShadow: '0 30px 80px -20px rgba(236,72,153,0.18)' }}
-                transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-              >
-                <Image src="/produtos_conf.png" alt="Tela de produtos do Confeitando" width={800} height={500} className="w-full h-auto" />
-              </motion.div>
+              <ParallaxImage src="/produtos_conf.png" alt="Tela de produtos do Confeitando" speed={0.1} />
             </FadeIn>
           </div>
 
@@ -746,8 +756,9 @@ export function LandingPageContent() {
       </section>
 
       {/* How it works */}
-      <section id="como-funciona" className="py-20 bg-slate-50">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+      <section id="como-funciona" className="py-20 relative overflow-hidden">
+        <ScrollBgLayer className="bg-slate-50" speed={0.1} />
+        <div className="relative z-10 mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <FadeUp className="text-center mb-14">
             <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">Simples de começar</h2>
             <p className="mt-4 text-slate-500 text-lg">Três passos e sua confeitaria já está organizada.</p>
@@ -784,8 +795,9 @@ export function LandingPageContent() {
       </section>
 
       {/* Pricing */}
-      <section id="planos" className="py-20 bg-slate-50">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+      <section id="planos" className="py-20 relative overflow-hidden">
+        <ScrollBgLayer className="bg-slate-50" speed={0.08} />
+        <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <FadeUp className="text-center mb-14">
             <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">Planos para cada fase da sua confeitaria</h2>
             <p className="mt-4 text-slate-500 text-lg">Sem contrato. Cancele quando quiser.</p>
@@ -980,6 +992,38 @@ export function LandingPageContent() {
 
 // ─── Helper sub-components ───────────────────────────────────────────────────
 
+// Decorative parallax background layer — place as absolute child inside a relative+overflow-hidden section
+function ScrollBgLayer({ className, speed = 0.15 }: { className?: string; speed?: number }) {
+  const ref = useRef(null)
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
+  const y = useTransform(scrollYProgress, [0, 1], [`-${speed * 100}%`, `${speed * 100}%`])
+  return <motion.div ref={ref} className={`absolute inset-0 pointer-events-none ${className ?? ''}`} style={{ y }} />
+}
+
+function ParallaxImage({ src, alt, speed = 0.1 }: { src: string; alt: string; speed?: number }) {
+  const ref = useRef(null)
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
+  // Image drifts upward at `speed` fraction of its scroll range → feels like it floats
+  const y = useTransform(scrollYProgress, [0, 1], [`${speed * 100}%`, `${-speed * 100}%`])
+
+  return (
+    <div
+      ref={ref}
+      className="rounded-2xl overflow-hidden border border-slate-200 shadow-xl"
+      style={{ isolation: 'isolate' }}
+    >
+      <motion.div style={{ y }} className="will-change-transform">
+        <motion.div
+          whileHover={{ scale: 1.03 }}
+          transition={{ type: 'spring', stiffness: 180, damping: 28 }}
+        >
+          <Image src={src} alt={alt} width={800} height={500} className="w-full h-auto block" />
+        </motion.div>
+      </motion.div>
+    </div>
+  )
+}
+
 function StepConnector() {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })
@@ -989,7 +1033,7 @@ function StepConnector() {
         className="h-full bg-pink-300"
         initial={{ width: '0%' }}
         animate={inView ? { width: '100%' } : {}}
-        transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
+        transition={{ duration: 1.1, delay: 0.4, ease: 'easeOut' }}
       />
     </div>
   )
@@ -1006,7 +1050,7 @@ function FlowItems() {
             className="text-center"
             initial={{ opacity: 0, scale: 0.7 }}
             animate={inView ? { opacity: 1, scale: 1 } : {}}
-            transition={{ duration: 0.4, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.65, delay: i * 0.14, ease: [0.22, 1, 0.36, 1] }}
           >
             <span className={`inline-block rounded-full px-3 py-1.5 text-xs font-semibold ${item.color}`}>
               {item.label}
@@ -1017,7 +1061,7 @@ function FlowItems() {
             <motion.div
               initial={{ opacity: 0, x: -8 }}
               animate={inView ? { opacity: 1, x: 0 } : {}}
-              transition={{ duration: 0.3, delay: i * 0.1 + 0.08 }}
+              transition={{ duration: 0.5, delay: i * 0.14 + 0.1 }}
             >
               <ArrowRight className="h-4 w-4 text-slate-300 flex-shrink-0 hidden sm:block" />
             </motion.div>
@@ -1039,7 +1083,7 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
         <span className="font-medium text-slate-800">{question}</span>
         <motion.div
           animate={{ rotate: open ? 180 : 0 }}
-          transition={{ duration: 0.25, ease: 'easeInOut' }}
+          transition={{ duration: 0.35, ease: 'easeInOut' }}
         >
           <ChevronDown className="h-5 w-5 text-slate-400 flex-shrink-0" />
         </motion.div>
@@ -1051,7 +1095,7 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
             initial={{ height: 0, opacity: 0, marginTop: 0 }}
             animate={{ height: 'auto', opacity: 1, marginTop: 12 }}
             exit={{ height: 0, opacity: 0, marginTop: 0 }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
           >
             {answer}
           </motion.p>
