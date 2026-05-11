@@ -335,55 +335,282 @@ export default function LandingPage() {
       </section>
 
       {/* Demo screenshots */}
-      <section className="py-20 bg-white">
+      <section className="py-24 bg-white overflow-hidden">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
+
+          {/* Header */}
+          <div className="text-center mb-20">
+            <div className="inline-flex items-center gap-2 rounded-full bg-pink-100 px-4 py-1.5 text-sm font-medium text-pink-700 mb-4">
+              <Zap className="h-4 w-4" />
+              Módulos integrados
+            </div>
             <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">
               Veja como fica na prática
             </h2>
             <p className="mt-4 text-slate-500 text-lg max-w-2xl mx-auto">
-              Interface limpa e intuitiva — tudo que você precisa a um clique de distância.
+              Os módulos conversam entre si em tempo real. Altere o preço de um ingrediente
+              e o custo de todas as receitas e produtos atualiza automaticamente.
             </p>
           </div>
-          <div className="grid grid-cols-1 gap-10 sm:grid-cols-2">
-            <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-md">
-              <Image
-                src="/produtos_conf.png"
-                alt="Tela de produtos do Confeitando"
-                width={800}
-                height={500}
-                className="w-full object-cover"
-              />
-              <div className="p-6 bg-white">
-                <div className="inline-flex items-center gap-2 rounded-full bg-pink-100 px-3 py-1 text-xs font-medium text-pink-700 mb-3">
-                  <Package className="h-3.5 w-3.5" />
-                  Produtos
-                </div>
-                <h3 className="font-semibold text-slate-800 text-lg mb-2">Catálogo completo de produtos</h3>
-                <p className="text-sm text-slate-500 leading-relaxed">
-                  Cadastre seus produtos com preço de venda e custo calculado automaticamente a partir das receitas. Veja a margem de lucro de cada item sem precisar fazer conta.
-                </p>
-              </div>
-            </div>
-            <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-md">
+
+          {/* Feature showcase: Receitas */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-24">
+            <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-xl">
               <Image
                 src="/receitas_conf.png"
                 alt="Tela de receitas do Confeitando"
                 width={800}
                 height={500}
-                className="w-full object-cover"
+                className="w-full h-auto"
               />
-              <div className="p-6 bg-white">
-                <div className="inline-flex items-center gap-2 rounded-full bg-pink-100 px-3 py-1 text-xs font-medium text-pink-700 mb-3">
-                  <FlaskConical className="h-3.5 w-3.5" />
-                  Receitas
-                </div>
-                <h3 className="font-semibold text-slate-800 text-lg mb-2">Custo real de cada receita</h3>
-                <p className="text-sm text-slate-500 leading-relaxed">
-                  Monte suas receitas com os ingredientes cadastrados e o sistema calcula o custo automaticamente. Mude o preço de um ingrediente e todos os produtos atualizam na hora.
-                </p>
-              </div>
             </div>
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full bg-purple-100 px-3 py-1 text-xs font-medium text-purple-700 mb-4">
+                <FlaskConical className="h-3.5 w-3.5" />
+                Módulo de Receitas
+              </div>
+              <h3 className="text-2xl font-bold text-slate-800 mb-4">
+                Custo exato de cada receita, sem fazer conta
+              </h3>
+              <p className="text-slate-500 leading-relaxed mb-6">
+                Liste os ingredientes e as quantidades que você já usa. O Confeitando soma os preços por grama, mililitro ou unidade e mostra o custo total da receita — e quanto custa cada porção individualmente.
+              </p>
+              <ul className="space-y-4">
+                <li className="flex items-start gap-3">
+                  <div className="mt-0.5 flex-shrink-0 h-5 w-5 rounded-full bg-purple-100 flex items-center justify-center">
+                    <Check className="h-3 w-3 text-purple-600" />
+                  </div>
+                  <span className="text-sm text-slate-600 leading-relaxed">
+                    <strong className="text-slate-700">Unidades reais</strong> — cadastre em g, ml ou unidade; o sistema converte para o custo exato por porção
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="mt-0.5 flex-shrink-0 h-5 w-5 rounded-full bg-purple-100 flex items-center justify-center">
+                    <Check className="h-3 w-3 text-purple-600" />
+                  </div>
+                  <span className="text-sm text-slate-600 leading-relaxed">
+                    <strong className="text-slate-700">Recalculo automático</strong> — atualizou o preço do chocolate? Todas as receitas que levam chocolate atualizam
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="mt-0.5 flex-shrink-0 h-5 w-5 rounded-full bg-purple-100 flex items-center justify-center">
+                    <Check className="h-3 w-3 text-purple-600" />
+                  </div>
+                  <span className="text-sm text-slate-600 leading-relaxed">
+                    <strong className="text-slate-700">Base para precificação</strong> — saiba o mínimo que você pode cobrar para não vender no prejuízo
+                  </span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Feature showcase: Produtos */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-24">
+            <div className="order-2 lg:order-1">
+              <div className="inline-flex items-center gap-2 rounded-full bg-pink-100 px-3 py-1 text-xs font-medium text-pink-700 mb-4">
+                <Package className="h-3.5 w-3.5" />
+                Módulo de Produtos
+              </div>
+              <h3 className="text-2xl font-bold text-slate-800 mb-4">
+                Catálogo com margem calculada em tempo real
+              </h3>
+              <p className="text-slate-500 leading-relaxed mb-6">
+                Cadastre seus bolos, tortas e doces com o preço de venda. O sistema busca automaticamente o custo da receita vinculada e exibe a margem de lucro de cada item — sem planilha, sem conta manual.
+              </p>
+              <ul className="space-y-4">
+                <li className="flex items-start gap-3">
+                  <div className="mt-0.5 flex-shrink-0 h-5 w-5 rounded-full bg-pink-100 flex items-center justify-center">
+                    <Check className="h-3 w-3 text-pink-600" />
+                  </div>
+                  <span className="text-sm text-slate-600 leading-relaxed">
+                    <strong className="text-slate-700">Preço vs. custo lado a lado</strong> — veja de relance se o produto está sendo vendido com margem saudável
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="mt-0.5 flex-shrink-0 h-5 w-5 rounded-full bg-pink-100 flex items-center justify-center">
+                    <Check className="h-3 w-3 text-pink-600" />
+                  </div>
+                  <span className="text-sm text-slate-600 leading-relaxed">
+                    <strong className="text-slate-700">Atualização em cascata</strong> — mude o preço da manteiga e a margem do bolo de cenoura atualiza na hora
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="mt-0.5 flex-shrink-0 h-5 w-5 rounded-full bg-pink-100 flex items-center justify-center">
+                    <Check className="h-3 w-3 text-pink-600" />
+                  </div>
+                  <span className="text-sm text-slate-600 leading-relaxed">
+                    <strong className="text-slate-700">Integrado a pedidos</strong> — adicione qualquer produto ao pedido do cliente em um clique, sem redigitar preços
+                  </span>
+                </li>
+              </ul>
+            </div>
+            <div className="order-1 lg:order-2 rounded-2xl overflow-hidden border border-slate-200 shadow-xl">
+              <Image
+                src="/produtos_conf.png"
+                alt="Tela de produtos do Confeitando"
+                width={800}
+                height={500}
+                className="w-full h-auto"
+              />
+            </div>
+          </div>
+
+          {/* Integration flow */}
+          <div className="rounded-2xl bg-gradient-to-br from-slate-50 to-pink-50/40 border border-slate-100 p-8 mb-16">
+            <p className="text-center text-xs font-semibold uppercase tracking-widest text-slate-400 mb-8">
+              Como os módulos se conectam
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 flex-wrap">
+              {(
+                [
+                  { label: 'Ingredientes', color: 'bg-blue-100 text-blue-700', desc: 'preço e estoque' },
+                  { label: 'Receitas', color: 'bg-purple-100 text-purple-700', desc: 'custo automático' },
+                  { label: 'Produtos', color: 'bg-pink-100 text-pink-700', desc: 'margem em tempo real' },
+                  { label: 'Pedidos', color: 'bg-orange-100 text-orange-700', desc: 'status e entrega' },
+                  { label: 'Financeiro', color: 'bg-green-100 text-green-700', desc: 'caixa atualizado' },
+                ] as const
+              ).map((item, i, arr) => (
+                <div key={item.label} className="flex items-center gap-3">
+                  <div className="text-center">
+                    <span className={`inline-block rounded-full px-3 py-1.5 text-xs font-semibold ${item.color}`}>
+                      {item.label}
+                    </span>
+                    <p className="text-xs text-slate-400 mt-1">{item.desc}</p>
+                  </div>
+                  {i < arr.length - 1 && (
+                    <ArrowRight className="h-4 w-4 text-slate-300 flex-shrink-0 hidden sm:block" />
+                  )}
+                </div>
+              ))}
+            </div>
+            <p className="text-center text-sm text-slate-500 mt-6 max-w-xl mx-auto">
+              Cada módulo alimenta o próximo. Você não precisa atualizar nada em dois lugares — tudo flui automaticamente.
+            </p>
+          </div>
+
+          {/* Other modules: 2x2 grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+            {/* Pedidos */}
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-100 flex-shrink-0">
+                  <ShoppingCart className="h-5 w-5 text-orange-600" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-orange-500 mb-0.5">Pedidos</p>
+                  <h3 className="font-semibold text-slate-800">Do recebimento à entrega</h3>
+                </div>
+              </div>
+              <p className="text-sm text-slate-500 leading-relaxed mb-5">
+                Registre pedidos com cliente, produtos, data de entrega e valor. Acompanhe cada pedido em um pipeline visual: <strong className="text-slate-600">Pendente → Em produção → Pronto → Entregue</strong>. Nada fica perdido no WhatsApp ou no caderno.
+              </p>
+              <ul className="space-y-2 text-sm text-slate-500">
+                <li className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-orange-400 mt-0.5 flex-shrink-0" />
+                  Histórico completo de pedidos com filtro por status e data
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-orange-400 mt-0.5 flex-shrink-0" />
+                  Valor total calculado automaticamente pelos produtos selecionados
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-orange-400 mt-0.5 flex-shrink-0" />
+                  Pedido marcado como pago registra a entrada no financeiro
+                </li>
+              </ul>
+            </div>
+
+            {/* Estoque */}
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-yellow-100 flex-shrink-0">
+                  <Package className="h-5 w-5 text-yellow-600" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-yellow-600 mb-0.5">Estoque</p>
+                  <h3 className="font-semibold text-slate-800">Alerta antes de faltar</h3>
+                </div>
+              </div>
+              <p className="text-sm text-slate-500 leading-relaxed mb-5">
+                Cadastre a quantidade atual de cada ingrediente e defina um estoque mínimo. O sistema alerta quando o nível cai abaixo do limite — antes de você descobrir na véspera da entrega que não tem manteiga suficiente.
+              </p>
+              <ul className="space-y-2 text-sm text-slate-500">
+                <li className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
+                  Estoque mínimo personalizável por ingrediente
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
+                  Painel com todos os ingredientes em estado de alerta
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
+                  Integrado a receitas — saiba exatamente o que falta para produzir
+                </li>
+              </ul>
+            </div>
+
+            {/* Financeiro */}
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-100 flex-shrink-0">
+                  <DollarSign className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-green-600 mb-0.5">Financeiro</p>
+                  <h3 className="font-semibold text-slate-800">Caixa em tempo real, sem planilha</h3>
+                </div>
+              </div>
+              <p className="text-sm text-slate-500 leading-relaxed mb-5">
+                Registre entradas, saídas e despesas por categoria. Veja o saldo atual e o fluxo mensal em gráfico — e entenda para onde está indo o dinheiro. Vendas de pedidos entram automaticamente, sem lançamento manual.
+              </p>
+              <ul className="space-y-2 text-sm text-slate-500">
+                <li className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                  Lançamentos por categoria: insumos, embalagens, marketing e mais
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                  Saldo atual e evolução mensal em gráfico
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                  Integrado a pedidos — vendas entram no caixa automaticamente
+                </li>
+              </ul>
+            </div>
+
+            {/* Dashboard & Clientes */}
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-100 flex-shrink-0">
+                  <BarChart3 className="h-5 w-5 text-indigo-600" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-indigo-500 mb-0.5">Dashboard & Clientes</p>
+                  <h3 className="font-semibold text-slate-800">Decisões com dados, não com achismo</h3>
+                </div>
+              </div>
+              <p className="text-sm text-slate-500 leading-relaxed mb-5">
+                Veja faturamento, ticket médio e produtos mais vendidos em uma tela só. No módulo de clientes, identifique quem compra mais, com que frequência e quanto já gastou — e cultive quem realmente impulsiona o seu negócio.
+              </p>
+              <ul className="space-y-2 text-sm text-slate-500">
+                <li className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-indigo-400 mt-0.5 flex-shrink-0" />
+                  KPIs do mês e comparativo com o período anterior
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-indigo-400 mt-0.5 flex-shrink-0" />
+                  Ranking de produtos mais vendidos e mais rentáveis
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-indigo-400 mt-0.5 flex-shrink-0" />
+                  Histórico de cada cliente: total gasto, pedidos e frequência de compra
+                </li>
+              </ul>
+            </div>
+
           </div>
         </div>
       </section>
