@@ -740,35 +740,50 @@ export default function LandingPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-24 bg-pink-500">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-white sm:text-4xl leading-tight">
-            Chega de pedido perdido.<br />Assine e organize tudo agora.
+      <section className="relative overflow-hidden py-24 bg-gradient-to-b from-pink-50/70 to-white">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-pink-100/60 via-transparent to-transparent" />
+        <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full bg-pink-100 px-4 py-1.5 text-sm font-medium text-pink-700 mb-6">
+            <Cake className="h-4 w-4" />
+            Comece hoje mesmo
+          </div>
+          <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl leading-tight">
+            Chega de pedido perdido.<br />
+            <span className="text-pink-500">Assine e organize tudo agora.</span>
           </h2>
-          <p className="mt-4 text-pink-100 text-lg">
+          <p className="mt-4 text-slate-600 text-lg max-w-2xl mx-auto">
             Controle pedidos, custos e estoque em um único lugar. Configure em menos de 2 minutos.
           </p>
-          <Button
-            size="lg"
-            asChild
-            className="mt-8 bg-white text-pink-600 hover:bg-pink-50 px-10 py-6 text-base font-semibold gap-2"
-          >
-            <TrackedLink href="/signup" trackEvent="cta_click" trackParams={{ location: 'final_cta', action: 'signup' }}>
-              Assinar agora
-              <ArrowRight className="h-5 w-5" />
-            </TrackedLink>
-          </Button>
-          <p className="mt-4 text-pink-200 text-sm">Sem contrato • Cancele quando quiser</p>
+          <div className="mt-8 flex items-center justify-center gap-4 flex-wrap">
+            <Button
+              size="lg"
+              asChild
+              className="bg-pink-500 hover:bg-pink-600 px-10 py-6 text-base font-semibold gap-2"
+            >
+              <TrackedLink href="/signup" trackEvent="cta_click" trackParams={{ location: 'final_cta', action: 'signup' }}>
+                Assinar agora
+                <ArrowRight className="h-5 w-5" />
+              </TrackedLink>
+            </Button>
+          </div>
+          <div className="mt-6 flex items-center justify-center gap-6 flex-wrap">
+            {trustBadges.map((badge) => (
+              <div key={badge.label} className="flex items-center gap-1.5 text-sm text-slate-500">
+                <badge.icon className="h-4 w-4 text-pink-400" />
+                {badge.label}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Support */}
-      <section className="py-16 bg-green-50">
+      <section className="py-16 border-t border-slate-100 bg-white">
         <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl font-bold text-slate-900">
             Dúvidas, ajuda ou feedback?
           </h2>
-          <p className="mt-3 text-slate-600">
+          <p className="mt-3 text-slate-500">
             Estamos no WhatsApp e respondemos em até 15 minutos.
           </p>
           <a
