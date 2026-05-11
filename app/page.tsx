@@ -200,13 +200,8 @@ export default function LandingPage() {
 
       {/* Hero */}
       <section className="relative overflow-hidden py-20 sm:py-28">
-        {/* Background image */}
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('/hero-bg.png')" }}
-        />
-        {/* Light frosted overlay so text stays legible */}
-        <div className="absolute inset-0 bg-white/70 backdrop-blur-[2px]" />
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-pink-50/60 to-white" />
 
         <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 text-center">
           <div className="mx-auto max-w-3xl">
@@ -258,7 +253,7 @@ export default function LandingPage() {
                 </div>
               </div>
               <img
-                src="/hero-bg.jpg"
+                src="/hero-bg.png"
                 alt="Dashboard do Confeitando — visão geral financeira"
                 className="w-full h-auto block"
                 loading="eager"
