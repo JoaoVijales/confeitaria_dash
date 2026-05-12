@@ -16,7 +16,6 @@ import {
   TrendingDown,
   AlertTriangle,
   ArrowRight,
-  Shield,
   Smartphone,
   Zap,
   ChevronDown,
@@ -222,7 +221,7 @@ const features = [
   { icon: FlaskConical, title: 'Custo automático de receitas', description: 'Cadastre seus ingredientes e o sistema calcula automaticamente o custo de cada receita. Saiba exatamente quanto cobrar para ter lucro.' },
   { icon: Package, title: 'Alerta antes do estoque acabar', description: 'Defina um estoque mínimo por ingrediente e receba alertas antes de faltar. Nunca mais seja pego de surpresa.' },
   { icon: DollarSign, title: 'Fluxo financeiro completo', description: 'Entradas, saídas e despesas em um só lugar. Veja o dinheiro da sua confeitaria em tempo real, sem planilha.' },
-  { icon: Users, title: 'Histórico de clientes VIP', description: 'Saiba quem compra mais, com que frequência e quanto já gastou. Cultive os melhores clientes com dados.' },
+  { icon: Users, title: 'Histórico completo de clientes', description: 'Saiba quem compra mais, com que frequência e quanto já gastou. Identifique seus melhores clientes e fidelize com dados reais.' },
   { icon: BarChart3, title: 'Dashboard com KPIs e gráficos', description: 'Faturamento, produtos mais vendidos e tendências em uma tela só. Tome decisões com dados, não com achismo.' },
 ]
 
@@ -239,17 +238,18 @@ const plans = [
 ]
 
 const faqs = [
+  { question: 'Tem período de teste gratuito?', answer: 'Sim. Você pode criar sua conta e explorar o sistema antes de assinar. Não cobramos cartão na hora do cadastro.' },
+  { question: 'Como funciona o pagamento?', answer: 'A cobrança é mensal, no cartão de crédito. Você pode cancelar a qualquer momento — sem multa, sem burocracia.' },
   { question: 'Preciso instalar algum programa?', answer: 'Não. O Confeitando funciona direto no navegador, em qualquer dispositivo — computador, celular ou tablet.' },
-  { question: 'Funciona bem no celular?', answer: 'Sim. O dashboard é totalmente responsivo e foi testado em telas pequenas para funcionar bem mesmo na correria do dia a dia.' },
   { question: 'Posso cancelar quando quiser?', answer: 'Sim. Não existe fidelidade nem multa. Você cancela quando quiser, sem complicação.' },
-  { question: 'Meus dados ficam seguros?', answer: 'Seus dados são armazenados com criptografia, com backup automático. Nunca compartilhamos suas informações com terceiros.' },
   { question: 'E se minha confeitaria crescer?', answer: 'É só fazer upgrade de plano. Você migra em segundos e não perde nenhum dado cadastrado.' },
+  { question: 'Meus dados ficam seguros?', answer: 'Seus dados são armazenados com criptografia e backup automático. Nunca compartilhamos suas informações com terceiros.' },
 ]
 
 const trustBadges = [
-  { icon: Shield, label: 'Dados criptografados' },
+  { icon: DollarSign, label: 'A partir de R$ 9,90/mês' },
   { icon: Smartphone, label: 'Funciona no celular' },
-  { icon: Zap, label: 'Sem instalação' },
+  { icon: Zap, label: 'Cancele quando quiser' },
 ]
 
 const flowItems = [
@@ -603,6 +603,9 @@ export function LandingPageContent() {
             <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">
               Isso te parece familiar?
             </h2>
+            <p className="mt-3 text-slate-500 text-lg max-w-xl mx-auto">
+              Se você se identificou com algum desses cenários, o Confeitando foi feito pra você.
+            </p>
           </FadeUp>
           <StaggerContainer className="grid grid-cols-1 gap-5 sm:grid-cols-3">
             {painPoints.map((point) => (
@@ -634,10 +637,10 @@ export function LandingPageContent() {
         <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <FadeUp className="text-center mb-14">
             <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">
-              Tudo que você precisa, em um lugar só
+              A resposta para cada um desses problemas
             </h2>
             <p className="mt-4 text-slate-500 text-lg max-w-2xl mx-auto">
-              Módulos integrados que conversam entre si — altere o custo de um ingrediente e o sistema recalcula tudo automaticamente.
+              Seis módulos que trabalham juntos para você parar de apagar incêndio e começar a crescer de verdade.
             </p>
           </FadeUp>
           {/* Featured card + remaining grid */}
@@ -652,17 +655,17 @@ export function LandingPageContent() {
                     </div>
                   </div>
                   <div className="flex-1">
-                    <span className="text-xs font-semibold uppercase tracking-widest text-pink-100 mb-2 block">Funcionalidade principal</span>
+                    <span className="text-xs font-semibold uppercase tracking-widest text-pink-100 mb-2 block">O coração do sistema</span>
                     <h3 className="text-xl font-bold text-white mb-2">Custo automático de receitas</h3>
                     <p className="text-pink-100 leading-relaxed text-sm max-w-2xl">
-                      Cadastre seus ingredientes e o sistema calcula automaticamente o custo de cada receita — por grama, mililitro ou unidade. Atualizou o preço da manteiga? Todos os produtos que a usam recalculam na hora.
+                      Cadastre seus ingredientes e o sistema calcula automaticamente o custo de cada receita — por grama, mililitro ou unidade. Atualizou o preço da manteiga? Todas as receitas e produtos que a usam recalculam na hora.
                     </p>
                   </div>
                   <div className="flex-shrink-0 mt-6 sm:mt-0">
                     <div className="rounded-xl bg-white/10 border border-white/20 px-5 py-4 text-center min-w-[120px]">
-                      <p className="text-xs text-pink-100 mb-1">Economia de tempo</p>
-                      <p className="text-3xl font-bold text-white">100%</p>
-                      <p className="text-xs text-pink-100 mt-1">de cálculo manual</p>
+                      <p className="text-xs text-pink-100 mb-1">Cálculo manual</p>
+                      <p className="text-3xl font-bold text-white">zero</p>
+                      <p className="text-xs text-pink-100 mt-1">o sistema faz tudo</p>
                     </div>
                   </div>
                 </div>
@@ -731,8 +734,8 @@ export function LandingPageContent() {
               Veja como fica na prática
             </h2>
             <p className="mt-4 text-slate-500 text-lg max-w-2xl mx-auto">
-              Os módulos conversam entre si em tempo real. Altere o preço de um ingrediente
-              e o custo de todas as receitas e produtos atualiza automaticamente.
+              Não é planilha, não é caderno. É um sistema visual onde tudo se conecta —
+              e você vê o resultado em tempo real, sem precisar fazer nada manualmente.
             </p>
           </FadeUp>
 
@@ -832,9 +835,9 @@ export function LandingPageContent() {
           </FadeUp>
           <StaggerContainer className="grid grid-cols-1 gap-6 sm:grid-cols-3">
             {[
-              { number: '1', icon: Cake, title: 'Crie sua conta', description: 'Cadastro em menos de 2 minutos. Sem burocracia, sem cartão exigido na hora.', color: 'from-pink-400 to-rose-400' },
-              { number: '2', icon: FlaskConical, title: 'Configure sua confeitaria', description: 'Adicione produtos, ingredientes e receitas. O sistema calcula os custos automaticamente.', color: 'from-pink-500 to-rose-400' },
-              { number: '3', icon: BarChart3, title: 'Gerencie com tranquilidade', description: 'Receba pedidos, acompanhe o financeiro e nunca mais perca o controle do seu negócio.', color: 'from-rose-400 to-pink-500' },
+              { number: '1', icon: Cake, title: 'Crie sua conta', description: 'Cadastro em menos de 2 minutos. Sem burocracia, sem cartão na hora.', color: 'from-pink-400 to-rose-400' },
+              { number: '2', icon: FlaskConical, title: 'Monte seu cardápio', description: 'Cadastre produtos, ingredientes e receitas. O sistema calcula os custos automaticamente desde o primeiro item.', color: 'from-pink-500 to-rose-400' },
+              { number: '3', icon: BarChart3, title: 'Receba pedidos e lucre', description: 'Comece a registrar pedidos, acompanhe o financeiro e veja o dinheiro real que entra no caixa.', color: 'from-rose-400 to-pink-500' },
             ].map((step, index, arr) => (
               <motion.div key={step.number} variants={staggerItem} className="relative">
                 {index < arr.length - 1 && <StepConnector />}
@@ -883,25 +886,28 @@ export function LandingPageContent() {
           <StaggerContainer className="grid grid-cols-1 gap-6 sm:grid-cols-3">
             {[
               {
-                quote: 'Antes eu não sabia se estava tendo lucro ou prejuízo. Agora vejo o custo de cada receita em segundos — isso mudou a minha precificação completamente.',
+                quote: 'Antes eu não sabia se estava tendo lucro ou prejuízo. Agora vejo o custo de cada receita em segundos e sei exatamente quanto cobrar — isso mudou minha precificação completamente.',
                 name: 'Ana Paula M.',
                 role: 'Confeitaria própria · São Paulo',
+                since: 'Usando desde jan/2025',
                 rating: 5,
                 initial: 'A',
                 color: 'bg-pink-100 text-pink-600',
               },
               {
-                quote: 'Perdi uma entrega porque esqueci um pedido no WhatsApp. Depois que comecei a usar o Confeitando, isso nunca mais aconteceu. O pipeline de pedidos é incrível.',
+                quote: 'Perdi uma entrega porque esqueci um pedido no WhatsApp. Depois do Confeitando, nunca mais aconteceu. Todos os pedidos em um lugar, com status claro.',
                 name: 'Fernanda L.',
                 role: 'Doces artesanais · Belo Horizonte',
+                since: 'Usando desde mar/2025',
                 rating: 5,
                 initial: 'F',
                 color: 'bg-rose-100 text-rose-600',
               },
               {
-                quote: 'Em menos de 2 minutos eu já estava cadastrando meus produtos. Não precisei de tutorial, é muito intuitivo. E o suporte responde rapidíssimo.',
+                quote: 'Em menos de 2 minutos eu já estava cadastrando meus produtos. Não precisei de tutorial nenhum. E quando tive dúvida, o suporte respondeu em minutos.',
                 name: 'Camila R.',
                 role: 'Bolos personalizados · Curitiba',
+                since: 'Usando desde fev/2025',
                 rating: 5,
                 initial: 'C',
                 color: 'bg-rose-100 text-rose-600',
@@ -925,6 +931,7 @@ export function LandingPageContent() {
                     <div>
                       <p className="text-sm font-semibold text-slate-800">{t.name}</p>
                       <p className="text-xs text-slate-400">{t.role}</p>
+                      <p className="text-xs text-slate-300 mt-0.5">{t.since}</p>
                     </div>
                   </div>
                 </TiltCard>
@@ -1042,16 +1049,16 @@ export function LandingPageContent() {
             </div>
             <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl leading-tight">
               Chega de pedido perdido.<br />
-              <span className="text-pink-500">Assine e organize tudo agora.</span>
+              <span className="text-pink-500">Comece a organizar tudo agora.</span>
             </h2>
             <p className="mt-4 text-slate-600 text-lg max-w-2xl mx-auto">
-              Controle pedidos, custos e estoque em um único lugar. Configure em menos de 2 minutos.
+              Pedidos, custos, estoque e financeiro em um único lugar. Pronta em menos de 2 minutos.
             </p>
             <div className="mt-8 flex items-center justify-center gap-4 flex-wrap">
               <MagneticButton>
                 <Button size="lg" asChild className="bg-pink-500 hover:bg-pink-600 px-10 py-6 text-base font-semibold gap-2 shadow-xl shadow-pink-200">
                   <TrackedLink href="/signup" trackEvent="cta_click" trackParams={{ location: 'final_cta', action: 'signup' }}>
-                    Assinar agora
+                    Começar agora
                     <motion.span animate={{ x: [0, 4, 0] }} transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}>
                       <ArrowRight className="h-5 w-5" />
                     </motion.span>
@@ -1071,6 +1078,9 @@ export function LandingPageContent() {
                 Falar com suporte
               </motion.a>
             </div>
+            <p className="mt-5 text-sm text-slate-400">
+              Sem cartão na hora do cadastro · Sem fidelidade · Cancele quando quiser
+            </p>
             <div className="mt-6 flex items-center justify-center gap-6 flex-wrap">
               {trustBadges.map((badge, i) => (
                 <motion.div
