@@ -819,65 +819,6 @@ export function LandingPageContent() {
             </div>
           </FadeUp>
 
-          {/* Other modules */}
-          <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {[
-              {
-                color: 'bg-orange-100', iconColor: 'text-orange-600', labelColor: 'text-orange-500',
-                checkColor: 'text-orange-400', Icon: ShoppingCart, label: 'Pedidos',
-                title: 'Do recebimento à entrega',
-                body: 'Registre pedidos com cliente, produtos, data de entrega e valor. Acompanhe cada pedido em um pipeline visual: <strong class="text-slate-600">Pendente → Em produção → Pronto → Entregue</strong>. Nada fica perdido no WhatsApp ou no caderno.',
-                items: ['Histórico completo de pedidos com filtro por status e data', 'Valor total calculado automaticamente pelos produtos selecionados', 'Pedido marcado como pago registra a entrada no financeiro'],
-              },
-              {
-                color: 'bg-yellow-100', iconColor: 'text-yellow-600', labelColor: 'text-yellow-600',
-                checkColor: 'text-yellow-500', Icon: Package, label: 'Estoque',
-                title: 'Alerta antes de faltar',
-                body: 'Cadastre a quantidade atual de cada ingrediente e defina um estoque mínimo. O sistema alerta quando o nível cai abaixo do limite — antes de você descobrir na véspera da entrega que não tem manteiga suficiente.',
-                items: ['Estoque mínimo personalizável por ingrediente', 'Painel com todos os ingredientes em estado de alerta', 'Integrado a receitas — saiba exatamente o que falta para produzir'],
-              },
-              {
-                color: 'bg-green-100', iconColor: 'text-green-600', labelColor: 'text-green-600',
-                checkColor: 'text-green-500', Icon: DollarSign, label: 'Financeiro',
-                title: 'Caixa em tempo real, sem planilha',
-                body: 'Registre entradas, saídas e despesas por categoria. Veja o saldo atual e o fluxo mensal em gráfico — e entenda para onde está indo o dinheiro. Vendas de pedidos entram automaticamente, sem lançamento manual.',
-                items: ['Lançamentos por categoria: insumos, embalagens, marketing e mais', 'Saldo atual e evolução mensal em gráfico', 'Integrado a pedidos — vendas entram no caixa automaticamente'],
-              },
-              {
-                color: 'bg-indigo-100', iconColor: 'text-indigo-600', labelColor: 'text-indigo-500',
-                checkColor: 'text-indigo-400', Icon: BarChart3, label: 'Dashboard & Clientes',
-                title: 'Decisões com dados, não com achismo',
-                body: 'Veja faturamento, ticket médio e produtos mais vendidos em uma tela só. No módulo de clientes, identifique quem compra mais, com que frequência e quanto já gastou — e cultive quem realmente impulsiona o seu negócio.',
-                items: ['KPIs do mês e comparativo com o período anterior', 'Ranking de produtos mais vendidos e mais rentáveis', 'Histórico de cada cliente: total gasto, pedidos e frequência de compra'],
-              },
-            ].map((mod) => (
-              <motion.div key={mod.label} variants={staggerItem}>
-                <TiltCard className="rounded-2xl border border-slate-100 bg-slate-50 p-8 h-full">
-                  <div className="flex items-center gap-3 mb-4">
-                    <motion.div
-                      className={`flex h-11 w-11 items-center justify-center rounded-xl ${mod.color} flex-shrink-0`}
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                    >
-                      <mod.Icon className={`h-5 w-5 ${mod.iconColor}`} />
-                    </motion.div>
-                    <div>
-                      <p className={`text-xs font-semibold uppercase tracking-widest ${mod.labelColor} mb-0.5`}>{mod.label}</p>
-                      <h3 className="font-semibold text-slate-800">{mod.title}</h3>
-                    </div>
-                  </div>
-                  <p className="text-sm text-slate-500 leading-relaxed mb-5" dangerouslySetInnerHTML={{ __html: mod.body }} />
-                  <ul className="space-y-2 text-sm text-slate-500">
-                    {mod.items.map((item) => (
-                      <li key={item} className="flex items-start gap-2">
-                        <Check className={`h-4 w-4 ${mod.checkColor} mt-0.5 flex-shrink-0`} />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </TiltCard>
-              </motion.div>
-            ))}
-          </StaggerContainer>
         </div>
       </section>
 
@@ -1117,6 +1058,18 @@ export function LandingPageContent() {
                   </TrackedLink>
                 </Button>
               </MagneticButton>
+              <motion.a
+                href={WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full border border-green-200 bg-white px-6 py-3 text-sm font-semibold text-green-700 shadow-sm"
+                whileHover={{ scale: 1.05, boxShadow: '0 8px 24px -6px rgba(34,197,94,0.3)' }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: 'spring', stiffness: 400 }}
+              >
+                <WhatsAppIcon className="h-4 w-4" />
+                Falar com suporte
+              </motion.a>
             </div>
             <div className="mt-6 flex items-center justify-center gap-6 flex-wrap">
               {trustBadges.map((badge, i) => (
@@ -1135,28 +1088,6 @@ export function LandingPageContent() {
             </div>
           </FadeUp>
         </div>
-      </section>
-
-      {/* Support */}
-      <section className="py-16 border-t border-slate-100 bg-white">
-        <FadeUp>
-          <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-2xl font-bold text-slate-900">Dúvidas, ajuda ou feedback?</h2>
-            <p className="mt-3 text-slate-500">Estamos no WhatsApp e respondemos em até 15 minutos.</p>
-            <motion.a
-              href={WHATSAPP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-6 inline-flex items-center gap-2.5 rounded-full bg-green-500 px-6 py-3 text-white font-semibold shadow-sm"
-              whileHover={{ scale: 1.05, backgroundColor: '#16a34a', boxShadow: '0 8px 24px -6px rgba(34,197,94,0.4)' }}
-              whileTap={{ scale: 0.97 }}
-              transition={{ type: 'spring', stiffness: 400 }}
-            >
-              <WhatsAppIcon className="h-5 w-5" />
-              Falar com suporte
-            </motion.a>
-          </div>
-        </FadeUp>
       </section>
 
       {/* Footer */}
