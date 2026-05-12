@@ -216,20 +216,6 @@ const painPoints = [
   },
 ]
 
-const features = [
-  { icon: ShoppingCart, title: 'Pedidos com status em tempo real', description: 'Do recebimento à entrega. Veja tudo pendente, em produção e concluído — sem papel, sem WhatsApp.' },
-  { icon: FlaskConical, title: 'Custo automático de receitas', description: 'Cadastre seus ingredientes e o sistema calcula automaticamente o custo de cada receita. Saiba exatamente quanto cobrar para ter lucro.' },
-  { icon: Package, title: 'Alerta antes do estoque acabar', description: 'Defina um estoque mínimo por ingrediente e receba alertas antes de faltar. Nunca mais seja pego de surpresa.' },
-  { icon: DollarSign, title: 'Fluxo financeiro completo', description: 'Entradas, saídas e despesas em um só lugar. Veja o dinheiro da sua confeitaria em tempo real, sem planilha.' },
-  { icon: Users, title: 'Histórico completo de clientes', description: 'Saiba quem compra mais, com que frequência e quanto já gastou. Identifique seus melhores clientes e fidelize com dados reais.' },
-  { icon: BarChart3, title: 'Dashboard com KPIs e gráficos', description: 'Faturamento, produtos mais vendidos e tendências em uma tela só. Tome decisões com dados, não com achismo.' },
-]
-
-const steps = [
-  { number: '1', title: 'Crie sua conta', description: 'Cadastro em menos de 2 minutos. Sem burocracia, sem cartão exigido na hora.' },
-  { number: '2', title: 'Configure sua confeitaria', description: 'Adicione seus produtos, ingredientes e receitas. O sistema calcula os custos automaticamente.' },
-  { number: '3', title: 'Gerencie com tranquilidade', description: 'Receba pedidos, acompanhe o financeiro e nunca mais perca o controle do seu negócio.' },
-]
 
 const plans = [
   { name: 'Básico', price: 'R$ 9,90', period: '/mês', description: 'Para começar com tudo organizado', limits: ['Até 10 produtos', 'Pedidos ilimitados', 'Todos os módulos', 'Suporte por email'], cta: 'Assinar agora', href: '/signup', highlight: false },
@@ -643,54 +629,80 @@ export function LandingPageContent() {
               Seis módulos que trabalham juntos para você parar de apagar incêndio e começar a crescer de verdade.
             </p>
           </FadeUp>
-          {/* Featured card + remaining grid */}
-          <StaggerContainer className="space-y-5">
-            {/* Destaque: custo automático */}
-            <motion.div variants={staggerItem}>
-              <TiltCard className="rounded-2xl bg-gradient-to-br from-pink-500 to-rose-500 text-white overflow-hidden shadow-xl shadow-pink-200">
-                <div className="p-8 sm:flex items-center gap-8">
-                  <div className="flex-shrink-0 mb-6 sm:mb-0">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-                      <FlaskConical className="h-8 w-8 text-white" />
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <span className="text-xs font-semibold uppercase tracking-widest text-pink-100 mb-2 block">O coração do sistema</span>
-                    <h3 className="text-xl font-bold text-white mb-2">Custo automático de receitas</h3>
-                    <p className="text-pink-100 leading-relaxed text-sm max-w-2xl">
-                      Cadastre seus ingredientes e o sistema calcula automaticamente o custo de cada receita — por grama, mililitro ou unidade. Atualizou o preço da manteiga? Todas as receitas e produtos que a usam recalculam na hora.
-                    </p>
-                  </div>
-                  <div className="flex-shrink-0 mt-6 sm:mt-0">
-                    <div className="rounded-xl bg-white/10 border border-white/20 px-5 py-4 text-center min-w-[120px]">
-                      <p className="text-xs text-pink-100 mb-1">Cálculo manual</p>
-                      <p className="text-3xl font-bold text-white">zero</p>
-                      <p className="text-xs text-pink-100 mt-1">o sistema faz tudo</p>
-                    </div>
-                  </div>
-                </div>
-              </TiltCard>
-            </motion.div>
-            {/* Remaining 5 features */}
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {features.filter(f => f.icon !== FlaskConical).map((feature) => (
-                <motion.div key={feature.title} variants={staggerItem}>
-                  <TiltCard className="rounded-xl border border-slate-200 shadow-sm bg-white h-full">
-                    <div className="p-6">
+          <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {[
+              {
+                color: 'bg-orange-100', iconColor: 'text-orange-600', labelColor: 'text-orange-500',
+                checkColor: 'text-orange-400', stripe: 'bg-orange-400', Icon: ShoppingCart, label: 'Pedidos',
+                title: 'Do recebimento à entrega',
+                body: 'Registre pedidos com cliente, produtos, data de entrega e valor. Acompanhe cada pedido em um pipeline visual: Pendente → Em produção → Pronto → Entregue.',
+                items: ['Histórico completo com filtro por status e data', 'Valor total calculado pelos produtos selecionados', 'Pedido pago entra automaticamente no financeiro'],
+              },
+              {
+                color: 'bg-purple-100', iconColor: 'text-purple-600', labelColor: 'text-purple-600',
+                checkColor: 'text-purple-400', stripe: 'bg-purple-400', Icon: FlaskConical, label: 'Receitas',
+                title: 'Custo exato, sem fazer conta',
+                body: 'Cadastre os ingredientes e quantidades. O sistema calcula o custo total e o custo por porção — em g, ml ou unidade — automaticamente.',
+                items: ['Recalculo automático quando o preço do ingrediente muda', 'Custo por porção para precificar com margem de lucro', 'Base para nunca mais vender no prejuízo'],
+              },
+              {
+                color: 'bg-yellow-100', iconColor: 'text-yellow-600', labelColor: 'text-yellow-600',
+                checkColor: 'text-yellow-500', stripe: 'bg-yellow-400', Icon: Package, label: 'Estoque',
+                title: 'Alerta antes de faltar',
+                body: 'Defina um estoque mínimo por ingrediente. O sistema avisa quando o nível cai abaixo do limite — antes de você descobrir na véspera que não tem manteiga.',
+                items: ['Estoque mínimo personalizável por ingrediente', 'Painel com todos os itens em estado de alerta', 'Integrado a receitas — saiba exatamente o que falta'],
+              },
+              {
+                color: 'bg-pink-100', iconColor: 'text-pink-600', labelColor: 'text-pink-600',
+                checkColor: 'text-pink-400', stripe: 'bg-pink-400', Icon: BarChart3, label: 'Produtos',
+                title: 'Catálogo com margem em tempo real',
+                body: 'Cadastre bolos, tortas e doces com o preço de venda. O sistema busca o custo da receita vinculada e exibe a margem de lucro de cada item automaticamente.',
+                items: ['Preço vs. custo lado a lado para decisão rápida', 'Margem atualiza quando o custo do ingrediente muda', 'Integrado a pedidos — adicione ao pedido em um clique'],
+              },
+              {
+                color: 'bg-green-100', iconColor: 'text-green-600', labelColor: 'text-green-600',
+                checkColor: 'text-green-500', stripe: 'bg-green-400', Icon: DollarSign, label: 'Financeiro',
+                title: 'Caixa em tempo real, sem planilha',
+                body: 'Registre entradas, saídas e despesas por categoria. Veja o saldo atual e o fluxo mensal em gráfico. Vendas entram automaticamente, sem lançamento manual.',
+                items: ['Lançamentos por categoria: insumos, embalagens e mais', 'Saldo atual e evolução mensal em gráfico', 'Integrado a pedidos — vendas entram no caixa sozinhas'],
+              },
+              {
+                color: 'bg-indigo-100', iconColor: 'text-indigo-600', labelColor: 'text-indigo-500',
+                checkColor: 'text-indigo-400', stripe: 'bg-indigo-400', Icon: Users, label: 'Dashboard & Clientes',
+                title: 'Decisões com dados, não com achismo',
+                body: 'Veja faturamento, ticket médio e produtos mais vendidos em uma tela. No módulo de clientes, identifique quem compra mais e com que frequência.',
+                items: ['KPIs do mês e comparativo com o período anterior', 'Ranking de produtos mais vendidos e mais rentáveis', 'Histórico de cada cliente: total gasto e frequência'],
+              },
+            ].map((mod) => (
+              <motion.div key={mod.label} variants={staggerItem}>
+                <TiltCard className="rounded-2xl bg-white border border-slate-200 overflow-hidden shadow-sm h-full">
+                  <div className={`h-1.5 w-full ${mod.stripe}`} />
+                  <div className="p-7">
+                    <div className="flex items-center gap-3 mb-4">
                       <motion.div
-                        className="flex h-11 w-11 items-center justify-center rounded-xl bg-pink-50 mb-4"
-                        whileHover={{ scale: 1.12, backgroundColor: '#fce7f3' }}
-                        transition={{ type: 'spring', stiffness: 400 }}
+                        className={`flex h-11 w-11 items-center justify-center rounded-2xl ${mod.color} flex-shrink-0`}
+                        whileHover={{ scale: 1.1, rotate: 5 }}
                       >
-                        <feature.icon className="h-5 w-5 text-pink-600" />
+                        <mod.Icon className={`h-5 w-5 ${mod.iconColor}`} />
                       </motion.div>
-                      <h3 className="font-semibold text-slate-800 mb-2 text-sm">{feature.title}</h3>
-                      <p className="text-sm text-slate-500 leading-relaxed">{feature.description}</p>
+                      <div>
+                        <p className={`text-xs font-semibold uppercase tracking-widest ${mod.labelColor} mb-0.5`}>{mod.label}</p>
+                        <h3 className="font-bold text-slate-800 text-base">{mod.title}</h3>
+                      </div>
                     </div>
-                  </TiltCard>
-                </motion.div>
-              ))}
-            </div>
+                    <p className="text-sm text-slate-500 leading-relaxed mb-5">{mod.body}</p>
+                    <ul className="space-y-2">
+                      {mod.items.map((item) => (
+                        <li key={item} className="flex items-start gap-2 text-sm text-slate-500">
+                          <Check className={`h-4 w-4 ${mod.checkColor} mt-0.5 flex-shrink-0`} />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </TiltCard>
+              </motion.div>
+            ))}
           </StaggerContainer>
         </div>
       </section>
