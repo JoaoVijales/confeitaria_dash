@@ -195,25 +195,25 @@ const painPoints = [
     icon: ClipboardList,
     title: 'Pedidos no caderno ou no WhatsApp',
     description: 'Você perde o controle de quem pediu o quê, quando e quanto falta produzir.',
-    color: 'bg-red-50',
-    iconColor: 'text-red-500',
-    stripe: 'bg-red-400',
+    color: 'bg-pink-50',
+    iconColor: 'text-pink-500',
+    stripe: 'bg-pink-400',
   },
   {
     icon: TrendingDown,
     title: 'Não sabe se está tendo lucro',
     description: 'Vende bastante, mas no fim do mês o dinheiro some. O custo real das receitas é um mistério.',
-    color: 'bg-orange-50',
-    iconColor: 'text-orange-500',
-    stripe: 'bg-orange-400',
+    color: 'bg-rose-50',
+    iconColor: 'text-rose-500',
+    stripe: 'bg-rose-400',
   },
   {
     icon: AlertTriangle,
     title: 'Descobre que faltou ingrediente na hora H',
     description: 'Na véspera da entrega você descobre que não tem manteiga ou chocolate suficiente.',
-    color: 'bg-yellow-50',
-    iconColor: 'text-yellow-600',
-    stripe: 'bg-yellow-400',
+    color: 'bg-pink-50',
+    iconColor: 'text-pink-600',
+    stripe: 'bg-pink-300',
   },
 ]
 
@@ -333,7 +333,7 @@ export function LandingPageContent() {
       </motion.header>
 
       {/* Hero */}
-      <section ref={heroRef} className="relative overflow-hidden py-20 sm:py-24 lg:py-28 min-h-screen flex items-center">
+      <section ref={heroRef} className="relative overflow-hidden py-16 sm:py-20 lg:py-24 min-h-[88vh] flex items-center">
         {/* Parallax background gradient */}
         <motion.div
           className="absolute inset-0 bg-gradient-to-b from-pink-50/70 via-pink-50/30 to-white"
@@ -369,10 +369,10 @@ export function LandingPageContent() {
         </motion.div>
 
         <motion.div
-          className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full"
+          className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 w-full"
           style={{ opacity: heroOpacity, y: heroTextY }}
         >
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] gap-10 lg:gap-14 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-8 lg:gap-10 items-center">
 
             {/* ── Left: text ── */}
             <div className="text-center lg:text-left">
@@ -392,7 +392,7 @@ export function LandingPageContent() {
               </motion.div>
 
               <motion.h1
-                className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl leading-tight"
+                className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl leading-tight"
                 initial={{ opacity: 0, y: 52 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1.5, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
@@ -486,20 +486,13 @@ export function LandingPageContent() {
                   backgroundSize: '14px 14px',
                 }}
               />
-              <div
-                className="absolute -top-4 -right-2 w-24 h-24 opacity-[0.12] pointer-events-none"
-                style={{
-                  backgroundImage: 'radial-gradient(circle, #a855f7 1.5px, transparent 1.5px)',
-                  backgroundSize: '12px 12px',
-                }}
-              />
 
               {/* ── Composition wrapper ── */}
-              <div className="relative w-full max-w-[580px]">
+              <div className="relative w-full max-w-[480px]">
 
                 {/* Floating card: Pedidos — top right */}
                 <motion.div
-                  className="absolute -top-10 -right-6 z-20 w-52 rounded-xl bg-white border border-slate-200/80 shadow-xl overflow-hidden"
+                  className="absolute -top-8 -right-4 z-20 w-48 rounded-xl bg-white border border-slate-200/80 shadow-xl overflow-hidden"
                   style={{ rotate: -3 }}
                   initial={{ opacity: 0, x: 24, y: -16 }}
                   animate={{ opacity: 1, x: 0, y: [0, -6, 0] }}
@@ -532,7 +525,7 @@ export function LandingPageContent() {
 
                 {/* Floating card: Financeiro — bottom left */}
                 <motion.div
-                  className="absolute -bottom-8 -left-6 z-20 w-44 rounded-xl bg-white border border-slate-200/80 shadow-xl overflow-hidden"
+                  className="absolute -bottom-6 -left-4 z-20 w-40 rounded-xl bg-white border border-slate-200/80 shadow-xl overflow-hidden"
                   style={{ rotate: 2.5 }}
                   initial={{ opacity: 0, x: -20, y: 16 }}
                   animate={{ opacity: 1, x: 0, y: [0, 6, 0] }}
@@ -554,7 +547,7 @@ export function LandingPageContent() {
                       {[40, 65, 45, 80, 55, 90, 70].map((h, i) => (
                         <motion.div
                           key={i}
-                          className="flex-1 bg-green-400 rounded-sm"
+                          className="flex-1 bg-pink-400 rounded-sm"
                           style={{ height: `${h}%` }}
                           initial={{ scaleY: 0 }}
                           animate={{ scaleY: 1 }}
@@ -899,8 +892,8 @@ export function LandingPageContent() {
           <StaggerContainer className="grid grid-cols-1 gap-6 sm:grid-cols-3">
             {[
               { number: '1', icon: Cake, title: 'Crie sua conta', description: 'Cadastro em menos de 2 minutos. Sem burocracia, sem cartão exigido na hora.', color: 'from-pink-400 to-rose-400' },
-              { number: '2', icon: FlaskConical, title: 'Configure sua confeitaria', description: 'Adicione produtos, ingredientes e receitas. O sistema calcula os custos automaticamente.', color: 'from-purple-400 to-pink-400' },
-              { number: '3', icon: BarChart3, title: 'Gerencie com tranquilidade', description: 'Receba pedidos, acompanhe o financeiro e nunca mais perca o controle do seu negócio.', color: 'from-rose-400 to-orange-400' },
+              { number: '2', icon: FlaskConical, title: 'Configure sua confeitaria', description: 'Adicione produtos, ingredientes e receitas. O sistema calcula os custos automaticamente.', color: 'from-pink-500 to-rose-400' },
+              { number: '3', icon: BarChart3, title: 'Gerencie com tranquilidade', description: 'Receba pedidos, acompanhe o financeiro e nunca mais perca o controle do seu negócio.', color: 'from-rose-400 to-pink-500' },
             ].map((step, index, arr) => (
               <motion.div key={step.number} variants={staggerItem} className="relative">
                 {index < arr.length - 1 && <StepConnector />}
@@ -962,7 +955,7 @@ export function LandingPageContent() {
                 role: 'Doces artesanais · Belo Horizonte',
                 rating: 5,
                 initial: 'F',
-                color: 'bg-purple-100 text-purple-600',
+                color: 'bg-rose-100 text-rose-600',
               },
               {
                 quote: 'Em menos de 2 minutos eu já estava cadastrando meus produtos. Não precisei de tutorial, é muito intuitivo. E o suporte responde rapidíssimo.',
