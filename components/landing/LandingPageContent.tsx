@@ -912,7 +912,18 @@ export function LandingPageContent() {
           </FadeUp>
           <StaggerContainer className="grid grid-cols-1 gap-8 sm:grid-cols-3 items-center">
             {plans.map((plan) => (
-              <motion.div key={plan.name} variants={staggerItem}>
+              <motion.div key={plan.name} variants={staggerItem} className="relative pt-5">
+                {plan.highlight && (
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10">
+                    <motion.span
+                      className="bg-pink-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md"
+                      animate={{ scale: [1, 1.05, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      Mais popular
+                    </motion.span>
+                  </div>
+                )}
                 <motion.div
                   className={`relative rounded-xl overflow-hidden ${plan.highlight ? 'border-pink-500 border-2 shadow-xl scale-105' : 'border border-slate-200 shadow-sm'} bg-white`}
                   whileHover={{
@@ -929,17 +940,6 @@ export function LandingPageContent() {
                       animate={{ opacity: [0.4, 0.8, 0.4] }}
                       transition={{ duration: 3, repeat: Infinity }}
                     />
-                  )}
-                  {plan.highlight && (
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-                      <motion.span
-                        className="bg-pink-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md"
-                        animate={{ scale: [1, 1.05, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      >
-                        Mais popular
-                      </motion.span>
-                    </div>
                   )}
                   <div className="p-6 text-center pb-4">
                     <h3 className="font-bold text-slate-800 text-lg">{plan.name}</h3>
