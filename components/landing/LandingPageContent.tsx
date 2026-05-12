@@ -45,14 +45,14 @@ function FadeUp({
   className?: string
 }) {
   const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '-80px' })
+  const inView = useInView(ref, { once: true, margin: '-60px' })
   return (
     <motion.div
       ref={ref}
       className={className}
-      initial={{ opacity: 0, y: 28 }}
+      initial={{ opacity: 0, y: 48 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.9, delay, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 1.6, delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
     </motion.div>
@@ -71,8 +71,8 @@ function FadeIn({
   direction?: 'up' | 'left' | 'right' | 'none'
 }) {
   const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '-60px' })
-  const dirMap = { up: [0, 36], left: [-44, 0], right: [44, 0], none: [0, 0] }
+  const inView = useInView(ref, { once: true, margin: '-50px' })
+  const dirMap = { up: [0, 56], left: [-64, 0], right: [64, 0], none: [0, 0] }
   const [x, y] = dirMap[direction]
   return (
     <motion.div
@@ -80,7 +80,7 @@ function FadeIn({
       className={className}
       initial={{ opacity: 0, x, y }}
       animate={inView ? { opacity: 1, x: 0, y: 0 } : {}}
-      transition={{ duration: 0.95, delay, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 1.6, delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
     </motion.div>
@@ -106,7 +106,7 @@ function StaggerContainer({
       animate={inView ? 'visible' : 'hidden'}
       variants={{
         hidden: {},
-        visible: { transition: { staggerChildren: 0.14, delayChildren: delay } },
+        visible: { transition: { staggerChildren: 0.22, delayChildren: delay } },
       }}
     >
       {children}
@@ -115,8 +115,8 @@ function StaggerContainer({
 }
 
 const staggerItem = {
-  hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.85, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
+  hidden: { opacity: 0, y: 40 },
+  visible: { opacity: 1, y: 0, transition: { duration: 1.4, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
 }
 
 // ─── Magnetic hover button ──────────────────────────────────────────────────
@@ -278,7 +278,7 @@ export function LandingPageContent() {
         className="sticky top-0 z-50 border-b border-slate-100 bg-white/95 backdrop-blur"
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
       >
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
@@ -303,7 +303,7 @@ export function LandingPageContent() {
                   className="hover:text-slate-900 transition-colors relative group"
                   initial={{ opacity: 0, y: -12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.15 + i * 0.1, duration: 0.7 }}
+                  transition={{ delay: 0.25 + i * 0.18, duration: 1.1 }}
                 >
                   {['Funcionalidades', 'Como funciona', 'Planos', 'FAQ'][i]}
                   <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-pink-400 group-hover:w-full transition-all duration-300" />
@@ -314,7 +314,7 @@ export function LandingPageContent() {
               className="flex items-center gap-3"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4, duration: 0.7 }}
+              transition={{ delay: 0.6, duration: 1.1 }}
             >
               <Button variant="ghost" asChild className="text-slate-600">
                 <TrackedLink href="/login" trackEvent="cta_click" trackParams={{ location: 'navbar', action: 'login' }}>Entrar</TrackedLink>
@@ -366,145 +366,155 @@ export function LandingPageContent() {
         </motion.div>
 
         <motion.div
-          className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 text-center w-full"
+          className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full"
           style={{ opacity: heroOpacity, y: heroTextY }}
         >
-          <div className="mx-auto max-w-3xl">
-            <motion.div
-              className="inline-flex items-center gap-2 rounded-full bg-pink-100 px-4 py-1.5 text-sm font-medium text-pink-700 mb-6"
-              initial={{ opacity: 0, y: -16, scale: 0.92 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <motion.span
-                animate={{ rotate: [0, -12, 12, -12, 0] }}
-                transition={{ duration: 1.8, repeat: Infinity, repeatDelay: 3 }}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.25fr] gap-12 lg:gap-16 items-center">
+
+            {/* ── Left: text ── */}
+            <div className="text-center lg:text-left">
+              <motion.div
+                className="inline-flex items-center gap-2 rounded-full bg-pink-100 px-4 py-1.5 text-sm font-medium text-pink-700 mb-6"
+                initial={{ opacity: 0, y: -24, scale: 0.88 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 1.3, ease: [0.22, 1, 0.36, 1] }}
               >
-                <Cake className="h-4 w-4" />
-              </motion.span>
-              Feito para confeiteiros artesanais
-            </motion.div>
-
-            <motion.h1
-              className="text-4xl font-bold tracking-tight text-slate-900 sm:text-6xl leading-tight"
-              initial={{ opacity: 0, y: 36 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1.0, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            >
-              Sua confeitaria organizada,{' '}
-              <motion.span
-                className="text-pink-500 inline-block"
-                initial={{ opacity: 0, x: -16 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.85, delay: 0.55 }}
-              >
-                do ingrediente ao caixa
-              </motion.span>
-            </motion.h1>
-
-            <motion.p
-              className="mt-6 text-lg leading-8 text-slate-600 max-w-2xl mx-auto"
-              initial={{ opacity: 0, y: 22 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, delay: 0.45 }}
-            >
-              Chega de pedido no caderno e custo no achismo. O Confeitando centraliza
-              pedidos, receitas, estoque e financeiro para você produzir com confiança e lucrar de verdade.
-            </motion.p>
-
-            <motion.div
-              className="mt-10 flex items-center justify-center gap-4 flex-wrap"
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, delay: 0.65 }}
-            >
-              <MagneticButton>
-                <Button size="lg" asChild className="bg-pink-500 hover:bg-pink-600 px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-pink-200 hover:shadow-pink-300 transition-shadow">
-                  <TrackedLink href="/signup" trackEvent="cta_click" trackParams={{ location: 'hero', action: 'signup' }}>
-                    Começar agora
-                    <motion.span
-                      animate={{ x: [0, 4, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-                    >
-                      <ArrowRight className="h-5 w-5" />
-                    </motion.span>
-                  </TrackedLink>
-                </Button>
-              </MagneticButton>
-              <Button size="lg" variant="outline" asChild className="px-8 py-6 text-base hover:border-pink-300 transition-colors">
-                <TrackedLink href="/login" trackEvent="cta_click" trackParams={{ location: 'hero', action: 'login' }}>Já tenho conta</TrackedLink>
-              </Button>
-            </motion.div>
-
-            <motion.div
-              className="mt-8 flex items-center justify-center gap-6 flex-wrap"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.9, delay: 0.85 }}
-            >
-              {trustBadges.map((badge, i) => (
-                <motion.div
-                  key={badge.label}
-                  className="flex items-center gap-1.5 text-sm text-slate-500"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.9 + i * 0.1, duration: 0.7 }}
+                <motion.span
+                  animate={{ rotate: [0, -12, 12, -12, 0] }}
+                  transition={{ duration: 1.8, repeat: Infinity, repeatDelay: 3 }}
                 >
-                  <badge.icon className="h-4 w-4 text-pink-400" />
-                  {badge.label}
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
+                  <Cake className="h-4 w-4" />
+                </motion.span>
+                Feito para confeiteiros artesanais
+              </motion.div>
 
-          {/* Dashboard preview with parallax */}
-          <motion.div
-            className="mt-16 relative mx-auto max-w-5xl"
-            initial={{ opacity: 0, y: 52, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 1.1, delay: 0.75, ease: [0.22, 1, 0.36, 1] }}
-            style={{ y: heroImgY }}
-          >
-            <motion.div
-              className="absolute -inset-4 rounded-3xl bg-pink-200/40 blur-2xl"
-              animate={{ scale: [1, 1.04, 1], opacity: [0.4, 0.65, 0.4] }}
-              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-            />
-            <div className="relative rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden">
-              <div className="flex items-center gap-1.5 px-4 py-3 border-b border-slate-100 bg-slate-50">
+              <motion.h1
+                className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl leading-tight"
+                initial={{ opacity: 0, y: 52 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1.5, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              >
+                Sua confeitaria organizada,{' '}
                 <motion.span
-                  className="h-3 w-3 rounded-full bg-red-400"
-                  whileHover={{ scale: 1.3 }}
-                />
-                <motion.span
-                  className="h-3 w-3 rounded-full bg-yellow-400"
-                  whileHover={{ scale: 1.3 }}
-                />
-                <motion.span
-                  className="h-3 w-3 rounded-full bg-green-400"
-                  whileHover={{ scale: 1.3 }}
-                />
-                <div className="ml-4 flex-1 rounded-md bg-white border border-slate-200 px-3 py-1 text-xs text-slate-400 text-left max-w-xs">
-                  app.confeitando.com.br
-                </div>
-              </div>
-              <div className="relative overflow-hidden">
-                <img
-                  src="/hero-bg.png"
-                  alt="Dashboard do Confeitando — visão geral financeira"
-                  className="w-full h-auto block"
-                  loading="eager"
-                />
-                {/* Shimmer overlay on load */}
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"
-                  initial={{ x: '-100%' }}
-                  animate={{ x: '200%' }}
-                  transition={{ duration: 1.6, delay: 1.4, ease: 'easeInOut' }}
-                />
-              </div>
+                  className="text-pink-500 inline-block"
+                  initial={{ opacity: 0, x: -24 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 1.3, delay: 0.85 }}
+                >
+                  do ingrediente ao caixa
+                </motion.span>
+              </motion.h1>
+
+              <motion.p
+                className="mt-6 text-lg leading-8 text-slate-600 max-w-xl mx-auto lg:mx-0"
+                initial={{ opacity: 0, y: 32 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1.4, delay: 0.7 }}
+              >
+                Chega de pedido no caderno e custo no achismo. O Confeitando centraliza
+                pedidos, receitas, estoque e financeiro para você produzir com confiança e lucrar de verdade.
+              </motion.p>
+
+              <motion.div
+                className="mt-10 flex items-center justify-center lg:justify-start gap-4 flex-wrap"
+                initial={{ opacity: 0, y: 28 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1.3, delay: 1.0 }}
+              >
+                <MagneticButton>
+                  <Button size="lg" asChild className="bg-pink-500 hover:bg-pink-600 px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-pink-200 hover:shadow-pink-300 transition-shadow">
+                    <TrackedLink href="/signup" trackEvent="cta_click" trackParams={{ location: 'hero', action: 'signup' }}>
+                      Começar agora
+                      <motion.span
+                        animate={{ x: [0, 4, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                      >
+                        <ArrowRight className="h-5 w-5" />
+                      </motion.span>
+                    </TrackedLink>
+                  </Button>
+                </MagneticButton>
+                <Button size="lg" variant="outline" asChild className="px-8 py-6 text-base hover:border-pink-300 transition-colors">
+                  <TrackedLink href="/login" trackEvent="cta_click" trackParams={{ location: 'hero', action: 'login' }}>Já tenho conta</TrackedLink>
+                </Button>
+              </motion.div>
+
+              <motion.div
+                className="mt-8 flex items-center justify-center lg:justify-start gap-6 flex-wrap"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1.2, delay: 1.3 }}
+              >
+                {trustBadges.map((badge, i) => (
+                  <motion.div
+                    key={badge.label}
+                    className="flex items-center gap-1.5 text-sm text-slate-500"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1.4 + i * 0.18, duration: 1.1 }}
+                  >
+                    <badge.icon className="h-4 w-4 text-pink-400" />
+                    {badge.label}
+                  </motion.div>
+                ))}
+              </motion.div>
             </div>
-          </motion.div>
+
+            {/* ── Right: dashboard mockup — slightly tilted for natural feel ── */}
+            <motion.div
+              className="relative"
+              initial={{ opacity: 0, y: 72, scale: 0.94 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 1.7, delay: 1.2, ease: [0.22, 1, 0.36, 1] }}
+              style={{ y: heroImgY }}
+            >
+              {/* Decorative glow */}
+              <motion.div
+                className="absolute -inset-6 rounded-3xl bg-pink-200/40 blur-3xl"
+                animate={{ scale: [1, 1.05, 1], opacity: [0.35, 0.6, 0.35] }}
+                transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+              />
+              {/* Decorative dot grid behind image */}
+              <div className="absolute -bottom-6 -left-6 w-32 h-32 opacity-20"
+                style={{
+                  backgroundImage: 'radial-gradient(circle, #f472b6 1.5px, transparent 1.5px)',
+                  backgroundSize: '14px 14px',
+                }}>
+              </div>
+
+              {/* Browser mockup — rotated 1° to feel less rigid */}
+              <motion.div
+                className="relative rounded-2xl border border-slate-200/80 bg-white shadow-2xl overflow-hidden"
+                style={{ rotate: 1 }}
+                whileHover={{ rotate: 0, scale: 1.015, boxShadow: '0 32px 80px -20px rgba(236,72,153,0.22)' }}
+                transition={{ type: 'spring', stiffness: 160, damping: 28 }}
+              >
+                <div className="flex items-center gap-1.5 px-4 py-3 border-b border-slate-100 bg-slate-50">
+                  <motion.span className="h-3 w-3 rounded-full bg-red-400" whileHover={{ scale: 1.3 }} />
+                  <motion.span className="h-3 w-3 rounded-full bg-yellow-400" whileHover={{ scale: 1.3 }} />
+                  <motion.span className="h-3 w-3 rounded-full bg-green-400" whileHover={{ scale: 1.3 }} />
+                  <div className="ml-4 flex-1 rounded-md bg-white border border-slate-200 px-3 py-1 text-xs text-slate-400 text-left max-w-xs">
+                    app.confeitando.com.br
+                  </div>
+                </div>
+                <div className="relative overflow-hidden">
+                  <img
+                    src="/hero-bg.png"
+                    alt="Dashboard do Confeitando — visão geral financeira"
+                    className="w-full h-auto block"
+                    loading="eager"
+                  />
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"
+                    initial={{ x: '-100%' }}
+                    animate={{ x: '200%' }}
+                    transition={{ duration: 1.6, delay: 1.4, ease: 'easeInOut' }}
+                  />
+                </div>
+              </motion.div>
+            </motion.div>
+
+          </div>
         </motion.div>
       </section>
 
@@ -1033,7 +1043,7 @@ function StepConnector() {
         className="h-full bg-pink-300"
         initial={{ width: '0%' }}
         animate={inView ? { width: '100%' } : {}}
-        transition={{ duration: 1.1, delay: 0.4, ease: 'easeOut' }}
+        transition={{ duration: 1.8, delay: 0.5, ease: 'easeOut' }}
       />
     </div>
   )
@@ -1050,7 +1060,7 @@ function FlowItems() {
             className="text-center"
             initial={{ opacity: 0, scale: 0.7 }}
             animate={inView ? { opacity: 1, scale: 1 } : {}}
-            transition={{ duration: 0.65, delay: i * 0.14, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 1.1, delay: i * 0.22, ease: [0.22, 1, 0.36, 1] }}
           >
             <span className={`inline-block rounded-full px-3 py-1.5 text-xs font-semibold ${item.color}`}>
               {item.label}
@@ -1061,7 +1071,7 @@ function FlowItems() {
             <motion.div
               initial={{ opacity: 0, x: -8 }}
               animate={inView ? { opacity: 1, x: 0 } : {}}
-              transition={{ duration: 0.5, delay: i * 0.14 + 0.1 }}
+              transition={{ duration: 0.8, delay: i * 0.22 + 0.16 }}
             >
               <ArrowRight className="h-4 w-4 text-slate-300 flex-shrink-0 hidden sm:block" />
             </motion.div>
@@ -1083,7 +1093,7 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
         <span className="font-medium text-slate-800">{question}</span>
         <motion.div
           animate={{ rotate: open ? 180 : 0 }}
-          transition={{ duration: 0.35, ease: 'easeInOut' }}
+          transition={{ duration: 0.45, ease: 'easeInOut' }}
         >
           <ChevronDown className="h-5 w-5 text-slate-400 flex-shrink-0" />
         </motion.div>
@@ -1095,7 +1105,7 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
             initial={{ height: 0, opacity: 0, marginTop: 0 }}
             animate={{ height: 'auto', opacity: 1, marginTop: 12 }}
             exit={{ height: 0, opacity: 0, marginTop: 0 }}
-            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           >
             {answer}
           </motion.p>
