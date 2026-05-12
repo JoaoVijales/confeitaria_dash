@@ -36,6 +36,34 @@
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
 
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-float-slow: float 9s ease-in-out infinite;
+  --animate-pulse-glow: pulse-glow 3s ease-in-out infinite;
+  --animate-gradient-shift: gradient-shift 8s ease infinite;
+  --animate-draw-line: draw-line 1s ease-out forwards;
+  --animate-shimmer: shimmer 2.5s linear infinite;
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-12px); }
+  }
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.05); }
+  }
+  @keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+  @keyframes draw-line {
+    from { width: 0%; }
+    to { width: 80%; }
+  }
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(200%); }
+  }
+
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
 
