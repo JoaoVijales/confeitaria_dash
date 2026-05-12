@@ -1095,24 +1095,23 @@ function ScrollBgLayer({ className, speed = 0.15 }: { className?: string; speed?
 function ParallaxImage({ src, alt, speed = 0.1 }: { src: string; alt: string; speed?: number }) {
   const ref = useRef(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
-  // Image drifts upward at `speed` fraction of its scroll range → feels like it floats
-  const y = useTransform(scrollYProgress, [0, 1], [`${speed * 100}%`, `${-speed * 100}%`])
+  const scrollY = useTransform(scrollYProgress, [0, 1], [`${speed * 100}%`, `${-speed * 100}%`])
 
   return (
-    <div
+    <motion.div
       ref={ref}
-      className="rounded-2xl overflow-hidden border border-slate-200 shadow-xl"
+      className="rounded-2xl overflow-hidden border border-slate-200/80 shadow-xl"
       style={{ isolation: 'isolate' }}
+      whileHover={{
+        y: -10,
+        boxShadow: '0 32px 72px -16px rgba(236,72,153,0.2), 0 12px 28px -8px rgba(0,0,0,0.1)',
+      }}
+      transition={{ type: 'spring', stiffness: 160, damping: 26 }}
     >
-      <motion.div style={{ y }} className="will-change-transform">
-        <motion.div
-          whileHover={{ scale: 1.03 }}
-          transition={{ type: 'spring', stiffness: 180, damping: 28 }}
-        >
-          <Image src={src} alt={alt} width={800} height={500} className="w-full h-auto block" />
-        </motion.div>
+      <motion.div style={{ y: scrollY }} className="will-change-transform">
+        <Image src={src} alt={alt} width={800} height={500} className="w-full h-auto block" />
       </motion.div>
-    </div>
+    </motion.div>
   )
 }
 
