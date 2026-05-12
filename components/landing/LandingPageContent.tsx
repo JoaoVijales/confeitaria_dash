@@ -837,57 +837,6 @@ export function LandingPageContent() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section id="como-funciona" className="py-24 relative overflow-hidden">
-        <ScrollBgLayer className="bg-slate-50" speed={0.1} />
-        <div className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          <FadeUp className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">Simples de começar</h2>
-            <p className="mt-4 text-slate-500 text-lg">Três passos e sua confeitaria já está organizada.</p>
-          </FadeUp>
-          <StaggerContainer className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-            {[
-              { number: '1', icon: Cake, title: 'Crie sua conta', description: 'Cadastro em menos de 2 minutos. Sem burocracia, sem cartão na hora.', color: 'from-pink-400 to-rose-400' },
-              { number: '2', icon: FlaskConical, title: 'Monte seu cardápio', description: 'Cadastre produtos, ingredientes e receitas. O sistema calcula os custos automaticamente desde o primeiro item.', color: 'from-pink-500 to-rose-400' },
-              { number: '3', icon: BarChart3, title: 'Receba pedidos e lucre', description: 'Comece a registrar pedidos, acompanhe o financeiro e veja o dinheiro real que entra no caixa.', color: 'from-rose-400 to-pink-500' },
-            ].map((step, index, arr) => (
-              <motion.div key={step.number} variants={staggerItem} className="relative">
-                {index < arr.length - 1 && <StepConnector />}
-                <TiltCard className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden h-full">
-                  <div className={`h-1.5 w-full bg-gradient-to-r ${step.color}`} />
-                  <div className="p-7 text-center">
-                    <div className="relative inline-block mb-5">
-                      <motion.div
-                        className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${step.color} shadow-lg mx-auto`}
-                        whileHover={{ scale: 1.1, rotate: 5 }}
-                        transition={{ type: 'spring', stiffness: 300 }}
-                      >
-                        <step.icon className="h-7 w-7 text-white" />
-                      </motion.div>
-                      <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-slate-800 text-white text-[10px] font-bold">
-                        {step.number}
-                      </span>
-                    </div>
-                    <h3 className="font-bold text-slate-800 text-base mb-2">{step.title}</h3>
-                    <p className="text-sm text-slate-500 leading-relaxed">{step.description}</p>
-                  </div>
-                </TiltCard>
-              </motion.div>
-            ))}
-          </StaggerContainer>
-          <FadeUp delay={0.3} className="text-center mt-10">
-            <MagneticButton className="inline-block">
-              <Button size="lg" asChild className="bg-pink-500 hover:bg-pink-600 px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-pink-200">
-                <TrackedLink href="/signup" trackEvent="cta_click" trackParams={{ location: 'como_funciona', action: 'signup' }}>
-                  Começar agora
-                  <ArrowRight className="h-5 w-5" />
-                </TrackedLink>
-              </Button>
-            </MagneticButton>
-          </FadeUp>
-        </div>
-      </section>
-
       {/* Testimonials */}
       <section className="py-20 bg-white">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -1175,20 +1124,6 @@ function ParallaxImage({ src, alt, speed = 0.1 }: { src: string; alt: string; sp
   )
 }
 
-function StepConnector() {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '-40px' })
-  return (
-    <div ref={ref} className="hidden sm:block absolute top-6 left-[60%] w-[80%] h-px bg-pink-100 overflow-hidden">
-      <motion.div
-        className="h-full bg-pink-300"
-        initial={{ width: '0%' }}
-        animate={inView ? { width: '100%' } : {}}
-        transition={{ duration: 1.8, delay: 0.5, ease: 'easeOut' }}
-      />
-    </div>
-  )
-}
 
 function FlowItems() {
   const ref = useRef(null)
