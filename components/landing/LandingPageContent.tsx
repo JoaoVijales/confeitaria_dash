@@ -194,23 +194,26 @@ const painPoints = [
   {
     icon: ClipboardList,
     title: 'Pedidos no caderno ou no WhatsApp',
-    description: 'Você perde o controlo de quem pediu o quê, quando e quanto falta produzir.',
-    color: 'bg-red-100',
+    description: 'Você perde o controle de quem pediu o quê, quando e quanto falta produzir.',
+    color: 'bg-red-50',
     iconColor: 'text-red-500',
+    stripe: 'bg-red-400',
   },
   {
     icon: TrendingDown,
     title: 'Não sabe se está tendo lucro',
     description: 'Vende bastante, mas no fim do mês o dinheiro some. O custo real das receitas é um mistério.',
-    color: 'bg-orange-100',
+    color: 'bg-orange-50',
     iconColor: 'text-orange-500',
+    stripe: 'bg-orange-400',
   },
   {
     icon: AlertTriangle,
     title: 'Descobre que faltou ingrediente na hora H',
     description: 'Na véspera da entrega você descobre que não tem manteiga ou chocolate suficiente.',
-    color: 'bg-yellow-100',
+    color: 'bg-yellow-50',
     iconColor: 'text-yellow-600',
+    stripe: 'bg-yellow-400',
   },
 ]
 
@@ -604,24 +607,27 @@ export function LandingPageContent() {
       <section className="py-20 bg-white">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <FadeUp className="text-center mb-14">
-            <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+            <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">
               Isso te parece familiar?
             </h2>
-            <p className="mt-3 text-slate-500">Se você se identificou com algum desses cenários, o Confeitando é para você.</p>
           </FadeUp>
-          <StaggerContainer className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+          <StaggerContainer className="grid grid-cols-1 gap-5 sm:grid-cols-3">
             {painPoints.map((point) => (
               <motion.div key={point.title} variants={staggerItem}>
-                <TiltCard className="rounded-2xl border border-slate-100 bg-slate-50 p-6 h-full">
-                  <motion.div
-                    className={`flex h-10 w-10 items-center justify-center rounded-xl ${point.color} mb-4`}
-                    whileHover={{ rotate: [-3, 3, -3, 0], scale: 1.1 }}
-                    transition={{ duration: 0.4 }}
-                  >
-                    <point.icon className={`h-5 w-5 ${point.iconColor}`} />
-                  </motion.div>
-                  <h3 className="font-semibold text-slate-800 mb-2">{point.title}</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed">{point.description}</p>
+                <TiltCard className="h-full rounded-2xl bg-white border border-slate-200 overflow-hidden shadow-sm">
+                  {/* colored top stripe */}
+                  <div className={`h-1.5 w-full ${point.stripe}`} />
+                  <div className="p-7">
+                    <motion.div
+                      className={`flex h-12 w-12 items-center justify-center rounded-2xl ${point.color} mb-5`}
+                      whileHover={{ rotate: [-4, 4, -4, 0], scale: 1.08 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <point.icon className={`h-6 w-6 ${point.iconColor}`} />
+                    </motion.div>
+                    <h3 className="font-bold text-slate-800 text-base mb-3">{point.title}</h3>
+                    <p className="text-sm text-slate-500 leading-relaxed">{point.description}</p>
+                  </div>
                 </TiltCard>
               </motion.div>
             ))}
@@ -641,43 +647,78 @@ export function LandingPageContent() {
               Módulos integrados que conversam entre si — altere o custo de um ingrediente e o sistema recalcula tudo automaticamente.
             </p>
           </FadeUp>
-          <StaggerContainer className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((feature) => (
-              <motion.div key={feature.title} variants={staggerItem}>
-                <TiltCard className="rounded-xl border border-white shadow-sm bg-white h-full">
-                  <div className="p-6">
-                    <motion.div
-                      className="flex h-11 w-11 items-center justify-center rounded-xl bg-pink-100 mb-4"
-                      whileHover={{ scale: 1.15, backgroundColor: '#fce7f3' }}
-                      transition={{ type: 'spring', stiffness: 400 }}
-                    >
-                      <feature.icon className="h-6 w-6 text-pink-600" />
-                    </motion.div>
-                    <h3 className="font-semibold text-slate-800 mb-2">{feature.title}</h3>
-                    <p className="text-sm text-slate-500 leading-relaxed">{feature.description}</p>
+          {/* Featured card + remaining grid */}
+          <StaggerContainer className="space-y-5">
+            {/* Destaque: custo automático */}
+            <motion.div variants={staggerItem}>
+              <TiltCard className="rounded-2xl bg-gradient-to-br from-pink-500 to-rose-500 text-white overflow-hidden shadow-xl shadow-pink-200">
+                <div className="p-8 sm:flex items-center gap-8">
+                  <div className="flex-shrink-0 mb-6 sm:mb-0">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
+                      <FlaskConical className="h-8 w-8 text-white" />
+                    </div>
                   </div>
-                </TiltCard>
-              </motion.div>
-            ))}
+                  <div className="flex-1">
+                    <span className="text-xs font-semibold uppercase tracking-widest text-pink-100 mb-2 block">Funcionalidade principal</span>
+                    <h3 className="text-xl font-bold text-white mb-2">Custo automático de receitas</h3>
+                    <p className="text-pink-100 leading-relaxed text-sm max-w-2xl">
+                      Cadastre seus ingredientes e o sistema calcula automaticamente o custo de cada receita — por grama, mililitro ou unidade. Atualizou o preço da manteiga? Todos os produtos que a usam recalculam na hora.
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0 mt-6 sm:mt-0">
+                    <div className="rounded-xl bg-white/10 border border-white/20 px-5 py-4 text-center min-w-[120px]">
+                      <p className="text-xs text-pink-100 mb-1">Economia de tempo</p>
+                      <p className="text-3xl font-bold text-white">100%</p>
+                      <p className="text-xs text-pink-100 mt-1">de cálculo manual</p>
+                    </div>
+                  </div>
+                </div>
+              </TiltCard>
+            </motion.div>
+            {/* Remaining 5 features */}
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {features.filter(f => f.icon !== FlaskConical).map((feature) => (
+                <motion.div key={feature.title} variants={staggerItem}>
+                  <TiltCard className="rounded-xl border border-slate-200 shadow-sm bg-white h-full">
+                    <div className="p-6">
+                      <motion.div
+                        className="flex h-11 w-11 items-center justify-center rounded-xl bg-pink-50 mb-4"
+                        whileHover={{ scale: 1.12, backgroundColor: '#fce7f3' }}
+                        transition={{ type: 'spring', stiffness: 400 }}
+                      >
+                        <feature.icon className="h-5 w-5 text-pink-600" />
+                      </motion.div>
+                      <h3 className="font-semibold text-slate-800 mb-2 text-sm">{feature.title}</h3>
+                      <p className="text-sm text-slate-500 leading-relaxed">{feature.description}</p>
+                    </div>
+                  </TiltCard>
+                </motion.div>
+              ))}
+            </div>
           </StaggerContainer>
         </div>
       </section>
 
-      {/* Mid-page CTA */}
-      <section className="py-10 bg-white border-y border-pink-100 overflow-hidden">
-        <FadeUp>
-          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+      {/* Mid-page CTA — gradient band */}
+      <section className="relative overflow-hidden py-16">
+        <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-rose-500" />
+        <motion.div
+          className="absolute inset-0 opacity-20"
+          style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 50%, white 1px, transparent 1px)', backgroundSize: '32px 32px' }}
+          animate={{ backgroundPositionX: ['0px', '32px'] }}
+          transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+        />
+        <FadeUp className="relative z-10">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
             <div>
-              <p className="font-semibold text-slate-800 text-lg">Pronta para sair do caderno de vez?</p>
-              <p className="text-slate-500 text-sm mt-1">Configure sua confeitaria em menos de 2 minutos.</p>
+              <p className="text-xl font-bold text-white">Pronta para sair do caderno de vez?</p>
+              <p className="text-pink-100 text-sm mt-1">Configure sua confeitaria em menos de 2 minutos. Sem cartão.</p>
             </div>
             <MagneticButton>
-              <Button asChild className="bg-pink-500 hover:bg-pink-600 shrink-0 gap-2 shadow-md shadow-pink-100">
+              <Button asChild size="lg" className="bg-white text-pink-600 hover:bg-pink-50 shrink-0 gap-2 font-semibold shadow-xl shadow-rose-700/30">
                 <TrackedLink href="/signup" trackEvent="cta_click" trackParams={{ location: 'mid_features', action: 'signup' }}>
                   Começar agora
-                  <motion.span animate={{ x: [0, 3, 0] }} transition={{ duration: 1.2, repeat: Infinity }}>
-                    <ArrowRight className="h-4 w-4" />
-                  </motion.span>
+                  <ArrowRight className="h-4 w-4" />
                 </TrackedLink>
               </Button>
             </MagneticButton>
@@ -848,32 +889,44 @@ export function LandingPageContent() {
       </section>
 
       {/* How it works */}
-      <section id="como-funciona" className="py-20 relative overflow-hidden">
+      <section id="como-funciona" className="py-24 relative overflow-hidden">
         <ScrollBgLayer className="bg-slate-50" speed={0.1} />
-        <div className="relative z-10 mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <FadeUp className="text-center mb-14">
+        <div className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+          <FadeUp className="text-center mb-16">
             <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">Simples de começar</h2>
             <p className="mt-4 text-slate-500 text-lg">Três passos e sua confeitaria já está organizada.</p>
           </FadeUp>
-          <StaggerContainer className="grid grid-cols-1 gap-8 sm:grid-cols-3">
-            {steps.map((step, index) => (
-              <motion.div key={step.number} variants={staggerItem} className="relative text-center">
-                {index < steps.length - 1 && (
-                  <StepConnector />
-                )}
-                <motion.div
-                  className="relative z-10 inline-flex h-12 w-12 items-center justify-center rounded-full bg-pink-500 text-white text-xl font-bold mb-4"
-                  whileHover={{ scale: 1.15, boxShadow: '0 0 0 6px rgba(236,72,153,0.15)' }}
-                  transition={{ type: 'spring', stiffness: 400 }}
-                >
-                  {step.number}
-                </motion.div>
-                <h3 className="font-semibold text-slate-800 text-base mb-2">{step.title}</h3>
-                <p className="text-sm text-slate-500 leading-relaxed">{step.description}</p>
+          <StaggerContainer className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+            {[
+              { number: '1', icon: Cake, title: 'Crie sua conta', description: 'Cadastro em menos de 2 minutos. Sem burocracia, sem cartão exigido na hora.', color: 'from-pink-400 to-rose-400' },
+              { number: '2', icon: FlaskConical, title: 'Configure sua confeitaria', description: 'Adicione produtos, ingredientes e receitas. O sistema calcula os custos automaticamente.', color: 'from-purple-400 to-pink-400' },
+              { number: '3', icon: BarChart3, title: 'Gerencie com tranquilidade', description: 'Receba pedidos, acompanhe o financeiro e nunca mais perca o controle do seu negócio.', color: 'from-rose-400 to-orange-400' },
+            ].map((step, index, arr) => (
+              <motion.div key={step.number} variants={staggerItem} className="relative">
+                {index < arr.length - 1 && <StepConnector />}
+                <TiltCard className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden h-full">
+                  <div className={`h-1.5 w-full bg-gradient-to-r ${step.color}`} />
+                  <div className="p-7 text-center">
+                    <div className="relative inline-block mb-5">
+                      <motion.div
+                        className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${step.color} shadow-lg mx-auto`}
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        transition={{ type: 'spring', stiffness: 300 }}
+                      >
+                        <step.icon className="h-7 w-7 text-white" />
+                      </motion.div>
+                      <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-slate-800 text-white text-[10px] font-bold">
+                        {step.number}
+                      </span>
+                    </div>
+                    <h3 className="font-bold text-slate-800 text-base mb-2">{step.title}</h3>
+                    <p className="text-sm text-slate-500 leading-relaxed">{step.description}</p>
+                  </div>
+                </TiltCard>
               </motion.div>
             ))}
           </StaggerContainer>
-          <FadeUp delay={0.3} className="text-center mt-12">
+          <FadeUp delay={0.3} className="text-center mt-10">
             <MagneticButton className="inline-block">
               <Button size="lg" asChild className="bg-pink-500 hover:bg-pink-600 px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-pink-200">
                 <TrackedLink href="/signup" trackEvent="cta_click" trackParams={{ location: 'como_funciona', action: 'signup' }}>
@@ -883,6 +936,67 @@ export function LandingPageContent() {
               </Button>
             </MagneticButton>
           </FadeUp>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-20 bg-white">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <FadeUp className="text-center mb-14">
+            <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">Quem já usa, não volta atrás</h2>
+            <p className="mt-3 text-slate-500 text-lg">Confeiteiras reais que organizaram o negócio com o Confeitando.</p>
+          </FadeUp>
+          <StaggerContainer className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+            {[
+              {
+                quote: 'Antes eu não sabia se estava tendo lucro ou prejuízo. Agora vejo o custo de cada receita em segundos — isso mudou a minha precificação completamente.',
+                name: 'Ana Paula M.',
+                role: 'Confeitaria própria · São Paulo',
+                rating: 5,
+                initial: 'A',
+                color: 'bg-pink-100 text-pink-600',
+              },
+              {
+                quote: 'Perdi uma entrega porque esqueci um pedido no WhatsApp. Depois que comecei a usar o Confeitando, isso nunca mais aconteceu. O pipeline de pedidos é incrível.',
+                name: 'Fernanda L.',
+                role: 'Doces artesanais · Belo Horizonte',
+                rating: 5,
+                initial: 'F',
+                color: 'bg-purple-100 text-purple-600',
+              },
+              {
+                quote: 'Em menos de 2 minutos eu já estava cadastrando meus produtos. Não precisei de tutorial, é muito intuitivo. E o suporte responde rapidíssimo.',
+                name: 'Camila R.',
+                role: 'Bolos personalizados · Curitiba',
+                rating: 5,
+                initial: 'C',
+                color: 'bg-rose-100 text-rose-600',
+              },
+            ].map((t) => (
+              <motion.div key={t.name} variants={staggerItem}>
+                <TiltCard className="rounded-2xl bg-white border border-slate-200 shadow-sm p-7 h-full flex flex-col">
+                  {/* Stars */}
+                  <div className="flex gap-0.5 mb-4">
+                    {Array.from({ length: t.rating }).map((_, i) => (
+                      <svg key={i} className="h-4 w-4 text-amber-400 fill-amber-400" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                  </div>
+                  <p className="text-slate-600 text-sm leading-relaxed flex-1 mb-6">&ldquo;{t.quote}&rdquo;</p>
+                  <div className="flex items-center gap-3">
+                    <div className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold flex-shrink-0 ${t.color}`}>
+                      {t.initial}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800">{t.name}</p>
+                      <p className="text-xs text-slate-400">{t.role}</p>
+                    </div>
+                  </div>
+                </TiltCard>
+              </motion.div>
+            ))}
+          </StaggerContainer>
         </div>
       </section>
 
