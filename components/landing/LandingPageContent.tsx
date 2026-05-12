@@ -330,7 +330,7 @@ export function LandingPageContent() {
       </motion.header>
 
       {/* Hero */}
-      <section ref={heroRef} className="relative overflow-hidden py-20 sm:py-28 min-h-[90vh] flex items-center">
+      <section ref={heroRef} className="relative overflow-hidden py-20 sm:py-24 lg:py-28 min-h-screen flex items-center">
         {/* Parallax background gradient */}
         <motion.div
           className="absolute inset-0 bg-gradient-to-b from-pink-50/70 via-pink-50/30 to-white"
@@ -369,7 +369,7 @@ export function LandingPageContent() {
           className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full"
           style={{ opacity: heroOpacity, y: heroTextY }}
         >
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.25fr] gap-12 lg:gap-16 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] gap-10 lg:gap-14 items-center">
 
             {/* ── Left: text ── */}
             <div className="text-center lg:text-left">
@@ -460,58 +460,140 @@ export function LandingPageContent() {
               </motion.div>
             </div>
 
-            {/* ── Right: dashboard mockup — slightly tilted for natural feel ── */}
+            {/* ── Right: multi-screen composition ── */}
             <motion.div
-              className="relative"
-              initial={{ opacity: 0, y: 72, scale: 0.94 }}
+              className="relative flex items-center justify-center lg:justify-end"
+              initial={{ opacity: 0, y: 64, scale: 0.93 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 1.7, delay: 1.2, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 1.7, delay: 1.1, ease: [0.22, 1, 0.36, 1] }}
               style={{ y: heroImgY }}
             >
-              {/* Decorative glow */}
+              {/* Ambient glow */}
               <motion.div
-                className="absolute -inset-6 rounded-3xl bg-pink-200/40 blur-3xl"
-                animate={{ scale: [1, 1.05, 1], opacity: [0.35, 0.6, 0.35] }}
-                transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+                className="absolute inset-0 -m-12 rounded-[40px] bg-pink-200/35 blur-3xl pointer-events-none"
+                animate={{ scale: [1, 1.06, 1], opacity: [0.3, 0.55, 0.3] }}
+                transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
               />
-              {/* Decorative dot grid behind image */}
-              <div className="absolute -bottom-6 -left-6 w-32 h-32 opacity-20"
+
+              {/* Dot grid decoration — back layer */}
+              <div
+                className="absolute -bottom-4 -left-4 w-36 h-36 opacity-[0.15] pointer-events-none"
                 style={{
                   backgroundImage: 'radial-gradient(circle, #f472b6 1.5px, transparent 1.5px)',
                   backgroundSize: '14px 14px',
-                }}>
-              </div>
+                }}
+              />
+              <div
+                className="absolute -top-4 -right-2 w-24 h-24 opacity-[0.12] pointer-events-none"
+                style={{
+                  backgroundImage: 'radial-gradient(circle, #a855f7 1.5px, transparent 1.5px)',
+                  backgroundSize: '12px 12px',
+                }}
+              />
 
-              {/* Browser mockup — rotated 1° to feel less rigid */}
-              <motion.div
-                className="relative rounded-2xl border border-slate-200/80 bg-white shadow-2xl overflow-hidden"
-                style={{ rotate: 1 }}
-                whileHover={{ rotate: 0, scale: 1.015, boxShadow: '0 32px 80px -20px rgba(236,72,153,0.22)' }}
-                transition={{ type: 'spring', stiffness: 160, damping: 28 }}
-              >
-                <div className="flex items-center gap-1.5 px-4 py-3 border-b border-slate-100 bg-slate-50">
-                  <motion.span className="h-3 w-3 rounded-full bg-red-400" whileHover={{ scale: 1.3 }} />
-                  <motion.span className="h-3 w-3 rounded-full bg-yellow-400" whileHover={{ scale: 1.3 }} />
-                  <motion.span className="h-3 w-3 rounded-full bg-green-400" whileHover={{ scale: 1.3 }} />
-                  <div className="ml-4 flex-1 rounded-md bg-white border border-slate-200 px-3 py-1 text-xs text-slate-400 text-left max-w-xs">
-                    app.confeitando.com.br
+              {/* ── Composition wrapper ── */}
+              <div className="relative w-full max-w-[580px]">
+
+                {/* Floating card: Pedidos — top right */}
+                <motion.div
+                  className="absolute -top-10 -right-6 z-20 w-52 rounded-xl bg-white border border-slate-200/80 shadow-xl overflow-hidden"
+                  style={{ rotate: -3 }}
+                  initial={{ opacity: 0, x: 24, y: -16 }}
+                  animate={{ opacity: 1, x: 0, y: [0, -6, 0] }}
+                  transition={{
+                    opacity: { duration: 1.1, delay: 2.0 },
+                    x: { duration: 1.1, delay: 2.0 },
+                    y: { duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 2.2, times: [0, 0.5, 1] },
+                  }}
+                >
+                  <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 bg-orange-50">
+                    <ShoppingCart className="h-3.5 w-3.5 text-orange-500" />
+                    <span className="text-xs font-semibold text-orange-700">Pedidos</span>
                   </div>
-                </div>
-                <div className="relative overflow-hidden">
-                  <img
-                    src="/hero-bg.png"
-                    alt="Dashboard do Confeitando — visão geral financeira"
-                    className="w-full h-auto block"
-                    loading="eager"
-                  />
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"
-                    initial={{ x: '-100%' }}
-                    animate={{ x: '200%' }}
-                    transition={{ duration: 1.6, delay: 1.4, ease: 'easeInOut' }}
-                  />
-                </div>
-              </motion.div>
+                  <div className="p-2.5 space-y-1.5">
+                    {[
+                      { name: 'Bolo de cenoura', status: 'Entregue', dot: 'bg-green-400' },
+                      { name: 'Torta de limão', status: 'Produção', dot: 'bg-yellow-400' },
+                      { name: 'Brownie 6un', status: 'Pendente', dot: 'bg-slate-300' },
+                    ].map((row) => (
+                      <div key={row.name} className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] text-slate-600 truncate">{row.name}</span>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <span className={`inline-block h-1.5 w-1.5 rounded-full ${row.dot}`} />
+                          <span className="text-[9px] text-slate-400">{row.status}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+
+                {/* Floating card: Financeiro — bottom left */}
+                <motion.div
+                  className="absolute -bottom-8 -left-6 z-20 w-44 rounded-xl bg-white border border-slate-200/80 shadow-xl overflow-hidden"
+                  style={{ rotate: 2.5 }}
+                  initial={{ opacity: 0, x: -20, y: 16 }}
+                  animate={{ opacity: 1, x: 0, y: [0, 6, 0] }}
+                  transition={{
+                    opacity: { duration: 1.1, delay: 2.3 },
+                    x: { duration: 1.1, delay: 2.3 },
+                    y: { duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 2.5, times: [0, 0.5, 1] },
+                  }}
+                >
+                  <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 bg-green-50">
+                    <DollarSign className="h-3.5 w-3.5 text-green-600" />
+                    <span className="text-xs font-semibold text-green-700">Financeiro</span>
+                  </div>
+                  <div className="px-3 py-2.5">
+                    <p className="text-[9px] text-slate-400 mb-0.5">Saldo atual</p>
+                    <p className="text-base font-bold text-slate-800">R$ 3.240</p>
+                    {/* Mini bar chart */}
+                    <div className="flex items-end gap-0.5 mt-2 h-6">
+                      {[40, 65, 45, 80, 55, 90, 70].map((h, i) => (
+                        <motion.div
+                          key={i}
+                          className="flex-1 bg-green-400 rounded-sm"
+                          style={{ height: `${h}%` }}
+                          initial={{ scaleY: 0 }}
+                          animate={{ scaleY: 1 }}
+                          transition={{ duration: 0.5, delay: 2.5 + i * 0.07, ease: 'easeOut' }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Main dashboard browser mockup */}
+                <motion.div
+                  className="relative rounded-2xl border border-slate-200/80 bg-white shadow-2xl overflow-hidden"
+                  style={{ rotate: 1 }}
+                  whileHover={{ rotate: 0, scale: 1.012, boxShadow: '0 36px 80px -20px rgba(236,72,153,0.22)' }}
+                  transition={{ type: 'spring', stiffness: 150, damping: 26 }}
+                >
+                  <div className="flex items-center gap-1.5 px-4 py-3 border-b border-slate-100 bg-slate-50">
+                    <motion.span className="h-3 w-3 rounded-full bg-red-400" whileHover={{ scale: 1.3 }} />
+                    <motion.span className="h-3 w-3 rounded-full bg-yellow-400" whileHover={{ scale: 1.3 }} />
+                    <motion.span className="h-3 w-3 rounded-full bg-green-400" whileHover={{ scale: 1.3 }} />
+                    <div className="ml-4 flex-1 rounded-md bg-white border border-slate-200 px-3 py-1 text-xs text-slate-400 text-left max-w-xs">
+                      app.confeitando.com.br
+                    </div>
+                  </div>
+                  <div className="relative overflow-hidden">
+                    <img
+                      src="/hero-bg.png"
+                      alt="Dashboard do Confeitando — visão geral financeira"
+                      className="w-full h-auto block"
+                      loading="eager"
+                    />
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"
+                      initial={{ x: '-100%' }}
+                      animate={{ x: '200%' }}
+                      transition={{ duration: 1.6, delay: 1.4, ease: 'easeInOut' }}
+                    />
+                  </div>
+                </motion.div>
+
+              </div>
             </motion.div>
 
           </div>
