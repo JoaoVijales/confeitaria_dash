@@ -1,9 +1,9 @@
 'use client'
 
+import { useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import { KpiCard } from "@/components/KpiCard";
 import { DollarSign, ShoppingCart, Trophy, Eye, PackagePlus, TrendingUp, Percent, Wallet } from "lucide-react";
-import { SalesChart } from "@/components/charts/SalesChart";
-import { TopProductsChart } from "@/components/charts/TopProductsChart";
 import {
   Table,
   TableBody,
@@ -23,10 +23,28 @@ import { useOrders } from "@/hooks/useOrders";
 import { StockAlertBanner } from "@/components/StockAlertBanner"
 import { SectionTracker } from '@/components/SectionTracker';
 import { ORDER_STATUS_COLORS } from "@/lib/constants/order-status";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF1919'];
+const ChartSkeleton = () => <Skeleton className="h-[260px] w-full" />
 
+const SalesChart = dynamic(
+  () => import('@/components/charts/SalesChart').then(m => ({ default: m.SalesChart })),
+  { loading: ChartSkeleton, ssr: false }
+)
+
+const TopProductsChart = dynamic(
+  () => import('@/components/charts/TopProductsChart').then(m => ({ default: m.TopProductsChart })),
+  { loading: ChartSkeleton, ssr: false }
+)
+
+const ProfitableProductsChart = dynamic(
+  () => import('@/components/charts/ProfitableProductsChart').then(m => ({ default: m.ProfitableProductsChart })),
+  { loading: ChartSkeleton, ssr: false }
+)
+
+const ExpensesPieChart = dynamic(
+  () => import('@/components/charts/ExpensesPieChart').then(m => ({ default: m.ExpensesPieChart })),
+  { loading: ChartSkeleton, ssr: false }
+)
 
 interface Order {
   id: string;
@@ -43,7 +61,7 @@ export default function DashboardPage() {
   const { data: ordersData, isLoading: isLoadingOrders } = useOrders();
 
   const orders = ordersData as unknown as Order[];
-  const recentOrders = orders?.slice(0, 5) || [];
+  const recentOrders = useMemo(() => orders?.slice(0, 5) || [], [orders]);
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
@@ -144,14 +162,7 @@ export default function DashboardPage() {
             <CardTitle className="font-semibold text-slate-800">Top 5 Produtos Mais Lucrativos</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={stats?.topProfitableProducts} layout="vertical">
-                <XAxis type="number" />
-                <YAxis type="category" dataKey="name" />
-                <Tooltip />
-                <Bar dataKey="Lucro" fill="#8884d8" />
-              </BarChart>
-            </ResponsiveContainer>
+            <ProfitableProductsChart data={stats?.topProfitableProducts} />
           </CardContent>
         </Card>
         <Card className="col-span-1 lg:col-span-2 rounded-xl border border-slate-200 shadow-sm">
@@ -159,26 +170,7 @@ export default function DashboardPage() {
             <CardTitle className="font-semibold text-slate-800">Despesas por Categoria</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <ResponsiveContainer width="100%" height={350}>
-              <PieChart>
-                <Pie
-                  data={stats?.expensesByCategoryChartData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={120}
-                  innerRadius={80} // Converted to donut
-                  dataKey="value"
-                  nameKey="name"
-                >
-                  {stats?.expensesByCategoryChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+            <ExpensesPieChart data={stats?.expensesByCategoryChartData} />
           </CardContent>
         </Card>
       </div>

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -12,13 +13,23 @@ import { EmptyState } from "@/components/EmptyState";
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useOrders } from '@/hooks/useOrders'
 import { useCreateOrder, useUpdateOrderStatus, useDeleteOrder } from '@/hooks/useMutations'
-import { OrderFormDialog } from '@/components/dialogs/OrderFormDialog'
-import { ConfirmDialog } from '@/components/dialogs/ConfirmDialog'
-import { UpdateOrderStatusDialog } from '@/components/dialogs/UpdateOrderStatusDialog'
 import { OrderFormValues } from '@/lib/validations/order.schema'
 import { ORDER_STATUS_COLORS } from '@/lib/constants/order-status'
 import { toast } from 'sonner'
 import { SectionTracker } from '@/components/SectionTracker'
+
+const OrderFormDialog = dynamic(
+  () => import('@/components/dialogs/OrderFormDialog').then(m => ({ default: m.OrderFormDialog })),
+  { ssr: false }
+)
+const ConfirmDialog = dynamic(
+  () => import('@/components/dialogs/ConfirmDialog').then(m => ({ default: m.ConfirmDialog })),
+  { ssr: false }
+)
+const UpdateOrderStatusDialog = dynamic(
+  () => import('@/components/dialogs/UpdateOrderStatusDialog').then(m => ({ default: m.UpdateOrderStatusDialog })),
+  { ssr: false }
+)
 
 type Order = {
   id: string;
@@ -95,10 +106,14 @@ export default function OrdersPage() {
     })
   }
 
-  const filteredOrders = orders?.filter(order => {
-    const customerName = order.customers?.[0]?.name || '';
-    return customerName.toLowerCase().includes(searchTerm.toLowerCase()) || String(order.id).includes(searchTerm.toLowerCase());
-  }) || [];
+  const filteredOrders = useMemo(
+    () =>
+      orders?.filter(order => {
+        const customerName = order.customers?.[0]?.name || '';
+        return customerName.toLowerCase().includes(searchTerm.toLowerCase()) || String(order.id).includes(searchTerm.toLowerCase());
+      }) || [],
+    [orders, searchTerm]
+  );
 
   const totalOrders = filteredOrders.length;
 

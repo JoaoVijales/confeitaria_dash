@@ -30,12 +30,12 @@ export function SalesChart() {
   const { data: chartData, isLoading, error } = useSalesChart();
 
   if (isLoading) {
-    return <Skeleton className="h-[350px] w-full" />
+    return <Skeleton className="h-[260px] w-full" />
   }
 
   if (error || !chartData || chartData.length === 0) {
     return (
-      <div className="h-[350px] flex items-center justify-center">
+      <div className="h-[260px] flex items-center justify-center">
         <EmptyState
           title="Nenhum dado de vendas"
           description="Não há dados de vendas para exibir no momento."
@@ -46,7 +46,7 @@ export function SalesChart() {
   }
 
   return (
-    <ResponsiveContainer width="100%" height={350}>
+    <ResponsiveContainer width="100%" height={260}>
       <BarChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">

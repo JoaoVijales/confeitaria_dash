@@ -29,8 +29,17 @@ import {
   useTransform,
   useInView,
   AnimatePresence,
+  MotionConfig,
 } from 'framer-motion'
 import { useRef, useState, useEffect } from 'react'
+
+function useIsMobile() {
+  const [mobile, setMobile] = useState(false)
+  useEffect(() => {
+    setMobile(window.matchMedia('(max-width: 767px), (pointer: coarse)').matches)
+  }, [])
+  return mobile
+}
 
 // ─── Reusable animation primitives ─────────────────────────────────────────
 
@@ -43,15 +52,16 @@ function FadeUp({
   delay?: number
   className?: string
 }) {
+  const isMobile = useIsMobile()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
   return (
     <motion.div
       ref={ref}
       className={className}
-      initial={{ opacity: 0, y: 48 }}
+      initial={{ opacity: 0, y: isMobile ? 20 : 48 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 1.6, delay, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: isMobile ? 0.45 : 1.6, delay: isMobile ? delay * 0.4 : delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
     </motion.div>
@@ -69,9 +79,11 @@ function FadeIn({
   className?: string
   direction?: 'up' | 'left' | 'right' | 'none'
 }) {
+  const isMobile = useIsMobile()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-50px' })
-  const dirMap = { up: [0, 56], left: [-64, 0], right: [64, 0], none: [0, 0] }
+  const dist = isMobile ? 24 : 56
+  const dirMap = { up: [0, dist], left: [-dist, 0], right: [dist, 0], none: [0, 0] }
   const [x, y] = dirMap[direction]
   return (
     <motion.div
@@ -79,7 +91,7 @@ function FadeIn({
       className={className}
       initial={{ opacity: 0, x, y }}
       animate={inView ? { opacity: 1, x: 0, y: 0 } : {}}
-      transition={{ duration: 1.6, delay, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: isMobile ? 0.45 : 1.6, delay: isMobile ? delay * 0.4 : delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
     </motion.div>
@@ -95,6 +107,7 @@ function StaggerContainer({
   className?: string
   delay?: number
 }) {
+  const isMobile = useIsMobile()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
   return (
@@ -105,7 +118,7 @@ function StaggerContainer({
       animate={inView ? 'visible' : 'hidden'}
       variants={{
         hidden: {},
-        visible: { transition: { staggerChildren: 0.22, delayChildren: delay } },
+        visible: { transition: { staggerChildren: isMobile ? 0.08 : 0.22, delayChildren: isMobile ? delay * 0.4 : delay } },
       }}
     >
       {children}
@@ -114,15 +127,18 @@ function StaggerContainer({
 }
 
 const staggerItem = {
-  hidden: { opacity: 0, y: 40 },
-  visible: { opacity: 1, y: 0, transition: { duration: 1.4, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
 }
 
 // ─── Magnetic hover button ──────────────────────────────────────────────────
 
 function MagneticButton({ children, className }: { children: React.ReactNode; className?: string }) {
+  const isMobile = useIsMobile()
   const ref = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState({ x: 0, y: 0 })
+
+  if (isMobile) return <div className={className}>{children}</div>
 
   function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
     const rect = ref.current?.getBoundingClientRect()
@@ -152,9 +168,12 @@ function MagneticButton({ children, className }: { children: React.ReactNode; cl
 // ─── Tilt card ──────────────────────────────────────────────────────────────
 
 function TiltCard({ children, className }: { children: React.ReactNode; className?: string }) {
+  const isMobile = useIsMobile()
   const ref = useRef<HTMLDivElement>(null)
   const [tilt, setTilt] = useState({ x: 0, y: 0 })
   const [hovered, setHovered] = useState(false)
+
+  if (isMobile) return <div className={className}>{children}</div>
 
   function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
     const rect = ref.current?.getBoundingClientRect()
@@ -249,6 +268,7 @@ const flowItems = [
 // ─── Main component ─────────────────────────────────────────────────────────
 
 export function LandingPageContent() {
+  const isMobile = useIsMobile()
   const heroRef = useRef(null)
   const { scrollYProgress: heroScroll } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
 
@@ -261,6 +281,7 @@ export function LandingPageContent() {
   const heroOpacity = useTransform(heroScroll, [0, 0.55], [1, 0])
 
   return (
+    <MotionConfig reducedMotion="user">
     <div className="min-h-screen bg-white overflow-x-hidden">
       {/* Navbar */}
       <motion.header
@@ -323,40 +344,23 @@ export function LandingPageContent() {
         {/* Parallax background gradient */}
         <motion.div
           className="absolute inset-0 bg-gradient-to-b from-pink-50/70 via-pink-50/30 to-white"
-          style={{ y: heroBgY }}
+          style={isMobile ? undefined : { y: heroBgY }}
         />
 
-        {/* Parallax blob layer — far (slow) */}
-        <motion.div style={{ y: blobFarY }} className="absolute inset-0 pointer-events-none">
-          <motion.div
-            className="absolute top-16 right-[8%] w-80 h-80 rounded-full bg-pink-200/30 blur-3xl"
-            animate={{ scale: [1, 1.12, 1], opacity: [0.28, 0.48, 0.28] }}
-            transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <motion.div
-            className="absolute top-40 left-[12%] w-48 h-48 rounded-full bg-rose-200/20 blur-3xl"
-            animate={{ scale: [1.05, 1, 1.05], opacity: [0.2, 0.35, 0.2] }}
-            transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
-          />
+        {/* Blob layers — static on all devices (blur-3xl + repeat:Infinity forces GPU repaints) */}
+        {/* Parallax wrapper kept on desktop: translate runs on compositor, no repaint */}
+        <motion.div style={isMobile ? undefined : { y: blobFarY }} className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-16 right-[8%] w-80 h-80 rounded-full bg-pink-200/30 blur-3xl opacity-30" />
+          <div className="absolute top-40 left-[12%] w-48 h-48 rounded-full bg-rose-200/20 blur-3xl opacity-25" />
         </motion.div>
-
-        {/* Parallax blob layer — near (faster) */}
-        <motion.div style={{ y: blobNearY }} className="absolute inset-0 pointer-events-none">
-          <motion.div
-            className="absolute bottom-24 left-[4%] w-56 h-56 rounded-full bg-purple-200/25 blur-3xl"
-            animate={{ scale: [1.1, 1, 1.1], opacity: [0.25, 0.42, 0.25] }}
-            transition={{ duration: 13, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
-          />
-          <motion.div
-            className="absolute bottom-32 right-[18%] w-36 h-36 rounded-full bg-pink-300/20 blur-2xl"
-            animate={{ scale: [1, 1.18, 1], opacity: [0.15, 0.3, 0.15] }}
-            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
-          />
+        <motion.div style={isMobile ? undefined : { y: blobNearY }} className="absolute inset-0 pointer-events-none">
+          <div className="absolute bottom-24 left-[4%] w-56 h-56 rounded-full bg-purple-200/25 blur-3xl opacity-25" />
+          <div className="absolute bottom-32 right-[18%] w-36 h-36 rounded-full bg-pink-300/20 blur-2xl opacity-20" />
         </motion.div>
 
         <motion.div
           className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 w-full"
-          style={{ opacity: heroOpacity, y: heroTextY }}
+          style={isMobile ? undefined : { opacity: heroOpacity, y: heroTextY }}
         >
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-8 lg:gap-10 items-center">
 
@@ -455,14 +459,10 @@ export function LandingPageContent() {
               initial={{ opacity: 0, y: 64, scale: 0.93 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 1.7, delay: 1.1, ease: [0.22, 1, 0.36, 1] }}
-              style={{ y: heroImgY }}
+              style={isMobile ? undefined : { y: heroImgY }}
             >
-              {/* Ambient glow */}
-              <motion.div
-                className="absolute inset-0 -m-12 rounded-[40px] bg-pink-200/35 blur-3xl pointer-events-none"
-                animate={{ scale: [1, 1.06, 1], opacity: [0.3, 0.55, 0.3] }}
-                transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-              />
+              {/* Ambient glow — static on all devices */}
+              <div className="absolute inset-0 -m-12 rounded-[40px] bg-pink-200/35 blur-3xl opacity-35 pointer-events-none" />
 
               {/* Dot grid decoration — back layer */}
               <div
@@ -710,12 +710,19 @@ export function LandingPageContent() {
       {/* Mid-page CTA — gradient band */}
       <section className="relative overflow-hidden py-16">
         <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-rose-500" />
-        <motion.div
-          className="absolute inset-0 opacity-20"
-          style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 50%, white 1px, transparent 1px)', backgroundSize: '32px 32px' }}
-          animate={{ backgroundPositionX: ['0px', '32px'] }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-        />
+        {isMobile ? (
+          <div
+            className="absolute inset-0 opacity-20"
+            style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 50%, white 1px, transparent 1px)', backgroundSize: '32px 32px' }}
+          />
+        ) : (
+          <motion.div
+            className="absolute inset-0 opacity-20"
+            style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 50%, white 1px, transparent 1px)', backgroundSize: '32px 32px' }}
+            animate={{ backgroundPositionX: ['0px', '32px'] }}
+            transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+          />
+        )}
         <FadeUp className="relative z-10">
           <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
             <div>
@@ -997,11 +1004,8 @@ export function LandingPageContent() {
       {/* Final CTA */}
       <section className="relative overflow-hidden py-24 bg-gradient-to-b from-pink-50/70 to-white">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-pink-100/60 via-transparent to-transparent" />
-        <motion.div
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-pink-200/20 blur-3xl"
-          animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-        />
+        {/* Final CTA blob — static on all devices */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-pink-200/20 blur-3xl opacity-30" />
         <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
           <FadeUp>
             <div className="inline-flex items-center gap-2 rounded-full bg-pink-100 px-4 py-1.5 text-sm font-medium text-pink-700 mb-6">
@@ -1088,6 +1092,7 @@ export function LandingPageContent() {
         </div>
       </footer>
     </div>
+    </MotionConfig>
   )
 }
 
@@ -1102,6 +1107,7 @@ function ScrollBgLayer({ className, speed = 0.15 }: { className?: string; speed?
 }
 
 function ParallaxImage({ src, alt, speed = 0.1 }: { src: string; alt: string; speed?: number }) {
+  const isMobile = useIsMobile()
   const ref = useRef(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
   const scrollY = useTransform(scrollYProgress, [0, 1], [`${speed * 100}%`, `${-speed * 100}%`])
@@ -1117,7 +1123,7 @@ function ParallaxImage({ src, alt, speed = 0.1 }: { src: string; alt: string; sp
       }}
       transition={{ type: 'spring', stiffness: 160, damping: 26 }}
     >
-      <motion.div style={{ y: scrollY }} className="will-change-transform">
+      <motion.div style={isMobile ? undefined : { y: scrollY }} className="will-change-transform">
         <Image src={src} alt={alt} width={800} height={500} className="w-full h-auto block" />
       </motion.div>
     </motion.div>

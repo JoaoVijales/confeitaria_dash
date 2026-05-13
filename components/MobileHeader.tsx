@@ -14,6 +14,19 @@ import {
 import { signOut } from '@/app/actions/auth'
 import { WhatsAppIcon, WHATSAPP_URL } from '@/components/SupportButton'
 
+const NAV_ITEMS = [
+  { href: '/dashboard', label: 'Visão Geral', icon: Home },
+  { href: '/dashboard/pedidos', label: 'Pedidos', icon: ShoppingCart },
+  { href: '/dashboard/produtos', label: 'Produtos', icon: Package },
+  { href: '/dashboard/ingredientes', label: 'Ingredientes', icon: Wheat },
+  { href: '/dashboard/receitas', label: 'Receitas', icon: ChefHat },
+  { href: '/dashboard/clientes', label: 'Clientes', icon: Users },
+  { href: '/dashboard/financeiro', label: 'Financeiro', icon: TrendingUp },
+  { href: '/dashboard/entradas', label: 'Entradas', icon: ArrowUpCircle },
+  { href: '/dashboard/saidas', label: 'Saídas', icon: ArrowDownCircle },
+  { href: '/dashboard/billing', label: 'Plano & Billing', icon: CreditCard },
+] as const
+
 function LogoutButton() {
   const { pending } = useFormStatus()
   return (
@@ -35,19 +48,6 @@ export function MobileHeader() {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
 
-  const navItems = [
-    { href: '/dashboard', label: 'Visão Geral', icon: Home },
-    { href: '/dashboard/pedidos', label: 'Pedidos', icon: ShoppingCart },
-    { href: '/dashboard/produtos', label: 'Produtos', icon: Package },
-    { href: '/dashboard/ingredientes', label: 'Ingredientes', icon: Wheat },
-    { href: '/dashboard/receitas', label: 'Receitas', icon: ChefHat },
-    { href: '/dashboard/clientes', label: 'Clientes', icon: Users },
-    { href: '/dashboard/financeiro', label: 'Financeiro', icon: TrendingUp },
-    { href: '/dashboard/entradas', label: 'Entradas', icon: ArrowUpCircle },
-    { href: '/dashboard/saidas', label: 'Saídas', icon: ArrowDownCircle },
-    { href: '/dashboard/billing', label: 'Plano & Billing', icon: CreditCard },
-  ]
-
   return (
     <div className="md:hidden">
       <header className="flex h-16 items-center justify-between border-b bg-white px-4 shadow-sm">
@@ -68,7 +68,7 @@ export function MobileHeader() {
       {isOpen && (
         <div className="fixed top-16 inset-x-0 bottom-0 z-50 bg-white overflow-y-auto animate-in slide-in-from-top duration-300">
           <nav className="grid gap-2 p-4 text-lg font-medium">
-            {navItems.map((item) => (
+            {NAV_ITEMS.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
