@@ -52,15 +52,16 @@ function FadeUp({
   delay?: number
   className?: string
 }) {
+  const isMobile = useIsMobile()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
   return (
     <motion.div
       ref={ref}
       className={className}
-      initial={{ opacity: 0, y: 48 }}
+      initial={{ opacity: 0, y: isMobile ? 20 : 48 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 1.6, delay, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: isMobile ? 0.45 : 1.6, delay: isMobile ? delay * 0.4 : delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
     </motion.div>
@@ -78,9 +79,11 @@ function FadeIn({
   className?: string
   direction?: 'up' | 'left' | 'right' | 'none'
 }) {
+  const isMobile = useIsMobile()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-50px' })
-  const dirMap = { up: [0, 56], left: [-64, 0], right: [64, 0], none: [0, 0] }
+  const dist = isMobile ? 24 : 56
+  const dirMap = { up: [0, dist], left: [-dist, 0], right: [dist, 0], none: [0, 0] }
   const [x, y] = dirMap[direction]
   return (
     <motion.div
@@ -88,7 +91,7 @@ function FadeIn({
       className={className}
       initial={{ opacity: 0, x, y }}
       animate={inView ? { opacity: 1, x: 0, y: 0 } : {}}
-      transition={{ duration: 1.6, delay, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: isMobile ? 0.45 : 1.6, delay: isMobile ? delay * 0.4 : delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
     </motion.div>
@@ -104,6 +107,7 @@ function StaggerContainer({
   className?: string
   delay?: number
 }) {
+  const isMobile = useIsMobile()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
   return (
@@ -114,7 +118,7 @@ function StaggerContainer({
       animate={inView ? 'visible' : 'hidden'}
       variants={{
         hidden: {},
-        visible: { transition: { staggerChildren: 0.22, delayChildren: delay } },
+        visible: { transition: { staggerChildren: isMobile ? 0.08 : 0.22, delayChildren: isMobile ? delay * 0.4 : delay } },
       }}
     >
       {children}
@@ -123,8 +127,8 @@ function StaggerContainer({
 }
 
 const staggerItem = {
-  hidden: { opacity: 0, y: 40 },
-  visible: { opacity: 1, y: 0, transition: { duration: 1.4, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
 }
 
 // ─── Magnetic hover button ──────────────────────────────────────────────────
@@ -277,7 +281,7 @@ export function LandingPageContent() {
   const heroOpacity = useTransform(heroScroll, [0, 0.55], [1, 0])
 
   return (
-    <MotionConfig reducedMotion={isMobile ? 'always' : 'never'}>
+    <MotionConfig reducedMotion="user">
     <div className="min-h-screen bg-white overflow-x-hidden">
       {/* Navbar */}
       <motion.header
@@ -343,8 +347,15 @@ export function LandingPageContent() {
           style={isMobile ? undefined : { y: heroBgY }}
         />
 
-        {/* Blob layers — desktop only (blur-3xl is expensive on mobile GPU) */}
-        {!isMobile && (
+        {/* Blob layers — static on mobile (animated blur causes GPU repaints), animated on desktop */}
+        {isMobile ? (
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-16 right-[8%] w-80 h-80 rounded-full bg-pink-200/30 blur-3xl opacity-30" />
+            <div className="absolute top-40 left-[12%] w-48 h-48 rounded-full bg-rose-200/20 blur-3xl opacity-25" />
+            <div className="absolute bottom-24 left-[4%] w-56 h-56 rounded-full bg-purple-200/25 blur-3xl opacity-25" />
+            <div className="absolute bottom-32 right-[18%] w-36 h-36 rounded-full bg-pink-300/20 blur-2xl opacity-20" />
+          </div>
+        ) : (
           <>
             <motion.div style={{ y: blobFarY }} className="absolute inset-0 pointer-events-none">
               <motion.div
@@ -476,8 +487,10 @@ export function LandingPageContent() {
               transition={{ duration: 1.7, delay: 1.1, ease: [0.22, 1, 0.36, 1] }}
               style={isMobile ? undefined : { y: heroImgY }}
             >
-              {/* Ambient glow — desktop only */}
-              {!isMobile && (
+              {/* Ambient glow — static on mobile, animated on desktop */}
+              {isMobile ? (
+                <div className="absolute inset-0 -m-12 rounded-[40px] bg-pink-200/35 blur-3xl opacity-35 pointer-events-none" />
+              ) : (
                 <motion.div
                   className="absolute inset-0 -m-12 rounded-[40px] bg-pink-200/35 blur-3xl pointer-events-none"
                   animate={{ scale: [1, 1.06, 1], opacity: [0.3, 0.55, 0.3] }}
@@ -731,7 +744,12 @@ export function LandingPageContent() {
       {/* Mid-page CTA — gradient band */}
       <section className="relative overflow-hidden py-16">
         <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-rose-500" />
-        {!isMobile && (
+        {isMobile ? (
+          <div
+            className="absolute inset-0 opacity-20"
+            style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 50%, white 1px, transparent 1px)', backgroundSize: '32px 32px' }}
+          />
+        ) : (
           <motion.div
             className="absolute inset-0 opacity-20"
             style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 50%, white 1px, transparent 1px)', backgroundSize: '32px 32px' }}
@@ -1020,7 +1038,9 @@ export function LandingPageContent() {
       {/* Final CTA */}
       <section className="relative overflow-hidden py-24 bg-gradient-to-b from-pink-50/70 to-white">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-pink-100/60 via-transparent to-transparent" />
-        {!isMobile && (
+        {isMobile ? (
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-pink-200/20 blur-3xl opacity-30" />
+        ) : (
           <motion.div
             className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-pink-200/20 blur-3xl"
             animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.5, 0.3] }}
