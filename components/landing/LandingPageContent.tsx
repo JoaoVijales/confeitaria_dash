@@ -347,42 +347,16 @@ export function LandingPageContent() {
           style={isMobile ? undefined : { y: heroBgY }}
         />
 
-        {/* Blob layers — static on mobile (animated blur causes GPU repaints), animated on desktop */}
-        {isMobile ? (
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-16 right-[8%] w-80 h-80 rounded-full bg-pink-200/30 blur-3xl opacity-30" />
-            <div className="absolute top-40 left-[12%] w-48 h-48 rounded-full bg-rose-200/20 blur-3xl opacity-25" />
-            <div className="absolute bottom-24 left-[4%] w-56 h-56 rounded-full bg-purple-200/25 blur-3xl opacity-25" />
-            <div className="absolute bottom-32 right-[18%] w-36 h-36 rounded-full bg-pink-300/20 blur-2xl opacity-20" />
-          </div>
-        ) : (
-          <>
-            <motion.div style={{ y: blobFarY }} className="absolute inset-0 pointer-events-none">
-              <motion.div
-                className="absolute top-16 right-[8%] w-80 h-80 rounded-full bg-pink-200/30 blur-3xl"
-                animate={{ scale: [1, 1.12, 1], opacity: [0.28, 0.48, 0.28] }}
-                transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-              />
-              <motion.div
-                className="absolute top-40 left-[12%] w-48 h-48 rounded-full bg-rose-200/20 blur-3xl"
-                animate={{ scale: [1.05, 1, 1.05], opacity: [0.2, 0.35, 0.2] }}
-                transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
-              />
-            </motion.div>
-            <motion.div style={{ y: blobNearY }} className="absolute inset-0 pointer-events-none">
-              <motion.div
-                className="absolute bottom-24 left-[4%] w-56 h-56 rounded-full bg-purple-200/25 blur-3xl"
-                animate={{ scale: [1.1, 1, 1.1], opacity: [0.25, 0.42, 0.25] }}
-                transition={{ duration: 13, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
-              />
-              <motion.div
-                className="absolute bottom-32 right-[18%] w-36 h-36 rounded-full bg-pink-300/20 blur-2xl"
-                animate={{ scale: [1, 1.18, 1], opacity: [0.15, 0.3, 0.15] }}
-                transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
-              />
-            </motion.div>
-          </>
-        )}
+        {/* Blob layers — static on all devices (blur-3xl + repeat:Infinity forces GPU repaints) */}
+        {/* Parallax wrapper kept on desktop: translate runs on compositor, no repaint */}
+        <motion.div style={isMobile ? undefined : { y: blobFarY }} className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-16 right-[8%] w-80 h-80 rounded-full bg-pink-200/30 blur-3xl opacity-30" />
+          <div className="absolute top-40 left-[12%] w-48 h-48 rounded-full bg-rose-200/20 blur-3xl opacity-25" />
+        </motion.div>
+        <motion.div style={isMobile ? undefined : { y: blobNearY }} className="absolute inset-0 pointer-events-none">
+          <div className="absolute bottom-24 left-[4%] w-56 h-56 rounded-full bg-purple-200/25 blur-3xl opacity-25" />
+          <div className="absolute bottom-32 right-[18%] w-36 h-36 rounded-full bg-pink-300/20 blur-2xl opacity-20" />
+        </motion.div>
 
         <motion.div
           className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 w-full"
@@ -487,16 +461,8 @@ export function LandingPageContent() {
               transition={{ duration: 1.7, delay: 1.1, ease: [0.22, 1, 0.36, 1] }}
               style={isMobile ? undefined : { y: heroImgY }}
             >
-              {/* Ambient glow — static on mobile, animated on desktop */}
-              {isMobile ? (
-                <div className="absolute inset-0 -m-12 rounded-[40px] bg-pink-200/35 blur-3xl opacity-35 pointer-events-none" />
-              ) : (
-                <motion.div
-                  className="absolute inset-0 -m-12 rounded-[40px] bg-pink-200/35 blur-3xl pointer-events-none"
-                  animate={{ scale: [1, 1.06, 1], opacity: [0.3, 0.55, 0.3] }}
-                  transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-                />
-              )}
+              {/* Ambient glow — static on all devices */}
+              <div className="absolute inset-0 -m-12 rounded-[40px] bg-pink-200/35 blur-3xl opacity-35 pointer-events-none" />
 
               {/* Dot grid decoration — back layer */}
               <div
@@ -1038,15 +1004,8 @@ export function LandingPageContent() {
       {/* Final CTA */}
       <section className="relative overflow-hidden py-24 bg-gradient-to-b from-pink-50/70 to-white">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-pink-100/60 via-transparent to-transparent" />
-        {isMobile ? (
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-pink-200/20 blur-3xl opacity-30" />
-        ) : (
-          <motion.div
-            className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-pink-200/20 blur-3xl"
-            animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.5, 0.3] }}
-            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-          />
-        )}
+        {/* Final CTA blob — static on all devices */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-pink-200/20 blur-3xl opacity-30" />
         <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
           <FadeUp>
             <div className="inline-flex items-center gap-2 rounded-full bg-pink-100 px-4 py-1.5 text-sm font-medium text-pink-700 mb-6">
