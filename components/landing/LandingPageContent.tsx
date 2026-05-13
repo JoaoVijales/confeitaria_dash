@@ -340,7 +340,7 @@ export function LandingPageContent() {
       </motion.header>
 
       {/* Hero */}
-      <section ref={heroRef} className="relative overflow-hidden py-16 sm:py-20 lg:py-24 xl:py-28 min-h-[88vh] xl:min-h-[85vh] flex items-center">
+      <section ref={heroRef} className="relative overflow-hidden pt-6 pb-12 sm:pt-8 sm:pb-16 lg:pt-10 lg:pb-20 2xl:pt-16 2xl:pb-24 min-h-[80vh] flex items-center">
         {/* Parallax background gradient */}
         <motion.div
           className="absolute inset-0 bg-gradient-to-b from-pink-50/70 via-pink-50/30 to-white"
@@ -362,7 +362,7 @@ export function LandingPageContent() {
           className="relative mx-auto max-w-6xl xl:max-w-7xl px-4 sm:px-6 lg:px-8 xl:px-10 w-full"
           style={isMobile ? undefined : { opacity: heroOpacity, y: heroTextY }}
         >
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] xl:grid-cols-[1fr_1.25fr] 2xl:grid-cols-[1fr_1.4fr] gap-8 lg:gap-12 xl:gap-16 2xl:gap-24 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] 2xl:grid-cols-[1fr_1.3fr] gap-8 lg:gap-10 xl:gap-14 2xl:gap-20 items-center">
 
             {/* ── Left: text ── */}
             <div className="text-center lg:text-left">
@@ -382,7 +382,7 @@ export function LandingPageContent() {
               </motion.div>
 
               <motion.h1
-                className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl xl:text-6xl leading-tight"
+                className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl 2xl:text-6xl leading-tight"
                 initial={{ opacity: 0, y: 52 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1.5, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
@@ -399,7 +399,7 @@ export function LandingPageContent() {
               </motion.h1>
 
               <motion.p
-                className="mt-6 text-lg xl:text-xl leading-8 text-slate-600 max-w-xl mx-auto lg:mx-0"
+                className="mt-6 text-lg 2xl:text-xl leading-8 text-slate-600 max-w-xl mx-auto lg:mx-0"
                 initial={{ opacity: 0, y: 32 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1.4, delay: 0.7 }}
@@ -474,7 +474,7 @@ export function LandingPageContent() {
               />
 
               {/* ── Composition wrapper ── */}
-              <div className="relative w-full max-w-[480px] xl:max-w-[560px] 2xl:max-w-full">
+              <div className="relative w-full max-w-[480px] xl:max-w-[520px] 2xl:max-w-[620px]">
 
                 {/* Main dashboard browser mockup */}
                 <motion.div
