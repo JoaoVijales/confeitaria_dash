@@ -1,8 +1,9 @@
 'use client'
 
+import { useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import { KpiCard } from "@/components/KpiCard";
 import { DollarSign, TrendingUp, TrendingDown, Percent, Wallet } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, PieLabelRenderProps } from 'recharts';
 import {
   Table,
   TableBody,
@@ -20,20 +21,17 @@ import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SectionTracker } from '@/components/SectionTracker';
 
+const ChartSkeleton = () => <Skeleton className="h-[260px] w-full" />
 
-const COLORS = ['#3B82F6', '#F87171', '#34D399', '#FB923C', '#A78BFA'];
+const RevenueExpensesChart = dynamic(
+  () => import('@/components/charts/RevenueExpensesChart').then(m => ({ default: m.RevenueExpensesChart })),
+  { loading: ChartSkeleton, ssr: false }
+)
 
-const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: PieLabelRenderProps) => {
-  const radius = (innerRadius as number) + ((outerRadius as number) - (innerRadius as number)) * 0.5;
-  const x = (cx as number) + radius * Math.cos(-(midAngle as number) * Math.PI / 180);
-  const y = (cy as number) + radius * Math.sin(-(midAngle as number) * Math.PI / 180);
-
-  return (
-    <text x={x} y={y} fill="white" textAnchor={x > (cx as number) ? 'start' : 'end'} dominantBaseline="central">
-      {`${((percent as number) * 100).toFixed(0)}%`}
-    </text>
-  );
-};
+const ExpensesPieChart = dynamic(
+  () => import('@/components/charts/ExpensesPieChart').then(m => ({ default: m.ExpensesPieChart })),
+  { loading: ChartSkeleton, ssr: false }
+)
 
 export default function FinanceiroPage() {
   const { data: financials, isLoading, error } = useFinancials();
@@ -44,23 +42,25 @@ export default function FinanceiroPage() {
   const categories = ['Ingredientes', 'Embalagens', 'Aluguel', 'Energia', 'Marketing', 'Outros', 'Todos'];
   const types = ['Receita', 'Despesa', 'Todos'];
 
-  // Limites de período calculados fora do filter para evitar mutação de Date dentro do loop
-  const now = new Date();
-  const periodStart: Date | null =
-    filterPeriod === 'Hoje' ? new Date(now.getFullYear(), now.getMonth(), now.getDate()) :
-    filterPeriod === 'Semana' ? new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7) :
-    filterPeriod === 'Mes' ? new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()) :
-    null;
+  const periodStart = useMemo((): Date | null => {
+    const now = new Date();
+    if (filterPeriod === 'Hoje') return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if (filterPeriod === 'Semana') return new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+    if (filterPeriod === 'Mes') return new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+    return null;
+  }, [filterPeriod]);
 
-  const filteredTransactions = financials?.recentTransactions.filter(transaction => {
-    const transactionDate = new Date(transaction.date);
-
-    const matchesPeriod = !periodStart || transactionDate >= periodStart;
-    const matchesCategory = filterCategory === 'Todos' || transaction.category === filterCategory;
-    const matchesType = filterType === 'Todos' || transaction.type === filterType;
-
-    return matchesPeriod && matchesCategory && matchesType;
-  }) || [];
+  const filteredTransactions = useMemo(
+    () =>
+      financials?.recentTransactions.filter(transaction => {
+        const transactionDate = new Date(transaction.date);
+        const matchesPeriod = !periodStart || transactionDate >= periodStart;
+        const matchesCategory = filterCategory === 'Todos' || transaction.category === filterCategory;
+        const matchesType = filterType === 'Todos' || transaction.type === filterType;
+        return matchesPeriod && matchesCategory && matchesType;
+      }) || [],
+    [financials, periodStart, filterCategory, filterType]
+  );
 
   if (isLoading) {
     return (
@@ -131,17 +131,7 @@ export default function FinanceiroPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-6">
-            <ResponsiveContainer width="100%" height={350}>
-              <LineChart data={financials?.revenueVsExpensesData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="Receitas" stroke="#3B82F6" />
-                <Line type="monotone" dataKey="Despesas" stroke="#F87171" />
-              </LineChart>
-            </ResponsiveContainer>
+            <RevenueExpensesChart data={financials?.revenueVsExpensesData} />
           </CardContent>
         </Card>
         <Card className="col-span-1 lg:col-span-2 rounded-xl border border-slate-200 shadow-sm">
@@ -149,27 +139,7 @@ export default function FinanceiroPage() {
             <CardTitle className="font-semibold text-slate-800">Despesas por Categoria</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <ResponsiveContainer width="100%" height={350}>
-              <PieChart>
-                <Pie
-                  data={financials?.expensesByCategoryChartData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={120}
-                  innerRadius={80} // Converted to donut
-                  dataKey="value"
-                  nameKey="name"
-                  label={renderCustomizedLabel} // Added custom label
-                >
-                  {financials?.expensesByCategoryChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+            <ExpensesPieChart data={financials?.expensesByCategoryChartData} showLabel />
           </CardContent>
         </Card>
       </div>

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -13,8 +14,6 @@ import { EmptyState } from "@/components/EmptyState";
 import { Progress } from "@/components/ui/progress";
 import { useProducts } from '@/hooks/useProducts'
 import { useCreateProduct, useUpdateProduct, useDeleteProduct } from '@/hooks/useMutations'
-import { ProductFormDialog } from '@/components/dialogs/ProductFormDialog'
-import { ConfirmDialog } from '@/components/dialogs/ConfirmDialog'
 import { ProductFormValues } from '@/lib/validations/product.schema'
 import { PRODUCT_CATEGORIES, CATEGORY_COLORS } from '@/lib/constants/categories'
 import { toast } from 'sonner'
@@ -22,6 +21,15 @@ import Link from 'next/link'
 import { StockAlertBanner } from '@/components/StockAlertBanner'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { SectionTracker } from '@/components/SectionTracker'
+
+const ProductFormDialog = dynamic(
+  () => import('@/components/dialogs/ProductFormDialog').then(m => ({ default: m.ProductFormDialog })),
+  { ssr: false }
+)
+const ConfirmDialog = dynamic(
+  () => import('@/components/dialogs/ConfirmDialog').then(m => ({ default: m.ConfirmDialog })),
+  { ssr: false }
+)
 
 type Product = {
   id: string;
@@ -94,11 +102,15 @@ export default function ProductsPage() {
     return ((price - cost) / price) * 100
   }
 
-  const filteredProducts = products?.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = filterCategory === 'Todos' || product.category === filterCategory;
-    return matchesSearch && matchesCategory;
-  }) || [];
+  const filteredProducts = useMemo(
+    () =>
+      products?.filter(product => {
+        const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesCategory = filterCategory === 'Todos' || product.category === filterCategory;
+        return matchesSearch && matchesCategory;
+      }) || [],
+    [products, searchTerm, filterCategory]
+  );
 
   const totalProducts = filteredProducts.length;
 

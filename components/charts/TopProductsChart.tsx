@@ -87,12 +87,12 @@ export function TopProductsChart() {
   const { data: chartData, isLoading, error } = useTopProductsChart();
 
   if (isLoading) {
-    return <Skeleton className="h-[400px] w-full" />
+    return <Skeleton className="h-[300px] w-full" />
   }
 
   if (error || !chartData || chartData.length === 0) {
     return (
-      <div className="h-[400px] flex items-center justify-center">
+      <div className="h-[300px] flex items-center justify-center">
         <EmptyState
           title="Nenhum dado de produtos"
           description="Não há dados de produtos para exibir no momento."
@@ -105,7 +105,7 @@ export function TopProductsChart() {
   const totalValue = chartData.reduce((acc, entry) => acc + entry.vendidos, 0);
 
   return (
-    <ResponsiveContainer width="100%" height={400}>
+    <ResponsiveContainer width="100%" height={300}>
       <PieChart>
         <Pie
           data={chartData}
