@@ -7,6 +7,7 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF1919'
 interface DataItem {
   name: string
   value: number
+  [key: string]: unknown
 }
 
 const renderLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: PieLabelRenderProps) => {

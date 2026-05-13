@@ -6,6 +6,7 @@ interface DataItem {
   name: string
   Receitas: number
   Despesas: number
+  [key: string]: unknown
 }
 
 export function RevenueExpensesChart({ data }: { data: DataItem[] | undefined }) {

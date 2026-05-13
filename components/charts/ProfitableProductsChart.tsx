@@ -5,6 +5,7 @@ import { Bar, BarChart, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recha
 interface DataItem {
   name: string
   Lucro: number
+  [key: string]: unknown
 }
 
 export function ProfitableProductsChart({ data }: { data: DataItem[] | undefined }) {
