@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -12,9 +13,16 @@ import { EmptyState } from "@/components/EmptyState";
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useCustomers } from '@/hooks/useCustomers'
 import { useCreateCustomer, useUpdateCustomer, useDeleteCustomer } from '@/hooks/useMutations'
-import { CustomerFormDialog } from '@/components/dialogs/CustomerFormDialog'
-import { ConfirmDialog } from '@/components/dialogs/ConfirmDialog'
 import { CustomerFormValues } from '@/lib/validations/customer.schema'
+
+const CustomerFormDialog = dynamic(
+  () => import('@/components/dialogs/CustomerFormDialog').then(m => ({ default: m.CustomerFormDialog })),
+  { ssr: false }
+)
+const ConfirmDialog = dynamic(
+  () => import('@/components/dialogs/ConfirmDialog').then(m => ({ default: m.ConfirmDialog })),
+  { ssr: false }
+)
 import { toast } from 'sonner'
 import { SectionTracker } from '@/components/SectionTracker'
 
@@ -87,14 +95,18 @@ export default function CustomersPage() {
     })
   }
 
-  const filteredCustomers = customers?.filter(customer => {
-    const searchTermLower = searchTerm.toLowerCase();
-    return (
-      customer.name.toLowerCase().includes(searchTermLower) ||
-      customer.email.toLowerCase().includes(searchTermLower) ||
-      customer.phone.toLowerCase().includes(searchTermLower)
-    );
-  }) || [];
+  const filteredCustomers = useMemo(
+    () =>
+      customers?.filter(customer => {
+        const searchTermLower = searchTerm.toLowerCase();
+        return (
+          customer.name.toLowerCase().includes(searchTermLower) ||
+          customer.email.toLowerCase().includes(searchTermLower) ||
+          customer.phone.toLowerCase().includes(searchTermLower)
+        );
+      }) || [],
+    [customers, searchTerm]
+  );
 
   const totalCustomers = filteredCustomers.length;
 

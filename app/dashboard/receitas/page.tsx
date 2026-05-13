@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -25,7 +26,12 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/EmptyState'
 import { useRecipes } from '@/hooks/useRecipes'
 import { createRecipe, updateRecipe, deleteRecipe } from '@/app/actions/recipes'
-import { RecipeFormDialog, RecipeFormValues } from '@/components/RecipeFormDialog'
+import type { RecipeFormValues } from '@/components/RecipeFormDialog'
+
+const RecipeFormDialog = dynamic(
+  () => import('@/components/RecipeFormDialog').then(m => ({ default: m.RecipeFormDialog })),
+  { ssr: false }
+)
 import {
   calculateTotalRecipeCost,
   calculateCostPerPortion,
@@ -118,9 +124,22 @@ export default function ReceitasPage() {
     }
   }
 
-  const filteredRecipes = (recipes ?? []).filter(recipe =>
-    recipe.name.toLowerCase().includes(searchTerm.toLowerCase())
-  ) as unknown as Recipe[]
+  const filteredRecipes = useMemo(
+    () =>
+      (recipes ?? []).filter(recipe =>
+        recipe.name.toLowerCase().includes(searchTerm.toLowerCase())
+      ) as unknown as Recipe[],
+    [recipes, searchTerm]
+  )
+
+  const recipeCosts = useMemo(
+    () => {
+      const map: Record<string, { totalCost: number; costPerUnit: number }> = {}
+      filteredRecipes.forEach(r => { map[r.id] = getRecipeCosts(r) })
+      return map
+    },
+    [filteredRecipes]
+  )
 
   const fmt = (v: number) =>
     `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -185,7 +204,7 @@ export default function ReceitasPage() {
                 </TableHeader>
                 <TableBody>
                   {filteredRecipes.map((recipe) => {
-                    const { totalCost, costPerUnit } = getRecipeCosts(recipe)
+                    const { totalCost, costPerUnit } = recipeCosts[recipe.id] ?? { totalCost: 0, costPerUnit: 0 }
 
                     return (
                       <TableRow key={recipe.id} className="hover:bg-slate-50 transition-colors py-4">

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -27,8 +28,12 @@ import { EmptyState } from "@/components/EmptyState";
 import { useQueryClient } from '@tanstack/react-query'
 import { useIngredients } from '@/hooks/useIngredients'
 import { createIngredient, updateIngredient, deleteIngredient } from '@/app/actions/ingredients'
-import { IngredientFormDialog } from '@/components/IngredientFormDialog'
 import { toast } from 'sonner'
+
+const IngredientFormDialog = dynamic(
+  () => import('@/components/IngredientFormDialog').then(m => ({ default: m.IngredientFormDialog })),
+  { ssr: false }
+)
 import { track } from '@/lib/analytics'
 import { SectionTracker } from '@/components/SectionTracker'
 
@@ -84,13 +89,17 @@ export default function IngredientesPage() {
     if (!isEditing) track('ingrediente_criado')
   }
 
-  const filteredIngredients = ingredients?.filter(ingredient => {
-    const searchTermLower = searchTerm.toLowerCase();
-    return (
-      ingredient.name.toLowerCase().includes(searchTermLower) ||
-      ingredient.category.toLowerCase().includes(searchTermLower)
-    );
-  }) || [];
+  const filteredIngredients = useMemo(
+    () =>
+      ingredients?.filter(ingredient => {
+        const searchTermLower = searchTerm.toLowerCase();
+        return (
+          ingredient.name.toLowerCase().includes(searchTermLower) ||
+          ingredient.category.toLowerCase().includes(searchTermLower)
+        );
+      }) || [],
+    [ingredients, searchTerm]
+  );
 
   const totalIngredients = filteredIngredients.length;
 
