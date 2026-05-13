@@ -290,7 +290,7 @@ export function LandingPageContent() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
       >
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 xl:px-10">
           <div className="flex h-16 items-center justify-between">
             <motion.div
               className="flex items-center gap-2 font-bold text-slate-800 text-lg"
@@ -340,7 +340,7 @@ export function LandingPageContent() {
       </motion.header>
 
       {/* Hero */}
-      <section ref={heroRef} className="relative overflow-hidden py-16 sm:py-20 lg:py-24 min-h-[88vh] flex items-center">
+      <section ref={heroRef} className="relative overflow-hidden pt-6 pb-12 sm:pt-8 sm:pb-16 lg:pt-10 lg:pb-20 2xl:pt-16 2xl:pb-24 min-h-[80vh] flex items-center">
         {/* Parallax background gradient */}
         <motion.div
           className="absolute inset-0 bg-gradient-to-b from-pink-50/70 via-pink-50/30 to-white"
@@ -359,10 +359,10 @@ export function LandingPageContent() {
         </motion.div>
 
         <motion.div
-          className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 w-full"
+          className="relative mx-auto max-w-6xl xl:max-w-7xl px-4 sm:px-6 lg:px-8 xl:px-10 w-full"
           style={isMobile ? undefined : { opacity: heroOpacity, y: heroTextY }}
         >
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-8 lg:gap-10 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] 2xl:grid-cols-[1fr_1.3fr] gap-8 lg:gap-10 xl:gap-14 2xl:gap-20 items-center">
 
             {/* ── Left: text ── */}
             <div className="text-center lg:text-left">
@@ -382,7 +382,7 @@ export function LandingPageContent() {
               </motion.div>
 
               <motion.h1
-                className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl leading-tight"
+                className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl 2xl:text-6xl leading-tight"
                 initial={{ opacity: 0, y: 52 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1.5, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
@@ -399,7 +399,7 @@ export function LandingPageContent() {
               </motion.h1>
 
               <motion.p
-                className="mt-6 text-lg leading-8 text-slate-600 max-w-xl mx-auto lg:mx-0"
+                className="mt-6 text-lg 2xl:text-xl leading-8 text-slate-600 max-w-xl mx-auto lg:mx-0"
                 initial={{ opacity: 0, y: 32 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1.4, delay: 0.7 }}
@@ -474,7 +474,7 @@ export function LandingPageContent() {
               />
 
               {/* ── Composition wrapper ── */}
-              <div className="relative w-full max-w-[480px]">
+              <div className="relative w-full max-w-[480px] xl:max-w-[520px] 2xl:max-w-[620px]">
 
                 {/* Main dashboard browser mockup */}
                 <motion.div
@@ -516,7 +516,7 @@ export function LandingPageContent() {
 
       {/* Pain points */}
       <section className="py-20 bg-white">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl xl:max-w-7xl px-4 sm:px-6 lg:px-8 xl:px-10">
           <FadeUp className="text-center mb-14">
             <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">
               Isso te parece familiar?
@@ -552,7 +552,7 @@ export function LandingPageContent() {
       {/* Features */}
       <section id="funcionalidades" className="py-20 relative overflow-hidden">
         <ScrollBgLayer className="bg-slate-50" speed={0.12} />
-        <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 mx-auto max-w-6xl xl:max-w-7xl px-4 sm:px-6 lg:px-8 xl:px-10">
           <FadeUp className="text-center mb-14">
             <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">
               A resposta para cada um desses problemas
@@ -561,7 +561,7 @@ export function LandingPageContent() {
               Seis módulos que trabalham juntos para você parar de apagar incêndio e começar a crescer de verdade.
             </p>
           </FadeUp>
-          <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
             {[
               {
                 color: 'bg-orange-100', iconColor: 'text-orange-600', labelColor: 'text-orange-500',
@@ -640,7 +640,7 @@ export function LandingPageContent() {
       </section>
 
       {/* Mid-page CTA — gradient band */}
-      <section className="relative overflow-hidden py-16">
+      <section className="relative overflow-hidden py-16 xl:py-20">
         <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-rose-500" />
         {isMobile ? (
           <div
@@ -656,7 +656,7 @@ export function LandingPageContent() {
           />
         )}
         <FadeUp className="relative z-10">
-          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
+          <div className="mx-auto max-w-4xl xl:max-w-5xl px-4 sm:px-6 lg:px-8 xl:px-10 flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
             <div>
               <p className="text-xl font-bold text-white">Pronta para sair do caderno de vez?</p>
               <p className="text-pink-100 text-sm mt-1">Configure sua confeitaria em menos de 2 minutos. Sem cartão.</p>
@@ -674,8 +674,8 @@ export function LandingPageContent() {
       </section>
 
       {/* Demo screenshots */}
-      <section className="py-24 bg-white overflow-hidden">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+      <section id="como-funciona" className="py-24 bg-white overflow-hidden">
+        <div className="mx-auto max-w-6xl xl:max-w-7xl px-4 sm:px-6 lg:px-8 xl:px-10">
           <FadeUp className="text-center mb-20">
             <div className="inline-flex items-center gap-2 rounded-full bg-pink-100 px-4 py-1.5 text-sm font-medium text-pink-700 mb-4">
               <Zap className="h-4 w-4" />
@@ -691,7 +691,7 @@ export function LandingPageContent() {
           </FadeUp>
 
           {/* Receitas */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-24">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 xl:gap-20 items-center mb-24">
             <FadeIn direction="left">
               <ParallaxImage src="/receitas_conf.png" alt="Tela de receitas do Confeitando" speed={0.12} />
             </FadeIn>
@@ -726,7 +726,7 @@ export function LandingPageContent() {
           </div>
 
           {/* Produtos */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-24">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 xl:gap-20 items-center mb-24">
             <FadeIn direction="left" className="order-2 lg:order-1" delay={0.1}>
               <div className="inline-flex items-center gap-2 rounded-full bg-pink-100 px-3 py-1 text-xs font-medium text-pink-700 mb-4">
                 <Package className="h-3.5 w-3.5" />
@@ -778,7 +778,7 @@ export function LandingPageContent() {
 
       {/* Testimonials */}
       <section className="py-20 bg-white">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl xl:max-w-7xl px-4 sm:px-6 lg:px-8 xl:px-10">
           <FadeUp className="text-center mb-14">
             <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">Quem já usa, não volta atrás</h2>
             <p className="mt-3 text-slate-500 text-lg">Confeiteiras reais que organizaram o negócio com o Confeitando.</p>
@@ -844,7 +844,7 @@ export function LandingPageContent() {
       {/* Pricing */}
       <section id="planos" className="py-20 relative overflow-hidden">
         <ScrollBgLayer className="bg-slate-50" speed={0.08} />
-        <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 mx-auto max-w-5xl xl:max-w-6xl px-4 sm:px-6 lg:px-8 xl:px-10">
           <FadeUp className="text-center mb-14">
             <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">Planos para cada fase da sua confeitaria</h2>
             <p className="mt-4 text-slate-500 text-lg">Sem contrato. Cancele quando quiser.</p>
@@ -934,11 +934,11 @@ export function LandingPageContent() {
       </section>
 
       {/* Final CTA */}
-      <section className="relative overflow-hidden py-24 bg-gradient-to-b from-pink-50/70 to-white">
+      <section className="relative overflow-hidden py-24 xl:py-32 bg-gradient-to-b from-pink-50/70 to-white">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-pink-100/60 via-transparent to-transparent" />
         {/* Final CTA blob — static on all devices */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-pink-200/20 blur-3xl opacity-30" />
-        <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
+        <div className="relative mx-auto max-w-4xl xl:max-w-5xl px-4 sm:px-6 lg:px-8 xl:px-10 text-center">
           <FadeUp>
             <div className="inline-flex items-center gap-2 rounded-full bg-pink-100 px-4 py-1.5 text-sm font-medium text-pink-700 mb-6">
               <Cake className="h-4 w-4" />
@@ -999,7 +999,7 @@ export function LandingPageContent() {
 
       {/* Footer */}
       <footer className="border-t border-slate-200 py-10 bg-white">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 xl:px-10">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             <motion.div
               className="flex items-center gap-2 font-bold text-slate-700"
