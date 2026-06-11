@@ -23,6 +23,8 @@ export default function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [confirmarSenha, setConfirmarSenha] = useState('')
+  const [senhaIguais, setSenhaIguais] = useState(false)
 
   async function handleEmailSignup() {
     if (!email || !password) return
@@ -30,6 +32,8 @@ export default function SignupPage() {
       toast.error('A senha deve ter pelo menos 6 caracteres')
       return
     }
+    handleConfirmarSenha()
+    if (!senhaIguais) return
     setLoading(true)
     try {
       const credential = await createUserWithEmailAndPassword(getClientAuth(), email, password)
@@ -46,6 +50,16 @@ export default function SignupPage() {
       }
       setLoading(false)
     }
+  }
+
+  async function handleConfirmarSenha() {
+    if (password !== confirmarSenha) {
+      toast.error('As senhas não coincidem')
+      setSenhaIguais(false)
+      return
+    }
+    setSenhaIguais(true)
+    toast.success('Senha confirmada com sucesso')
   }
 
   async function handleGoogleSignup() {
@@ -99,6 +113,19 @@ export default function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleEmailSignup()}
+                className="py-6"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="confirmar-senha" className="text-slate-700">Confirmar Senha</Label>
+              <Input
+                id="confirmar-senha"
+                type="password"
+                placeholder="Mínimo 6 caracteres"
+                required
+                value={confirmarSenha}
+                onChange={(e) => setConfirmarSenha(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleConfirmarSenha()}
                 className="py-6"
               />
             </div>
